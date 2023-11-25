@@ -1,10 +1,9 @@
-// スライダー範囲拡大を指定するテンプレートファイル
-using BepInEx;
-using CM3D2.ExternalSaveData.Managed;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using BepInEx;
+using CM3D2.ExternalSaveData.Managed;
 
 internal static class SliderTemplates {
 	class Cache : TemplateFiles<SliderTemplate> { }
@@ -101,7 +100,7 @@ internal static class SliderTemplates {
 			foreach (var kv in Sliders) {
 				var name = kv.Key;
 				var slider = kv.Value;
-				var mpn = Helper.ToEnum<MPN>(name, MPN.null_mpn);
+				var mpn = Helper.ToEnum(name, MPN.null_mpn);
 				if (mpn != MPN.null_mpn) {
 					var maidProp = maid.GetProp(mpn);
 					maidProp.min = (int)slider.min;

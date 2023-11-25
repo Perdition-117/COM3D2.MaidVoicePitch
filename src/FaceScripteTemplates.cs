@@ -1,10 +1,9 @@
-// スライダー範囲拡大を指定するテンプレートファイル (テスト中)
-using BepInEx;
-using CM3D2.ExternalSaveData.Managed;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using BepInEx;
+using CM3D2.ExternalSaveData.Managed;
 
 internal static class FaceScriptTemplates {
 	class Cache : TemplateFiles<TemplateFile> { }

@@ -1,10 +1,6 @@
-using CM3D2.ExternalSaveData.Managed;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using CM3D2.ExternalSaveData.Managed;
 using UnityEngine;
-using UnityInjector;
 
 namespace CM3D2.MaidVoicePitch.Plugin;
 

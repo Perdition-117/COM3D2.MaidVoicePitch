@@ -1,5 +1,5 @@
-using CM3D2.ExternalSaveData.Managed;
 using System;
+using CM3D2.ExternalSaveData.Managed;
 using UnityEngine;
 
 class TBodyMoveHeadAndEye {
@@ -50,7 +50,7 @@ class TBodyMoveHeadAndEye {
 			var thatEyeEulerAngle = that.EyeEulerAngle;
 
 			if (bParamHeadTrack) {
-				var externalValues = PluginHelper.GetOrAddComponent<ExternalValues>(tbody.gameObject);
+				var externalValues = tbody.GetOrAddComponent<ExternalValues>();
 				externalValues.tbody = tbody;
 				newTbodyMoveHeadAndEyeCallback2(externalValues, tbody, ref thatHeadEulerAngle, ref thatHeadEulerAngleG, ref thatEyeEulerAngle);
 			} else {

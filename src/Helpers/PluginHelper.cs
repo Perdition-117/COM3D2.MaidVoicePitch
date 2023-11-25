@@ -45,7 +45,7 @@ internal static class PluginHelper {
 			if (maid.AudioMan == null) {
 				continue;
 			}
-			if (object.ReferenceEquals(maid.AudioMan, audioSourceMgr)) {
+			if (ReferenceEquals(maid.AudioMan, audioSourceMgr)) {
 				return maid;
 			}
 		}
@@ -63,7 +63,7 @@ internal static class PluginHelper {
 			if (maid.body0 == null || maid.body0.bonemorph == null) {
 				continue;
 			}
-			if (object.ReferenceEquals(maid.body0.bonemorph, boneMorph_)) {
+			if (ReferenceEquals(maid.body0.bonemorph, boneMorph_)) {
 				return maid;
 			}
 		}
@@ -124,16 +124,5 @@ internal static class PluginHelper {
 			NormalizeAngle(eulerAngles.x),
 			NormalizeAngle(eulerAngles.y),
 			NormalizeAngle(eulerAngles.z));
-	}
-
-	public static T GetOrAddComponent<T>(GameObject gameObject) where T : Component {
-		T t = null;
-		if (gameObject != null) {
-			t = gameObject.GetComponent<T>();
-			if (t == null) {
-				t = gameObject.AddComponent<T>();
-			}
-		}
-		return t;
 	}
 }

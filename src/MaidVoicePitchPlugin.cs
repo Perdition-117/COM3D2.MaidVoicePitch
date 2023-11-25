@@ -1,15 +1,14 @@
-using CM3D2.ExternalSaveData.Managed;
-using CM3D2.ExternalPreset.Managed;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
+using BepInEx;
+using CM3D2.ExternalPreset.Managed;
+using CM3D2.ExternalPreset.Patcher;
+using CM3D2.ExternalSaveData.Managed;
+using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using BepInEx;
-using HarmonyLib;
-using System.Reflection.Emit;
-using CM3D2.ExternalPreset.Patcher;
 
 namespace CM3D2.MaidVoicePitch.Plugin;
 
@@ -71,7 +70,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	};
 
 	public void Awake() {
-		UnityEngine.GameObject.DontDestroyOnLoad(this);
+		DontDestroyOnLoad(this);
 
 		SceneManager.sceneLoaded += OnSceneLoaded;
 
@@ -129,7 +128,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		var tag = "sintyou";
 		foreach (var boneAndPropName in boneAndPropNameList) {
 			var bname = boneAndPropName[0];
-			var key = ($"min+{tag}*{bname.Replace('?', 'L')}");
+			var key = $"min+{tag}*{bname.Replace('?', 'L')}";
 			if (!BoneMorph.dic.ContainsKey(key)) {
 				PluginHelper.BoneMorphSetScale(tag, bname, 1f, 1f, 1f, 1f, 1f, 1f);
 			}
@@ -830,7 +829,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		// http://jbbs.shitaraba.net/bbs/read.cgi/game/55179/1438196715/923
 		if (tEyePosL != null) {
 			var linkT = tEyePosL;
-			var localCenter = linkT.localPosition + (new Vector3(0f, eyeAngY, eyeAngX)); // ローカル座標系での回転中心位置
+			var localCenter = linkT.localPosition + new Vector3(0f, eyeAngY, eyeAngX); // ローカル座標系での回転中心位置
 			var worldCenter = linkT.parent.TransformPoint(localCenter);         // ワールド座標系での回転中心位置
 			var localAxis = new Vector3(-1f, 0f, 0f);                       // ローカル座標系での回転軸
 			var worldAxis = linkT.TransformDirection(localAxis);               // ワールド座標系での回転軸
@@ -840,7 +839,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		}
 		if (tEyePosR != null) {
 			var linkT = tEyePosR;
-			var localCenter = linkT.localPosition + (new Vector3(0f, eyeAngY, -eyeAngX));    // ローカル座標系での回転中心位置
+			var localCenter = linkT.localPosition + new Vector3(0f, eyeAngY, -eyeAngX);    // ローカル座標系での回転中心位置
 			var worldCenter = linkT.parent.TransformPoint(localCenter);             // ワールド座標系での回転中心位置
 			var localAxis = new Vector3(-1f, 0f, 0f);                           // ローカル座標系での回転軸
 			var worldAxis = linkT.TransformDirection(localAxis);                   // ワールド座標系での回転軸
@@ -859,17 +858,17 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			var addMax = boneMorphPos.m_vAddMax;
 
 			if (strPropName == "Nosepos")
-				trs.localPosition = Lerp(addMin, defPos, addMax, (float)boneMorph_.POS_Nose, sliderScale);
+				trs.localPosition = Lerp(addMin, defPos, addMax, boneMorph_.POS_Nose, sliderScale);
 			else if (strPropName == "MayuY") {
-				trs.localPosition = Lerp(addMin, defPos, addMax, (float)boneMorph_.POS_MayuY, sliderScale);
+				trs.localPosition = Lerp(addMin, defPos, addMax, boneMorph_.POS_MayuY, sliderScale);
 			} else if (strPropName == "EyeBallPosYL" || strPropName == "EyeBallPosYR") {
-				trs.localPosition = Lerp(addMin, defPos, addMax, (float)boneMorph_.EyeBallPosY, sliderScale);
+				trs.localPosition = Lerp(addMin, defPos, addMax, boneMorph_.EyeBallPosY, sliderScale);
 			} else if (strPropName == "Mayupos_L" || strPropName == "Mayupos_R") {
-				var vector3_1 = Lerp(addMin, defPos, addMax, (float)boneMorph_.POS_MayuY, sliderScale);
+				var vector3_1 = Lerp(addMin, defPos, addMax, boneMorph_.POS_MayuY, sliderScale);
 				var x1 = addMin.x;
 				addMin.x = addMax.x;
 				addMax.x = x1;
-				var vector3_2 = Lerp(addMin, defPos, addMax, (float)boneMorph_.POS_MayuX, sliderScale);
+				var vector3_2 = Lerp(addMin, defPos, addMax, boneMorph_.POS_MayuX, sliderScale);
 				var x3 = vector3_2.x + vector3_1.x - defPos.x;
 				trs.localPosition = new(x3, vector3_1.y, vector3_2.z);
 			}
@@ -884,16 +883,16 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			var addMax = boneMorphScl.m_vAddMax;
 
 			if (strPropName == "Earscl_L" || strPropName == "Earscl_R") {
-				trs.localScale = Lerp(addMin, defScl, addMax, (float)boneMorph_.SCALE_Ear, sliderScale);
+				trs.localScale = Lerp(addMin, defScl, addMax, boneMorph_.SCALE_Ear, sliderScale);
 			} else if (strPropName == "Nosescl") {
-				trs.localScale = Lerp(addMin, defScl, addMax, (float)boneMorph_.SCALE_Nose, sliderScale);
+				trs.localScale = Lerp(addMin, defScl, addMax, boneMorph_.SCALE_Nose, sliderScale);
 			} else if (strPropName == "EyeBallSclXL" || strPropName == "EyeBallSclXR") {
 				var localScale = trs.localScale;
-				localScale.z = Lerp(addMin, defScl, addMax, (float)boneMorph_.EyeBallSclX, sliderScale).z;
+				localScale.z = Lerp(addMin, defScl, addMax, boneMorph_.EyeBallSclX, sliderScale).z;
 				trs.localScale = localScale;
 			} else if (strPropName == "EyeBallSclYL" || strPropName == "EyeBallSclYR") {
 				var localScale = trs.localScale;
-				localScale.y = Lerp(addMin, defScl, addMax, (float)boneMorph_.EyeBallSclY, sliderScale).y;
+				localScale.y = Lerp(addMin, defScl, addMax, boneMorph_.EyeBallSclY, sliderScale).y;
 				trs.localScale = localScale;
 			}
 		}
@@ -907,9 +906,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			var addMax = boneMorphRot.m_vAddMax;
 
 			if (strPropName == "Earrot_L" || strPropName == "Earrot_R") {
-				trs.localRotation = RotLerp(addMin, defRot, addMax, (float)boneMorph_.ROT_Ear, sliderScale);
+				trs.localRotation = RotLerp(addMin, defRot, addMax, boneMorph_.ROT_Ear, sliderScale);
 			} else if (strPropName == "Mayurot_L" || strPropName == "Mayurot_R") {
-				trs.localRotation = RotLerp(addMin, defRot, addMax, (float)boneMorph_.ROT_Mayu, sliderScale);
+				trs.localRotation = RotLerp(addMin, defRot, addMax, boneMorph_.ROT_Mayu, sliderScale);
 			}
 		}
 	}

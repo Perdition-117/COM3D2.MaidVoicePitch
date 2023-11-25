@@ -1,8 +1,7 @@
+using System;
+using System.Diagnostics;
 using CM3D2.ExternalSaveData.Managed;
 using script;
-using System;
-using UnityEngine;
-using System.Diagnostics;
 
 internal static class KagHooks {
 	static bool bKagTagPropSetHooked = false;

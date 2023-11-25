@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Xml;
 
 internal static class Helper {
@@ -19,7 +18,7 @@ internal static class Helper {
 			return;
 		}
 		if (logStreamWriter == null) {
-			var fname = ($".\\Log_{now:yyyyMMdd_HHmmss}.log");
+			var fname = $".\\Log_{now:yyyyMMdd_HHmmss}.log";
 			logStreamWriter = new(fname, true);
 		}
 		logStreamWriter.Write(s);
@@ -72,7 +71,7 @@ internal static class Helper {
 				xml.Load(xmlFilePath);
 			}
 		} catch (Exception e) {
-			Helper.ShowException(e);
+			ShowException(e);
 		}
 		return xml;
 	}
