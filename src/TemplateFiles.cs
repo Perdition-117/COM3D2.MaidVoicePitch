@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 public interface ITemplateFile {
 	bool Load(string fname);
 }
@@ -7,7 +5,7 @@ public interface ITemplateFile {
 public class TemplateFiles<T> : Dictionary<string, T> where T : ITemplateFile, new() {
 	public T Get(string fname) {
 		if (fname != null) {
-			if (TryGetValue(fname, out T t0)) {
+			if (TryGetValue(fname, out var t0)) {
 				return t0;
 			}
 

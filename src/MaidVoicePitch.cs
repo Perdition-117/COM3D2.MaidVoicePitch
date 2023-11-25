@@ -1,11 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using BepInEx;
 using CM3D2.ExternalPreset.Managed;
 using CM3D2.ExternalPreset.Patcher;
 using CM3D2.ExternalSaveData.Managed;
+using ExtensionMethods;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,7 +14,10 @@ namespace CM3D2.MaidVoicePitch.Plugin;
 [BepInPlugin("CM3D2.MaidVoicePitch", "CM3D2 MaidVoicePitch", "0.2.18")]
 public class MaidVoicePitch : BaseUnityPlugin {
 	public static string PluginName => "CM3D2.MaidVoicePitch";
-	static bool bDeserialized = false;
+
+	internal const string DefaultTemplateFile = "MaidVoicePitchSlider.xml";
+
+	private static bool _deserialized = false;
 
 	//static string[] boneMorph_PropNames;
 
@@ -31,10 +33,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	//    }
 	//}
 
-	static TBodyMoveHeadAndEye tbodyMoveHeadAndEye = new();
+	private static readonly TBodyMoveHeadAndEye TBodyMoveHeadAndEye = new();
 
-	static Vector3 skirtScaleBackUp;
-	static Vector3 jiggleBoneScaleBackUp;
+	private static readonly Dictionary<jiggleBone, Maid> JiggleBones = new();
 
 	/// <summary>
 	/// Transform変形を行うボーンのリスト。
@@ -44,29 +45,72 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// 頭に影響が行くボーンを登録する場合は
 	/// WIDESLIDER() 内の ignoreHeadBones にボーン名を書くこと。
 	/// </summary>
-	private static string[][] boneAndPropNameList = {
-		new[] { "Bip01 ? Thigh", "THISCL" },         // 下半身
-		new[] { "momotwist_?", "MTWSCL" },         // ももツイスト
-		new[] { "momoniku_?", "MMNSCL" },         // もも肉
-		new[] { "Bip01 Pelvis_SCL_", "PELSCL" },     // 骨盤
-		new[] { "Bip01 ? Thigh_SCL_", "THISCL2" },   // 膝
-		new[] { "Bip01 ? Calf", "CALFSCL" },         // 膝下
-		new[] { "Bip01 ? Foot", "FOOTSCL" },         // 足首より下
-		new[] { "Skirt", "SKTSCL" },                 // スカート
-		new[] { "Bip01 Spine_SCL_", "SPISCL" },      // 胴(下腹部周辺)
-		new[] { "Bip01 Spine0a_SCL_", "S0ASCL" },    // 胴0a(腹部周辺)
-		new[] { "Bip01 Spine1_SCL_", "S1_SCL" },     // 胴1_(みぞおち周辺)
-		new[] { "Bip01 Spine1a_SCL_", "S1ASCL" },    // 胴1a(首・肋骨周辺)
-		new[] { "Bip01 Spine1a", "S1ABASESCL" },     // 胴1a(胸より上)※頭に影響有り
-		new[] { "Kata_?", "KATASCL" },               // 肩
-		new[] { "Bip01 ? UpperArm", "UPARMSCL" },    // 上腕
-		new[] { "Bip01 ? Forearm", "FARMSCL" },      // 前腕
-		new[] { "Bip01 ? Hand", "HANDSCL" },         // 手
-		new[] { "Bip01 ? Clavicle", "CLVSCL" },      // 鎖骨
-		new[] { "Mune_?", "MUNESCL" },               // 胸
-		new[] { "Mune_?_sub", "MUNESUBSCL" },        // 胸サブ
-		new[] { "Bip01 Neck_SCL_", "NECKSCL" },      // 首
-		//new[] { "", "" },
+	private static readonly Dictionary<string, string> BoneAndPropNameList = new() {
+		["Bip01 ? Thigh"]      = "THISCL",     // 下半身
+		["momotwist_?"]        = "MTWSCL",     // ももツイスト
+		["momoniku_?"]         = "MMNSCL",     // もも肉
+		["Bip01 Pelvis_SCL_"]  = "PELSCL",     // 骨盤
+		["Bip01 ? Thigh_SCL_"] = "THISCL2",    // 膝
+		["Bip01 ? Calf"]       = "CALFSCL",    // 膝下
+		["Bip01 ? Foot"]       = "FOOTSCL",    // 足首より下
+		["Skirt"]              = "SKTSCL",     // スカート
+		["Bip01 Spine_SCL_"]   = "SPISCL",     // 胴(下腹部周辺)
+		["Bip01 Spine0a_SCL_"] = "S0ASCL",     // 胴0a(腹部周辺)
+		["Bip01 Spine1_SCL_"]  = "S1_SCL",     // 胴1_(みぞおち周辺)
+		["Bip01 Spine1a_SCL_"] = "S1ASCL",     // 胴1a(首・肋骨周辺)
+		["Bip01 Spine1a"]      = "S1ABASESCL", // 胴1a(胸より上)※頭に影響有り
+		["Kata_?"]             = "KATASCL",    // 肩
+		["Bip01 ? UpperArm"]   = "UPARMSCL",   // 上腕
+		["Bip01 ? Forearm"]    = "FARMSCL",    // 前腕
+		["Bip01 ? Hand"]       = "HANDSCL",    // 手
+		["Bip01 ? Clavicle"]   = "CLVSCL",     // 鎖骨
+		["Mune_?"]             = "MUNESCL",    // 胸
+		["Mune_?_sub"]         = "MUNESUBSCL", // 胸サブ
+		["Bip01 Neck_SCL_"]    = "NECKSCL",    // 首
+		//[""] = "",
+	};
+
+	private static readonly string[] ObsoleteSettings = {
+		"WIDESLIDER.enable",
+		"PROPSET_OFF.enable",
+		"LIPSYNC_OFF.enable",
+
+		"HYOUJOU_OFF.enable",
+		"EYETOCAMERA_OFF.enable",
+		"MUHYOU.enable",
+
+		"FARMFIX.enable",
+		"EYEBALL.enable",
+		"EYE_ANG.enable",
+
+		"PELSCL.enable",
+		"SKTSCL.enable",
+		"THISCL.enable",
+		"THIPOS.enable",
+
+		"PELVIS.enable",
+		"FARMFIX.enable",
+		"SPISCL.enable",
+
+		"S0ASCL.enable",
+		"S1_SCL.enable",
+		"S1ASCL.enable",
+
+		"FACE_OFF.enable",
+		"FACEBLEND_OFF.enable",
+
+		// 以下0.2.4で廃止
+		"FACE_ANIME_SPEED",
+		"MABATAKI_SPEED",
+
+		"PELVIS",
+		"PELVIS.x",
+		"PELVIS.y",
+		"PELVIS.z",
+	};
+
+	private static readonly string[] ObsoleteGlobalSettings = {
+		"TEST_GLOBAL_KEY"
 	};
 
 	public void Awake() {
@@ -84,12 +128,12 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		Harmony.CreateAndPatchAll(typeof(ExternalPresetPatch));
 	}
 
-	void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
+	private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
 		KagHooks.SetHook(PluginName, true);
 
 		// ロード直後のシーン読み込みなら、初回セットアップを行う
-		if (bDeserialized) {
-			bDeserialized = false;
+		if (_deserialized) {
+			_deserialized = false;
 			ExSaveData.CleanupMaids();
 			CleanupExSave();
 		}
@@ -115,7 +159,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		if (SceneManager.GetActiveScene().name == "SceneEdit") {
 			if (GameMain.Instance?.CharacterMgr != null) {
 				var cm = GameMain.Instance.CharacterMgr;
-				for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
+				for (var i = 0; i < cm.GetStockMaidCount(); i++) {
 					EditSceneMaidUpdate(cm.GetStockMaid(i));
 				}
 			}
@@ -124,21 +168,21 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	[HarmonyPatch(typeof(BoneMorph), nameof(BoneMorph.Init))]
 	[HarmonyPostfix]
-	static void BoneMorph_OnInit() {
+	private static void BoneMorph_OnInit() {
 		var tag = "sintyou";
-		foreach (var boneAndPropName in boneAndPropNameList) {
-			var bname = boneAndPropName[0];
-			var key = $"min+{tag}*{bname.Replace('?', 'L')}";
+		foreach (var boneAndPropName in BoneAndPropNameList) {
+			var boneName = boneAndPropName.Key;
+			var key = $"min+{tag}*{boneName.Replace('?', 'L')}";
 			if (!BoneMorph.dic.ContainsKey(key)) {
-				PluginHelper.BoneMorphSetScale(tag, bname, 1f, 1f, 1f, 1f, 1f, 1f);
+				PluginHelper.BoneMorphSetScale(tag, boneName, 1f, 1f, 1f, 1f, 1f, 1f);
 			}
 		}
 	}
 
 	[HarmonyPatch(typeof(GameMain), nameof(GameMain.Deserialize))]
 	[HarmonyPostfix]
-	static void deserializeCallback(GameMain __instance, int f_nSaveNo) {
-		bDeserialized = true;
+	private static void GameMain_DeserializeCallback(GameMain __instance, int f_nSaveNo) {
+		_deserialized = true;
 	}
 
 	/// <summary>
@@ -149,7 +193,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// </summary>
 	[HarmonyPatch(typeof(BoneMorph_), nameof(BoneMorph_.Blend))]
 	[HarmonyPostfix]
-	static void boneMorph_BlendCallback(BoneMorph_ __instance) {
+	private static void BoneMorph_BlendCallback(BoneMorph_ __instance) {
 		var maid = PluginHelper.GetMaid(__instance);
 		if (maid == null) {
 			return;
@@ -164,7 +208,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		}
 	}
 
-	static void IKPreInit(Maid maid) {
+	private static void IKPreInit(Maid maid) {
 		var fbikc = maid.body0.IKCtrl;
 
 		var mouth = fbikc.m_Mouth;
@@ -190,8 +234,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// </summary>
 	[HarmonyPatch(typeof(TBody), nameof(TBody.MoveHeadAndEye))]
 	[HarmonyPrefix]
-	static bool tbodyMoveHeadAndEyeCallback(TBody __instance) {
-		tbodyMoveHeadAndEye.Callback(__instance);
+	private static bool TBody_MoveHeadAndEyeCallback(TBody __instance) {
+		TBodyMoveHeadAndEye.Callback(__instance);
 
 		if (__instance.boMAN || __instance.trsEyeL == null || __instance.trsEyeR == null || __instance.maid == null) {
 			return false;
@@ -217,7 +261,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// AudioSourceMgr.Play および AudioSourceMgr.PlayOneShot の処理終了後に呼ばれるコールバック。
 	/// ピッチ変更を行う
 	/// </summary>
-	static void SetAudioPitch(AudioSourceMgr audioSourceMgr) {
+	private static void SetAudioPitch(AudioSourceMgr audioSourceMgr) {
 		var maid = PluginHelper.GetMaid(audioSourceMgr);
 		if (maid == null || audioSourceMgr.audiosource == null || !audioSourceMgr.audiosource.isPlaying) {
 			return;
@@ -235,7 +279,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		if (GameMain.Instance?.CharacterMgr != null) {
 			var cm = GameMain.Instance.CharacterMgr;
-			for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
+			for (var i = 0; i < cm.GetStockMaidCount(); i++) {
 				var maid = cm.GetStockMaid(i);
 				if (maid?.body0?.bonemorph != null) {
 					//
@@ -254,10 +298,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 					}
 					if (safe) {
 						try {
-
 							// 同じ "sintyou" の値を入れて、強制的にモーフ再計算を行う
-							var SCALE_Sintyou = maid.body0.bonemorph.SCALE_Sintyou;
-							maid.body0.BoneMorph_FromProcItem("sintyou", SCALE_Sintyou);
+							var sintyouScale = maid.body0.bonemorph.SCALE_Sintyou;
+							maid.body0.BoneMorph_FromProcItem("sintyou", sintyouScale);
 
 						} catch (Exception) {
 							;
@@ -271,7 +314,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// <summary>
 	/// エディットシーン用の状態更新
 	/// </summary>
-	void EditSceneMaidUpdate(Maid maid) {
+	private void EditSceneMaidUpdate(Maid maid) {
 		if (maid == null || !maid.Visible) {
 			return;
 		}
@@ -291,17 +334,17 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// </summary>
 	[HarmonyPatch(typeof(DynamicSkirtBone), nameof(DynamicSkirtBone.UpdateSelf))]
 	[HarmonyPrefix]
-	static void DynamicSkirtBonePreUpdate(DynamicSkirtBone __instance) {
+	private static void DynamicSkirtBonePreUpdate(DynamicSkirtBone __instance, ref Vector3 __state) {
 		var targetTransform = __instance.m_trPanierParent.parent;
-		skirtScaleBackUp = targetTransform.localScale;
+		__state = targetTransform.localScale;
 		targetTransform.localScale = Vector3.one;
 	}
 
 	[HarmonyPatch(typeof(DynamicSkirtBone), nameof(DynamicSkirtBone.UpdateSelf))]
 	[HarmonyPostfix]
-	static void DynamicSkirtBonePostUpdate(DynamicSkirtBone __instance) {
+	private static void DynamicSkirtBonePostUpdate(DynamicSkirtBone __instance, Vector3 __state) {
 		var targetTransform = __instance.m_trPanierParent.parent;
-		targetTransform.localScale = skirtScaleBackUp;
+		targetTransform.localScale = __state;
 	}
 
 	/// <summary>
@@ -309,33 +352,33 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// </summary>
 	[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
 	[HarmonyPrefix]
-	static void jiggleBonePreLateUpdateSelef(jiggleBone __instance) {
-		jiggleBoneScaleBackUp = __instance.transform.localScale;
+	private static void jiggleBone_PreLateUpdateSelf(jiggleBone __instance, ref Vector3 __state) {
+		__state = __instance.transform.localScale;
 	}
-
-	static Dictionary<jiggleBone, Maid> jigBones = new();
 
 	[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
 	[HarmonyPostfix]
-	static void jiggleBonePostLateUpdateSelef(jiggleBone __instance) {
+	private static void jiggleBone_PostLateUpdateSelf(jiggleBone __instance, Vector3 __state) {
 		// 変更処理が実行されなければ終了
-		if (__instance.transform.localScale == jiggleBoneScaleBackUp) return;
+		if (__instance.transform.localScale == __state) {
+			return;
+		}
 		// jiggleBoneからMaidを取得
 		Maid maid = null;
 
-		if (jigBones.ContainsKey(__instance)) {
-			maid = jigBones[__instance];
+		if (JiggleBones.ContainsKey(__instance)) {
+			maid = JiggleBones[__instance];
 		} else {
-			var t = __instance.transform;
+			var transform = __instance.transform;
 
-			while (maid == null && t != null) {
-				maid = t.GetComponent<Maid>();
-				t = t.parent;
+			while (maid == null && transform != null) {
+				maid = transform.GetComponent<Maid>();
+				transform = transform.parent;
 			}
 
 			if (maid == null) return;
 
-			jigBones[__instance] = maid;
+			JiggleBones[__instance] = maid;
 		}
 
 		// スライダー拡張オフなら何もしない
@@ -347,13 +390,13 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		var sy = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.depth", 1f);
 		var sz = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.width", 1f);
 
-		var scl = __instance.transform.localScale;
-		__instance.transform.localScale = new(scl.x * sx, scl.y * sy, scl.z * sz);
+		var scale = __instance.transform.localScale;
+		__instance.transform.localScale = new(scale.x * sx, scale.y * sy, scale.z * sz);
 	}
 
 	[HarmonyPatch(typeof(CharacterMgr), nameof(CharacterMgr.PresetSet), typeof(Maid), typeof(CharacterMgr.Preset))]
 	[HarmonyPrefix]
-	static void CharacterMgrPresetSet(CharacterMgr __instance, Maid f_maid, CharacterMgr.Preset f_prest) {
+	private static void CharacterMgrPresetSet(CharacterMgr __instance, Maid f_maid, CharacterMgr.Preset f_prest) {
 		if (f_maid == null) {
 			return;
 		}
@@ -362,7 +405,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	[HarmonyPatch(typeof(SceneEdit), nameof(SceneEdit.SlideCallback))]
 	[HarmonyTranspiler]
-	private static IEnumerable<CodeInstruction> Patch_SceneEdit_SlideCallback(IEnumerable<CodeInstruction> instructions) {
+	private static IEnumerable<CodeInstruction> SceneEdit_SlideCallback(IEnumerable<CodeInstruction> instructions) {
 		// SceneEdit.SlideCallback の補間式を変更し、
 		// タブ等を変更してスライダーがアクティブになる度に
 		// 負の値が 0 に近づくのを抑制する
@@ -413,7 +456,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// 目を常時カメラに向ける
-	static void EyeToCam(Maid maid, TBody tbody) {
+	private static void EyeToCam(Maid maid, TBody tbody) {
 		var fEyeToCam = ExSaveData.GetFloat(maid, PluginName, "EYETOCAM", 0f);
 		if (fEyeToCam < -0.5f) {
 			tbody.boEyeToCam = false;
@@ -423,7 +466,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// 顔を常時カメラに向ける
-	static void HeadToCam(Maid maid, TBody tbody) {
+	private static void HeadToCam(Maid maid, TBody tbody) {
 		var fHeadToCam = ExSaveData.GetFloat(maid, PluginName, "HEADTOCAM", 0f);
 		if (fHeadToCam < -0.5f) {
 			tbody.boHeadToCam = false;
@@ -433,7 +476,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// まばたき制限
-	static void Mabataki(Maid maid) {
+	private static void Mabataki(Maid maid) {
 		var mabatakiVal = maid.MabatakiVal;
 		var f = Mathf.Clamp01(1f - ExSaveData.GetFloat(maid, PluginName, "MABATAKI", 1f));
 		var mMin = Mathf.Asin(f);
@@ -449,7 +492,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// 瞳サイズ変更
-	void EyeBall(Maid maid) {
+	private void EyeBall(Maid maid) {
 		var tbody = maid.body0;
 		if (tbody != null && tbody.trsEyeL != null && tbody.trsEyeR != null) {
 			var w = ExSaveData.GetFloat(maid, PluginName, "EYEBALL.width", 1f);
@@ -460,7 +503,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// 瞳の角度を目の角度に合わせて補正
-	static void RotatePupil(Maid maid, TBody tbody) {
+	private static void RotatePupil(Maid maid, TBody tbody) {
 		/*
 					//  注意：TBody.MoveHeadAndEye内で trsEye[L,R].localRotation が上書きされているため、
 					//  この値は TBody.MoveHeadAndEyeが呼ばれるたびに書き換える必要がある
@@ -472,7 +515,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// リップシンク強度指定
-	static void SetLipSyncIntensity(Maid maid, TBody tbody) {
+	private static void SetLipSyncIntensity(Maid maid, TBody tbody) {
 		if (!ExSaveData.GetBool(maid, PluginName, "LIPSYNC_INTENISTY", false)) {
 			return;
 		}
@@ -487,7 +530,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// リップシンク(口パク)抑制
-	static void DisableLipSync(Maid maid) {
+	private static void DisableLipSync(Maid maid) {
 		var bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
 		var bLipSyncOff = ExSaveData.GetBool(maid, PluginName, "LIPSYNC_OFF", false);
 		if (bLipSyncOff || bMuhyou) {
@@ -496,7 +539,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// 目と口の表情変化をやめる
-	static void DisableFaceAnime(Maid maid) {
+	private static void DisableFaceAnime(Maid maid) {
 		var bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
 		var bHyoujouOff = ExSaveData.GetBool(maid, PluginName, "HYOUJOU_OFF", false);
 		if (bHyoujouOff || bMuhyou) {
@@ -505,7 +548,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// スライダー範囲を拡大
-	static void WideSlider(Maid maid) {
+	private static void WideSlider(Maid maid) {
 		if (!ExSaveData.GetBool(maid, PluginName, "WIDESLIDER", false)) {
 			return;
 		}
@@ -515,7 +558,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		if (tbody == null || tbody.bonemorph == null || tbody.bonemorph.bones == null) {
 			return;
 		}
-		var boneMorph_ = tbody.bonemorph;
+		var boneMorph = tbody.bonemorph;
 
 		// スケール変更するボーンのリスト
 		var boneScale = new Dictionary<string, Vector3>();
@@ -551,198 +594,122 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			ExSaveData.GetFloat(maid, PluginName, "THISCL.depth", 1f),
 			ExSaveData.GetFloat(maid, PluginName, "THISCL.width", 1f));
 
-		Vector3 thiPosL;
-		Vector3 thiPosR;
 		{
 			var dx = ExSaveData.GetFloat(maid, PluginName, "THIPOS.x", 0f);
 			var dz = ExSaveData.GetFloat(maid, PluginName, "THIPOS.z", 0f);
 			var dy = 0.0f;
-			thiPosL = new(dy, dz / 1000f, -dx / 1000f);
-			thiPosR = new(dy, dz / 1000f, dx / 1000f);
+			bonePosition["Bip01 L Thigh"] = new(dy, dz / 1000f, -dx / 1000f);
+			bonePosition["Bip01 R Thigh"] = new(dy, dz / 1000f, dx / 1000f);
 		}
-		bonePosition["Bip01 L Thigh"] = thiPosL;
-		bonePosition["Bip01 R Thigh"] = thiPosR;
 
-		Vector3 thi2PosL;
-		Vector3 thi2PosR;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "THI2POS.x", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "THI2POS.z", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "THI2POS.y", 0f);
-			thi2PosL = new(dy / 1000f, dz / 1000f, -dx / 1000f);
-			thi2PosR = new(dy / 1000f, dz / 1000f, dx / 1000f);
+			var (x, y, z) = GetBonePosition(maid, "THI2POS");
+			bonePosition["Bip01 L Thigh_SCL_"] = new Vector3(y, z, -x) / 1000f;
+			bonePosition["Bip01 R Thigh_SCL_"] = new Vector3(y, z, x) / 1000f;
 		}
-		bonePosition["Bip01 L Thigh_SCL_"] = thi2PosL;
-		bonePosition["Bip01 R Thigh_SCL_"] = thi2PosR;
 
 		// 元々足の位置と連動しており、追加するときに整合性を保つため足の位置との和で計算
-		Vector3 hipPosL;
-		Vector3 hipPosR;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "HIPPOS.x", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "HIPPOS.y", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "HIPPOS.z", 0f);
-			hipPosL = new(dy / 1000f, dz / 1000f, -dx / 1000f);
-			hipPosR = new(dy / 1000f, dz / 1000f, dx / 1000f);
+			var (x, y, z) = GetBonePosition(maid, "HIPPOS");
+			bonePosition["Hip_L"] = new Vector3(y, z, -x) / 1000f;
+			bonePosition["Hip_R"] = new Vector3(y, z, x) / 1000f;
 		}
-		bonePosition["Hip_L"] = thiPosL + hipPosL;
-		bonePosition["Hip_R"] = thiPosR + hipPosR;
 
-		Vector3 mtwPosL;
-		Vector3 mtwPosR;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "MTWPOS.x", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "MTWPOS.y", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "MTWPOS.z", 0f);
-			mtwPosL = new(dx / 10f, dy / 10f, dz / 10f);
-			mtwPosR = new(dx / 10f, dy / 10f, -dz / 10f);
+			var (x, y, z) = GetBonePosition(maid, "MTWPOS");
+			bonePosition["momotwist_L"] = new Vector3(x, y, z) / 10f;
+			bonePosition["momotwist_R"] = new Vector3(x, y, -z) / 10f;
 		}
-		bonePosition["momotwist_L"] = mtwPosL;
-		bonePosition["momotwist_R"] = mtwPosR;
 
-		Vector3 mmnPosL;
-		Vector3 mmnPosR;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "MMNPOS.x", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "MMNPOS.y", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "MMNPOS.z", 0f);
-			mmnPosL = new(dx / 10f, dy / 10f, dz / 10f);
-			mmnPosR = new(dx / 10f, -dy / 10f, dz / 10f);
+			var (x, y, z) = GetBonePosition(maid, "MMNPOS");
+			bonePosition["momoniku_L"] = new Vector3(x, y, z) / 10f;
+			bonePosition["momoniku_R"] = new Vector3(x, -y, z) / 10f;
 		}
-		bonePosition["momoniku_L"] = mmnPosL;
-		bonePosition["momoniku_R"] = mmnPosR;
 
-		Vector3 skirtPos;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "SKTPOS.x", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "SKTPOS.y", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "SKTPOS.z", 0f);
-			skirtPos = new(-dz / 10f, -dy / 10f, dx / 10f);
+			var (x, y, z) = GetBonePosition(maid, "SKTPOS");
+			bonePosition["Skirt"] = new Vector3(-z, -y, x) / 10f;
 		}
-		bonePosition["Skirt"] = skirtPos;
 
-		Vector3 spinePos;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "SPIPOS.x", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "SPIPOS.y", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "SPIPOS.z", 0f);
-			spinePos = new(-dx / 10f, dy / 10f, dz / 10f);
+			var (x, y, z) = GetBonePosition(maid, "SPIPOS");
+			bonePosition["Bip01 Spine"] = new Vector3(-x, y, z) / 10f;
 		}
-		bonePosition["Bip01 Spine"] = spinePos;
 
-		Vector3 spine0aPos;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "S0APOS.x", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "S0APOS.y", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "S0APOS.z", 0f);
-			spine0aPos = new(-dx / 10f, dy / 10f, dz / 10f);
+			var (x, y, z) = GetBonePosition(maid, "S0APOS");
+			bonePosition["Bip01 Spine0a"] = new Vector3(-x, y, z) / 10f;
 		}
-		bonePosition["Bip01 Spine0a"] = spine0aPos;
 
-		Vector3 spine1Pos;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "S1POS.x", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "S1POS.y", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "S1POS.z", 0f);
-			spine1Pos = new(-dx / 10f, dy / 10f, dz / 10f);
+			var (x, y, z) = GetBonePosition(maid, "S1POS");
+			bonePosition["Bip01 Spine1"] = new Vector3(-x, y, z) / 10f;
 		}
-		bonePosition["Bip01 Spine1"] = spine1Pos;
 
-		Vector3 spine1aPos;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "S1APOS.x", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "S1APOS.y", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "S1APOS.z", 0f);
-			spine1aPos = new(-dx / 10f, dy / 10f, dz / 10f);
+			var (x, y, z) = GetBonePosition(maid, "S1APOS");
+			bonePosition["Bip01 Spine1a"] = new Vector3(-x, y, z) / 10f;
 		}
-		bonePosition["Bip01 Spine1a"] = spine1aPos;
 
-		Vector3 neckPos;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "NECKPOS.x", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "NECKPOS.y", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "NECKPOS.z", 0f);
-			neckPos = new(-dx / 10f, dy / 10f, dz / 10f);
+			var (x, y, z) = GetBonePosition(maid, "NECKPOS");
+			bonePosition["Bip01 Neck"] = new Vector3(-x, y, z) / 10f;
 		}
-		bonePosition["Bip01 Neck"] = neckPos;
 
-		Vector3 clvPosL;
-		Vector3 clvPosR;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "CLVPOS.x", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "CLVPOS.z", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "CLVPOS.y", 0f);
-			clvPosL = new(-dx / 10f, dy / 10f, dz / 10f);
-			clvPosR = new(-dx / 10f, dy / 10f, -dz / 10f);
+			var (x, y, z) = GetBonePosition(maid, "CLVPOS");
+			bonePosition["Bip01 L Clavicle"] = new Vector3(-x, y, z) / 10f;
+			bonePosition["Bip01 R Clavicle"] = new Vector3(-x, y, -z) / 10f;
 		}
-		bonePosition["Bip01 L Clavicle"] = clvPosL;
-		bonePosition["Bip01 R Clavicle"] = clvPosR;
 
-		Vector3 muneSubPosL;
-		Vector3 muneSubPosR;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "MUNESUBPOS.x", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "MUNESUBPOS.z", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "MUNESUBPOS.y", 0f);
-			muneSubPosL = new(-dy / 10f, dz / 10f, -dx / 10f);
-			muneSubPosR = new(-dy / 10f, -dz / 10f, -dx / 10f);
+			var (x, y, z) = GetBonePosition(maid, "MUNESUBPOS");
+			bonePosition["Mune_L_sub"] = new Vector3(-y, z, -x) / 10f;
+			bonePosition["Mune_R_sub"] = new Vector3(-y, -z, -x) / 10f;
 		}
-		bonePosition["Mune_L_sub"] = muneSubPosL;
-		bonePosition["Mune_R_sub"] = muneSubPosR;
 
-		Vector3 munePosL;
-		Vector3 munePosR;
 		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "MUNEPOS.x", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "MUNEPOS.z", 0f);
-			var dy = ExSaveData.GetFloat(maid, PluginName, "MUNEPOS.y", 0f);
-			munePosL = new(dz / 10f, -dy / 10f, dx / 10f);
-			munePosR = new(dz / 10f, -dy / 10f, -dx / 10f);
+			var (x, y, z) = GetBonePosition(maid, "MUNEPOS");
+			bonePosition["Mune_L"] = new Vector3(z, -y, x) / 10f;
+			bonePosition["Mune_R"] = new Vector3(z, -y, -x) / 10f;
 		}
-		bonePosition["Mune_L"] = munePosL;
-		bonePosition["Mune_R"] = munePosR;
 
 		// スケール変更するボーンをリストに一括登録
-		SetBoneScaleFromList(boneScale, maid, boneAndPropNameList);
+		SetBoneScales(boneScale, maid);
 
 		// 元々尻はPELSCLに連動していたが単体でも設定できるようにする
 		// ただし元との整合性をとるため乗算する
-		var pelScl = new Vector3(
-			ExSaveData.GetFloat(maid, PluginName, "PELSCL.height", 1f),
-			ExSaveData.GetFloat(maid, PluginName, "PELSCL.depth", 1f),
-			ExSaveData.GetFloat(maid, PluginName, "PELSCL.width", 1f));
-		var hipScl = new Vector3(
-			ExSaveData.GetFloat(maid, PluginName, "HIPSCL.height", 1f) * pelScl.x,
-			ExSaveData.GetFloat(maid, PluginName, "HIPSCL.depth", 1f) * pelScl.y,
-			ExSaveData.GetFloat(maid, PluginName, "HIPSCL.width", 1f) * pelScl.z);
-		boneScale["Hip_L"] = hipScl;
-		boneScale["Hip_R"] = hipScl;
+		var pelScale = GetBoneScale(maid, "PELSCL");
+		var hipScale = GetBoneScale(maid, "HIPSCL");
+		hipScale = new(hipScale.x * pelScale.x, hipScale.y * pelScale.y, hipScale.z * pelScale.z);
+		boneScale["Hip_L"] = hipScale;
+		boneScale["Hip_R"] = hipScale;
 
 		Transform tEyePosL = null;
 		Transform tEyePosR = null;
 
 		var sliderScale = 20f;
-		for (var i = boneMorph_.bones.Count - 1; i >= 0; i--) {
-			var boneMorphLocal = boneMorph_.bones[i];
-			var scl = new Vector3(1f, 1f, 1f);
-			var pos = boneMorphLocal.pos;
+		for (var i = boneMorph.bones.Count - 1; i >= 0; i--) {
+			var boneMorphLocal = boneMorph.bones[i];
+			var scale = new Vector3(1f, 1f, 1f);
+			var position = boneMorphLocal.pos;
 			//for (int j = 0; j < (int)PropNames.Length; j++)
 			for (var j = 0; j < BoneMorph.PropNames.Length; j++) {
-				var s = 1f;
-				s = j switch {
-					0 => boneMorph_.SCALE_Kubi,
-					1 => boneMorph_.SCALE_Ude,
-					2 => boneMorph_.SCALE_EyeX,
-					3 => boneMorph_.SCALE_EyeY,
-					4 => boneMorph_.Postion_EyeX * (0.5f + boneMorph_.Postion_EyeY * 0.5f),
-					5 => boneMorph_.Postion_EyeY,
-					6 => boneMorph_.SCALE_HeadX,
-					7 => boneMorph_.SCALE_HeadY,
-					8 => boneMorph_.SCALE_DouPer,
-					9 => boneMorph_.SCALE_Sintyou,
-					10 => boneMorph_.SCALE_Koshi,
-					11 => boneMorph_.SCALE_Kata,
-					12 => boneMorph_.SCALE_West,
+				var s = j switch {
+					0 => boneMorph.SCALE_Kubi,
+					1 => boneMorph.SCALE_Ude,
+					2 => boneMorph.SCALE_EyeX,
+					3 => boneMorph.SCALE_EyeY,
+					4 => boneMorph.Postion_EyeX * (0.5f + boneMorph.Postion_EyeY * 0.5f),
+					5 => boneMorph.Postion_EyeY,
+					6 => boneMorph.SCALE_HeadX,
+					7 => boneMorph.SCALE_HeadY,
+					8 => boneMorph.SCALE_DouPer,
+					9 => boneMorph.SCALE_Sintyou,
+					10 => boneMorph.SCALE_Koshi,
+					11 => boneMorph.SCALE_Kata,
+					12 => boneMorph.SCALE_West,
 					_ => 1f,
 				};
 
@@ -757,7 +724,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 					var n0 = v0 * sliderScale - v1 * (sliderScale - 1f);
 					var n1 = v1 * sliderScale - v0 * (sliderScale - 1f);
 					var f = (s + sliderScale - 1f) * (1f / (sliderScale * 2.0f - 1f));
-					scl = Vector3.Scale(scl, Vector3.Lerp(n0, n1, f));
+					scale = Vector3.Scale(scale, Vector3.Lerp(n0, n1, f));
 				}
 
 				if ((boneMorphLocal.atr & 1L << (j + 32 & 63)) != 0L) {
@@ -767,7 +734,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 					var n0 = v0 * sliderScale - v1 * (sliderScale - 1f);
 					var n1 = v1 * sliderScale - v0 * (sliderScale - 1f);
 					var f = (s + sliderScale - 1f) * (1f / (sliderScale * 2.0f - 1f));
-					pos = Vector3.Scale(pos, Vector3.Lerp(n0, n1, f));
+					position = Vector3.Scale(position, Vector3.Lerp(n0, n1, f));
 				}
 			}
 
@@ -779,17 +746,17 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			var name = linkT.name;
 
 			if (name != null && name.Contains("Thigh_SCL_")) {
-				boneMorph_.SnityouOutScale = Mathf.Pow(scl.x, 0.9f);
+				boneMorph.SnityouOutScale = Mathf.Pow(scale.x, 0.9f);
 			}
 
 			// リストに登録されているボーンのスケール設定
 			if (name != null && boneScale.ContainsKey(name)) {
-				scl = Vector3.Scale(scl, boneScale[name]);
+				scale = Vector3.Scale(scale, boneScale[name]);
 			}
 
 			// リストに登録されているボーンのポジション設定
 			if (name != null && bonePosition.ContainsKey(name)) {
-				pos += bonePosition[name];
+				position += bonePosition[name];
 			}
 
 			var muneLParent = tbody.m_trHitParentL;
@@ -808,9 +775,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			// ignoreHeadBonesに登録されている場合はヒラエルキーを辿って頭のツリーを無視
 			if (name != null) {
 				if (!(ignoreHeadBones.Contains(name) && CMT.SearchObjObj(maid.body0.m_Bones.transform.Find("Bip01"), linkT))) {
-					linkT.localScale = scl;
+					linkT.localScale = scale;
 				}
-				linkT.localPosition = pos;
+				linkT.localPosition = position;
 			}
 
 			if (name != null) {
@@ -850,65 +817,65 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		// COM3D2追加処理
 		// ボーンポジション系
-		foreach (var boneMorphPos in boneMorph_.m_listBoneMorphPos) {
-			var strPropName = boneMorphPos.strPropName;
-			var trs = boneMorphPos.trBone;
-			var defPos = boneMorphPos.m_vDefPos;
-			var addMin = boneMorphPos.m_vAddMin;
-			var addMax = boneMorphPos.m_vAddMax;
+		foreach (var boneMorphPosition in boneMorph.m_listBoneMorphPos) {
+			var propName = boneMorphPosition.strPropName;
+			var transform = boneMorphPosition.trBone;
+			var defPosition = boneMorphPosition.m_vDefPos;
+			var addMin = boneMorphPosition.m_vAddMin;
+			var addMax = boneMorphPosition.m_vAddMax;
 
-			if (strPropName == "Nosepos")
-				trs.localPosition = Lerp(addMin, defPos, addMax, boneMorph_.POS_Nose, sliderScale);
-			else if (strPropName == "MayuY") {
-				trs.localPosition = Lerp(addMin, defPos, addMax, boneMorph_.POS_MayuY, sliderScale);
-			} else if (strPropName == "EyeBallPosYL" || strPropName == "EyeBallPosYR") {
-				trs.localPosition = Lerp(addMin, defPos, addMax, boneMorph_.EyeBallPosY, sliderScale);
-			} else if (strPropName == "Mayupos_L" || strPropName == "Mayupos_R") {
-				var vector3_1 = Lerp(addMin, defPos, addMax, boneMorph_.POS_MayuY, sliderScale);
+			if (propName == "Nosepos")
+				transform.localPosition = Lerp(addMin, defPosition, addMax, boneMorph.POS_Nose, sliderScale);
+			else if (propName == "MayuY") {
+				transform.localPosition = Lerp(addMin, defPosition, addMax, boneMorph.POS_MayuY, sliderScale);
+			} else if (propName == "EyeBallPosYL" || propName == "EyeBallPosYR") {
+				transform.localPosition = Lerp(addMin, defPosition, addMax, boneMorph.EyeBallPosY, sliderScale);
+			} else if (propName == "Mayupos_L" || propName == "Mayupos_R") {
+				var vector3_1 = Lerp(addMin, defPosition, addMax, boneMorph.POS_MayuY, sliderScale);
 				var x1 = addMin.x;
 				addMin.x = addMax.x;
 				addMax.x = x1;
-				var vector3_2 = Lerp(addMin, defPos, addMax, boneMorph_.POS_MayuX, sliderScale);
-				var x3 = vector3_2.x + vector3_1.x - defPos.x;
-				trs.localPosition = new(x3, vector3_1.y, vector3_2.z);
+				var vector3_2 = Lerp(addMin, defPosition, addMax, boneMorph.POS_MayuX, sliderScale);
+				var x3 = vector3_2.x + vector3_1.x - defPosition.x;
+				transform.localPosition = new(x3, vector3_1.y, vector3_2.z);
 			}
 		}
 
 		// ボーンスケール系
-		foreach (var boneMorphScl in boneMorph_.m_listBoneMorphScl) {
-			var strPropName = boneMorphScl.strPropName;
-			var trs = boneMorphScl.trBone;
-			var defScl = boneMorphScl.m_vDefScl;
-			var addMin = boneMorphScl.m_vAddMin;
-			var addMax = boneMorphScl.m_vAddMax;
+		foreach (var boneMorphScale in boneMorph.m_listBoneMorphScl) {
+			var propName = boneMorphScale.strPropName;
+			var transform = boneMorphScale.trBone;
+			var defScale = boneMorphScale.m_vDefScl;
+			var addMin = boneMorphScale.m_vAddMin;
+			var addMax = boneMorphScale.m_vAddMax;
 
-			if (strPropName == "Earscl_L" || strPropName == "Earscl_R") {
-				trs.localScale = Lerp(addMin, defScl, addMax, boneMorph_.SCALE_Ear, sliderScale);
-			} else if (strPropName == "Nosescl") {
-				trs.localScale = Lerp(addMin, defScl, addMax, boneMorph_.SCALE_Nose, sliderScale);
-			} else if (strPropName == "EyeBallSclXL" || strPropName == "EyeBallSclXR") {
-				var localScale = trs.localScale;
-				localScale.z = Lerp(addMin, defScl, addMax, boneMorph_.EyeBallSclX, sliderScale).z;
-				trs.localScale = localScale;
-			} else if (strPropName == "EyeBallSclYL" || strPropName == "EyeBallSclYR") {
-				var localScale = trs.localScale;
-				localScale.y = Lerp(addMin, defScl, addMax, boneMorph_.EyeBallSclY, sliderScale).y;
-				trs.localScale = localScale;
+			if (propName == "Earscl_L" || propName == "Earscl_R") {
+				transform.localScale = Lerp(addMin, defScale, addMax, boneMorph.SCALE_Ear, sliderScale);
+			} else if (propName == "Nosescl") {
+				transform.localScale = Lerp(addMin, defScale, addMax, boneMorph.SCALE_Nose, sliderScale);
+			} else if (propName == "EyeBallSclXL" || propName == "EyeBallSclXR") {
+				var localScale = transform.localScale;
+				localScale.z = Lerp(addMin, defScale, addMax, boneMorph.EyeBallSclX, sliderScale).z;
+				transform.localScale = localScale;
+			} else if (propName == "EyeBallSclYL" || propName == "EyeBallSclYR") {
+				var localScale = transform.localScale;
+				localScale.y = Lerp(addMin, defScale, addMax, boneMorph.EyeBallSclY, sliderScale).y;
+				transform.localScale = localScale;
 			}
 		}
 
 		// ボーンローテーション系
-		foreach (var boneMorphRot in boneMorph_.m_listBoneMorphRot) {
-			var strPropName = boneMorphRot.strPropName;
-			var trs = boneMorphRot.trBone;
-			var defRot = boneMorphRot.m_vDefRotate;
-			var addMin = boneMorphRot.m_vAddMin;
-			var addMax = boneMorphRot.m_vAddMax;
+		foreach (var boneMorphRotation in boneMorph.m_listBoneMorphRot) {
+			var propName = boneMorphRotation.strPropName;
+			var transform = boneMorphRotation.trBone;
+			var defRotation = boneMorphRotation.m_vDefRotate;
+			var addMin = boneMorphRotation.m_vAddMin;
+			var addMax = boneMorphRotation.m_vAddMax;
 
-			if (strPropName == "Earrot_L" || strPropName == "Earrot_R") {
-				trs.localRotation = RotLerp(addMin, defRot, addMax, boneMorph_.ROT_Ear, sliderScale);
-			} else if (strPropName == "Mayurot_L" || strPropName == "Mayurot_R") {
-				trs.localRotation = RotLerp(addMin, defRot, addMax, boneMorph_.ROT_Mayu, sliderScale);
+			if (propName == "Earrot_L" || propName == "Earrot_R") {
+				transform.localRotation = RotLerp(addMin, defRotation, addMax, boneMorph.ROT_Ear, sliderScale);
+			} else if (propName == "Mayurot_L" || propName == "Mayurot_R") {
+				transform.localRotation = RotLerp(addMin, defRotation, addMax, boneMorph.ROT_Mayu, sliderScale);
 			}
 		}
 	}
@@ -934,100 +901,66 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	}
 
-	private static void SetBoneScaleFromList(Dictionary<string, Vector3> dictionary, Maid maid, string[][] _boneAndPropNameList) {
-		foreach (var item in _boneAndPropNameList) {
-			if (item[0].Contains("?")) {
-				var boneNameL = item[0].Replace('?', 'L');
-				var boneNameR = item[0].Replace('?', 'R');
-				SetBoneScale(dictionary, boneNameL, maid, item[1]);
+	private static Vector3 GetBoneScale(Maid maid, string propName) {
+		var x = ExSaveData.GetFloat(maid, PluginName, propName + ".height", 1f);
+		var y = ExSaveData.GetFloat(maid, PluginName, propName + ".depth", 1f);
+		var z = ExSaveData.GetFloat(maid, PluginName, propName + ".width", 1f);
+		return new(x, y, z);
+	}
+
+	private static Vector3 GetBonePosition(Maid maid, string propName) {
+		var x = ExSaveData.GetFloat(maid, PluginName, propName + ".x", 0f);
+		var y = ExSaveData.GetFloat(maid, PluginName, propName + ".y", 0f);
+		var z = ExSaveData.GetFloat(maid, PluginName, propName + ".z", 0f);
+		return new(x, y, z);
+	}
+
+	private static void SetBoneScales(Dictionary<string, Vector3> dictionary, Maid maid) {
+		foreach (var item in BoneAndPropNameList) {
+			var boneName = item.Key;
+			if (boneName.Contains("?")) {
+				var boneNameL = boneName.Replace('?', 'L');
+				var boneNameR = boneName.Replace('?', 'R');
+				dictionary[boneNameL] = GetBoneScale(maid, item.Value);
 				dictionary[boneNameR] = dictionary[boneNameL];
 			} else {
-				SetBoneScale(dictionary, item[0], maid, item[1]);
+				dictionary[boneName] = GetBoneScale(maid, item.Value);
 			}
 		}
 	}
 
-	static void SetBoneScale(Dictionary<string, Vector3> dictionary, string boneName, Maid maid, string propName) {
-		dictionary[boneName] = new(
-			ExSaveData.GetFloat(maid, PluginName, propName + ".height", 1f),
-			ExSaveData.GetFloat(maid, PluginName, propName + ".depth", 1f),
-			ExSaveData.GetFloat(maid, PluginName, propName + ".width", 1f));
-	}
-
-	private string getHiraerchy(Transform t) {
-		if (!t) {
+	private string GetHierarchy(Transform transform) {
+		if (!transform) {
 			return string.Empty;
 		}
-		var hiraerchy = "/" + t.name;
-		while (t.parent) {
-			t = t.parent;
-			hiraerchy = "/" + t.name + hiraerchy;
+		var hierarchy = "/" + transform.name;
+		while (transform.parent) {
+			transform = transform.parent;
+			hierarchy = "/" + transform.name + hierarchy;
 		}
 
-		return hiraerchy;
+		return hierarchy;
 	}
 
 	// 動作していない古い設定を削除する
-	static void CleanupExSave() {
-		string[] obsoleteSettings = {
-			"WIDESLIDER.enable",
-			"PROPSET_OFF.enable",
-			"LIPSYNC_OFF.enable",
-
-			"HYOUJOU_OFF.enable",
-			"EYETOCAMERA_OFF.enable",
-			"MUHYOU.enable",
-
-			"FARMFIX.enable",
-			"EYEBALL.enable",
-			"EYE_ANG.enable",
-
-			"PELSCL.enable",
-			"SKTSCL.enable",
-			"THISCL.enable",
-			"THIPOS.enable",
-
-			"PELVIS.enable",
-			"FARMFIX.enable",
-			"SPISCL.enable",
-
-			"S0ASCL.enable",
-			"S1_SCL.enable",
-			"S1ASCL.enable",
-
-			"FACE_OFF.enable",
-			"FACEBLEND_OFF.enable",
-
-			// 以下0.2.4で廃止
-			"FACE_ANIME_SPEED",
-			"MABATAKI_SPEED",
-
-			"PELVIS",
-			"PELVIS.x",
-			"PELVIS.y",
-			"PELVIS.z",
-		};
-
+	private static void CleanupExSave() {
 		var cm = GameMain.Instance.CharacterMgr;
-		for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
+		for (var i = 0; i < cm.GetStockMaidCount(); i++) {
 			var maid = cm.GetStockMaid(i);
-			foreach (var s in obsoleteSettings) {
-				ExSaveData.Remove(maid, PluginName, s);
+			foreach (var setting in ObsoleteSettings) {
+				ExSaveData.Remove(maid, PluginName, setting);
 			}
 
 			{
-				var fname = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", null);
-				if (string.IsNullOrEmpty(fname)) {
-					ExSaveData.Set(maid, PluginName, "SLIDER_TEMPLATE", "MaidVoicePitchSlider.xml", true);
+				var fileName = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", null);
+				if (string.IsNullOrEmpty(fileName)) {
+					ExSaveData.Set(maid, PluginName, "SLIDER_TEMPLATE", DefaultTemplateFile, true);
 				}
 			}
 		}
 
-		string[] obsoleteGlobalSettings = {
-			"TEST_GLOBAL_KEY"
-		};
-		foreach (var s in obsoleteGlobalSettings) {
-			ExSaveData.GlobalRemove(PluginName, s);
+		foreach (var setting in ObsoleteGlobalSettings) {
+			ExSaveData.GlobalRemove(PluginName, setting);
 		}
 	}
 }

@@ -1,16 +1,14 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using BepInEx;
 using CM3D2.ExternalSaveData.Managed;
+using CM3D2.MaidVoicePitch.Plugin;
 
 internal static class SliderTemplates {
-	class Cache : TemplateFiles<SliderTemplate> { }
-	static Cache sliderTemplates = new();
+	private static readonly Cache SliderTemplateCache = new();
 
 	public static void Clear() {
-		sliderTemplates.Clear();
+		SliderTemplateCache.Clear();
 	}
 
 	public static void Update(string PluginName) {
@@ -19,20 +17,20 @@ internal static class SliderTemplates {
 			return;
 		}
 		var cm = GameMain.Instance.CharacterMgr;
-		for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
-			Maid maid = cm.GetStockMaid(i);
+		for (var i = 0; i < cm.GetStockMaidCount(); i++) {
+			var maid = cm.GetStockMaid(i);
 			Update(maid, PluginName);
 		}
 	}
 
-	static public void Update(Maid maid, string PluginName) {
+	public static void Update(Maid maid, string pluginName) {
 		if (!maid.Visible) {
 			return;
 		}
-		var fname = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", "MaidVoicePitchSlider.xml");
-		fname = Path.Combine(Paths.ConfigPath, fname);
-		PathCheck(maid, PluginName, fname);
-		var sliderTemplate = sliderTemplates.Get(fname);
+		var fileName = ExSaveData.Get(maid, pluginName, "SLIDER_TEMPLATE", MaidVoicePitch.DefaultTemplateFile);
+		fileName = Path.Combine(Paths.ConfigPath, fileName);
+		PathCheck(maid, pluginName, fileName);
+		var sliderTemplate = SliderTemplateCache.Get(fileName);
 		var guid = maid.status.guid;
 		if (sliderTemplate != null && !sliderTemplate.LoadedMaidGuids.Contains(guid)) {
 			sliderTemplate.WriteProps(maid);
@@ -40,17 +38,19 @@ internal static class SliderTemplates {
 		}
 	}
 
-	static void PathCheck(Maid maid, string PluginName, string fname) {
-		if (!File.Exists(fname)) {
-			fname = "MaidVoicePitchSlider.xml";
-			ExSaveData.Set(maid, PluginName, "SLIDER_TEMPLATE", fname);
+	private static void PathCheck(Maid maid, string pluginName, string fileName) {
+		if (!File.Exists(fileName)) {
+			fileName = MaidVoicePitch.DefaultTemplateFile;
+			ExSaveData.Set(maid, pluginName, "SLIDER_TEMPLATE", fileName);
 		}
 	}
 
+	class Cache : TemplateFiles<SliderTemplate> { }
+
 	class SliderTemplate : ITemplateFile {
 		public class Slider {
-			public float min;
-			public float max;
+			public float Min { get; set; }
+			public float Max { get; set; }
 		}
 
 		public Dictionary<string, Slider> Sliders { get; set; }
@@ -64,30 +64,30 @@ internal static class SliderTemplates {
 			Sliders = new();
 		}
 
-		public bool Load(string fname) {
+		public bool Load(string fileName) {
 			var result = false;
 			Clear();
-			var xd = new XmlDocument();
+			var document = new XmlDocument();
 			try {
-				if (File.Exists(fname)) {
+				if (File.Exists(fileName)) {
 #if DEBUG
-					Helper.Log("SliderTemplates.SliderTemplate.Load({0})", fname);
+					Helper.Log($"SliderTemplates.SliderTemplate.Load({fileName})");
 #endif
-					xd.Load(fname);
-					foreach (XmlNode e in xd.SelectNodes("/slidertemplate/sliders/slider")) {
-						Sliders[e.Attributes["name"].Value] = new() {
-							min = Helper.StringToFloat(e.Attributes["min"].Value, 0f),
-							max = Helper.StringToFloat(e.Attributes["max"].Value, 100f)
+					document.Load(fileName);
+					foreach (XmlNode node in document.SelectNodes("/slidertemplate/sliders/slider")) {
+						Sliders[node.Attributes["name"].Value] = new() {
+							Min = Helper.StringToFloat(node.Attributes["min"].Value, 0f),
+							Max = Helper.StringToFloat(node.Attributes["max"].Value, 100f)
 						};
 #if DEBUG
 						{
-							var name = e.Attributes["name"].Value;
-							var s = Sliders[name];
-							Helper.Log("  {0} .min={1:F6}, .max={2:F6}", name, s.min, s.max);
+							var name = node.Attributes["name"].Value;
+							var slider = Sliders[name];
+							Helper.Log($"  {name} .min={slider.Min:F6}, .max={slider.Max:F6}");
 						}
 #endif
 					}
-					// Helper.Log("SliderTemplates.SliderTemplate.Load({0}) -> ok", fname);
+					// Helper.Log($"SliderTemplates.SliderTemplate.Load({fileName}) -> ok");
 					result = true;
 				}
 			} catch (Exception e) {
@@ -103,8 +103,8 @@ internal static class SliderTemplates {
 				var mpn = Helper.ToEnum(name, MPN.null_mpn);
 				if (mpn != MPN.null_mpn) {
 					var maidProp = maid.GetProp(mpn);
-					maidProp.min = (int)slider.min;
-					maidProp.max = (int)slider.max;
+					maidProp.min = (int)slider.Min;
+					maidProp.max = (int)slider.Max;
 				}
 			}
 		}

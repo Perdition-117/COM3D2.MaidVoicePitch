@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 internal static class PluginHelper {
@@ -40,7 +38,7 @@ internal static class PluginHelper {
 			return null;
 		}
 		var cm = GameMain.Instance.CharacterMgr;
-		for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
+		for (var i = 0; i < cm.GetStockMaidCount(); i++) {
 			var maid = cm.GetStockMaid(i);
 			if (maid.AudioMan == null) {
 				continue;
@@ -58,7 +56,7 @@ internal static class PluginHelper {
 			return null;
 		}
 		var cm = GameMain.Instance.CharacterMgr;
-		for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
+		for (var i = 0; i < cm.GetStockMaidCount(); i++) {
 			var maid = cm.GetStockMaid(i);
 			if (maid.body0 == null || maid.body0.bonemorph == null) {
 				continue;

@@ -1,48 +1,47 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using BepInEx;
 using CM3D2.ExternalSaveData.Managed;
 
 internal static class FaceScriptTemplates {
-	class Cache : TemplateFiles<TemplateFile> { }
-	static Cache faceScriptTemplates = new();
+	private static readonly Cache FaceScriptTemplateCache = new();
 
 	public static void Clear() {
-		faceScriptTemplates.Clear();
+		FaceScriptTemplateCache.Clear();
 	}
 
-	public static string ProcFaceName(Maid maid, string PluginName, string faceName) {
-		var t = Get(maid, PluginName);
+	public static string ProcFaceName(Maid maid, string pluginName, string faceName) {
+		var t = Get(maid, pluginName);
 		if (t == null) {
-			// Helper.Log("FaceScriptTemplates.ProcFaceName({0},{1},{2}) -> null", maid, PluginName, faceName);
+			// Helper.Log($"FaceScriptTemplates.ProcFaceName({maid},{pluginName},{faceName}) -> null");
 			return faceName;
 		}
 		return t.ProcFaceName(faceName);
 	}
 
-	public static string ProcFaceBlendName(Maid maid, string PluginName, string faceBlendName) {
-		var t = Get(maid, PluginName);
+	public static string ProcFaceBlendName(Maid maid, string pluginName, string faceBlendName) {
+		var t = Get(maid, pluginName);
 		if (t == null) {
-			// Helper.Log("FaceScriptTemplates.ProcFaceBlendName({0},{1},{2}) -> null", maid, PluginName, faceBlendName);
+			// Helper.Log($"FaceScriptTemplates.ProcFaceBlendName({maid},{pluginName},{faceBlendName}) -> null");
 			return faceBlendName;
 		}
 		return t.ProcFaceBlendName(faceBlendName);
 	}
 
-	static TemplateFile Get(Maid maid, string PluginName) {
-		return Get(ExSaveData.Get(maid, PluginName, "FACE_SCRIPT_TEMPLATE", null));
+	private static TemplateFile Get(Maid maid, string pluginName) {
+		return Get(ExSaveData.Get(maid, pluginName, "FACE_SCRIPT_TEMPLATE", null));
 	}
 
-	static TemplateFile Get(string fname) {
-		if (fname != null) {
-			fname = Path.Combine(Paths.ConfigPath, fname);
+	private static TemplateFile Get(string fileName) {
+		if (fileName != null) {
+			fileName = Path.Combine(Paths.ConfigPath, fileName);
 		}
-		var t = faceScriptTemplates.Get(fname);
-		// Helper.Log("FaceScriptTemplates.Get({0}) -> {1}", fname, t);
+		var t = FaceScriptTemplateCache.Get(fileName);
+		// Helper.Log($"FaceScriptTemplates.Get({fileName}) -> {t}");
 		return t;
 	}
+
+	class Cache : TemplateFiles<TemplateFile> { }
 
 	class TemplateFile : ITemplateFile {
 		public Dictionary<string, string> FaceBlends { get; set; }
@@ -57,20 +56,20 @@ internal static class FaceScriptTemplates {
 			Faces = new();
 		}
 
-		public bool Load(string fname) {
+		public bool Load(string fileName) {
 			var result = false;
 			Clear();
-			var xd = new XmlDocument();
+			var document = new XmlDocument();
 			try {
-				if (File.Exists(fname)) {
-					xd.Load(fname);
-					foreach (XmlNode e in xd.SelectNodes("/facescripttemplate/faceblends/faceblend")) {
-						FaceBlends[e.Attributes["key"].Value] = e.Attributes["value"].Value;
+				if (File.Exists(fileName)) {
+					document.Load(fileName);
+					foreach (XmlNode node in document.SelectNodes("/facescripttemplate/faceblends/faceblend")) {
+						FaceBlends[node.Attributes["key"].Value] = node.Attributes["value"].Value;
 					}
-					foreach (XmlNode e in xd.SelectNodes("/facescripttemplate/faces/face")) {
-						Faces[e.Attributes["key"].Value] = e.Attributes["value"].Value;
+					foreach (XmlNode node in document.SelectNodes("/facescripttemplate/faces/face")) {
+						Faces[node.Attributes["key"].Value] = node.Attributes["value"].Value;
 					}
-					// Helper.Log("FaceScriptTemplates.TemplateFile({0}) -> ok", fname);
+					// Helper.Log($"FaceScriptTemplates.TemplateFile({fileName}) -> ok");
 					result = true;
 				}
 			} catch (Exception e) {
@@ -80,20 +79,20 @@ internal static class FaceScriptTemplates {
 		}
 
 		public string ProcFaceName(string faceName) {
-			if (Faces.TryGetValue(faceName, out string s)) {
-				// Helper.Log("FaceScriptTemplates.TemplateFile.ProcFaceName({0}) -> {1}", faceName, s);
+			if (Faces.TryGetValue(faceName, out var s)) {
+				// Helper.Log($"FaceScriptTemplates.TemplateFile.ProcFaceName({faceName}) -> {s}");
 				return s;
 			}
-			// Helper.Log("FaceScriptTemplates.TemplateFile.ProcFaceName({0}) -> fail", faceName);
+			// Helper.Log($"FaceScriptTemplates.TemplateFile.ProcFaceName({faceName}) -> fail");
 			return faceName;
 		}
 
 		public string ProcFaceBlendName(string faceBlendName) {
-			if (FaceBlends.TryGetValue(faceBlendName, out string s)) {
-				// Helper.Log("FaceScriptTemplates.TemplateFile.ProcFaceBlendName({0}) -> {1}", faceBlendName, s);
+			if (FaceBlends.TryGetValue(faceBlendName, out var s)) {
+				// Helper.Log($"FaceScriptTemplates.TemplateFile.ProcFaceBlendName({faceBlendName}) -> {s}");
 				return s;
 			}
-			// Helper.Log("FaceScriptTemplates.TemplateFile.ProcFaceBlendName({0}) -> fail", faceBlendName);
+			// Helper.Log($"FaceScriptTemplates.TemplateFile.ProcFaceBlendName({faceBlendName}) -> fail");
 			return faceBlendName;
 		}
 	}
