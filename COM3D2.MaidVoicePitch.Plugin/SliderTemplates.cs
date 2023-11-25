@@ -1,4 +1,5 @@
 // スライダー範囲拡大を指定するテンプレートファイル
+using BepInEx;
 using CM3D2.ExternalSaveData.Managed;
 using System;
 using System.Collections.Generic;
@@ -29,8 +30,9 @@ internal static class SliderTemplates {
         if (!maid.Visible) {
             return;
         }
-        string fname = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", "Sybaris/UnityInjector/Config/MaidVoicePitchSlider.xml");
-        PathCheck(maid, PluginName, fname);
+        string fname = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", "MaidVoicePitchSlider.xml");
+        fname = Path.Combine(Paths.ConfigPath, fname);
+		PathCheck(maid, PluginName, fname);
         SliderTemplate sliderTemplate = sliderTemplates.Get(fname);
         string guid = maid.status.guid;
         if (sliderTemplate != null && !sliderTemplate.LoadedMaidGuids.Contains(guid)) {
@@ -41,7 +43,7 @@ internal static class SliderTemplates {
 
     static void PathCheck(Maid maid, string PluginName, string fname) {
         if (!File.Exists(fname)) {
-            fname = "Sybaris/UnityInjector/Config/MaidVoicePitchSlider.xml";
+            fname = "MaidVoicePitchSlider.xml";
             ExSaveData.Set(maid, PluginName, "SLIDER_TEMPLATE", fname);
         }
     }

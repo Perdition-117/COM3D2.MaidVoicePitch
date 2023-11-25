@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BepInEx.BaseLib" Version="5.4.19" />
     <PackageReference Include="COM3D2.GameLibs" Version="2.25.2-r.0" />
     <PackageReference Include="HarmonyX" Version="2.10.0" />
     <PackageReference Include="UnityEngine" Version="5.6.1" />
@@ -17,12 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="..\COM3D2.ExternalPreset.Managed\COM3D2.ExternalPreset.Managed.csproj" />
     <ProjectReference Include="..\COM3D2.ExternalSaveData.Managed\COM3D2.ExternalSaveData.Managed.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="UnityInjector">
-      <HintPath>..\lib\UnityInjector.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

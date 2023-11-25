@@ -6,16 +6,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using UnityInjector;
-using UnityInjector.Attributes;
 using UnityEngine.SceneManagement;
+using BepInEx;
 using HarmonyLib;
 using System.Reflection.Emit;
 using CM3D2.ExternalPreset.Patcher;
 
 namespace CM3D2.MaidVoicePitch.Plugin {
-	[PluginName("CM3D2 MaidVoicePitch"), PluginVersion("0.2.18")]
-	public class MaidVoicePitch : PluginBase {
+	[BepInPlugin("CM3D2.MaidVoicePitch", "CM3D2 MaidVoicePitch", "0.2.18")]
+	public class MaidVoicePitch : BaseUnityPlugin {
 		public static string PluginName { get { return "CM3D2.MaidVoicePitch"; } }
 		static bool bDeserialized = false;
 
@@ -82,15 +81,6 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		public void Awake() {
 			UnityEngine.GameObject.DontDestroyOnLoad(this);
 
-			string tag = "sintyou";
-			foreach (string[] boneAndPropName in boneAndPropNameList) {
-				string bname = boneAndPropName[0];
-				string key = string.Concat("min+" + tag, "*", bname.Replace('?', 'L'));
-				if (!BoneMorph.dic.ContainsKey(key)) {
-					PluginHelper.BoneMorphSetScale(tag, bname, 1f, 1f, 1f, 1f, 1f, 1f);
-				}
-			}
-
 			SceneManager.sceneLoaded += OnSceneLoaded;
 
 			// ExPresetに外部から登録
@@ -137,6 +127,19 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 					for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
 						EditSceneMaidUpdate(cm.GetStockMaid(i));
 					}
+				}
+			}
+		}
+
+		[HarmonyPatch(typeof(BoneMorph), nameof(BoneMorph.Init))]
+		[HarmonyPostfix]
+		static void BoneMorph_OnInit() {
+			string tag = "sintyou";
+			foreach (string[] boneAndPropName in boneAndPropNameList) {
+				string bname = boneAndPropName[0];
+				string key = string.Concat("min+" + tag, "*", bname.Replace('?', 'L'));
+				if (!BoneMorph.dic.ContainsKey(key)) {
+					PluginHelper.BoneMorphSetScale(tag, bname, 1f, 1f, 1f, 1f, 1f, 1f);
 				}
 			}
 		}
@@ -1046,7 +1049,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 				{
 					string fname = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", null);
 					if (string.IsNullOrEmpty(fname)) {
-						ExSaveData.Set(maid, PluginName, "SLIDER_TEMPLATE", "UnityInjector/Config/MaidVoicePitchSlider.xml", true);
+						ExSaveData.Set(maid, PluginName, "SLIDER_TEMPLATE", "MaidVoicePitchSlider.xml", true);
 					}
 				}
 			}
