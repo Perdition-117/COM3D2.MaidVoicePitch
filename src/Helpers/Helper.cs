@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using System.IO;
 using System.Xml;
+using CM3D2.MaidVoicePitch.Plugin;
 
 internal static class Helper {
 	static StreamWriter logStreamWriter = null;
@@ -23,13 +23,6 @@ internal static class Helper {
 		logStreamWriter.Write(s);
 		logStreamWriter.Write("\n");
 		logStreamWriter.Flush();
-	}
-
-	public static void Log(string format, params object[] args) {
-		if (!bLogEnable) {
-			return;
-		}
-		Log(string.Format(format, args));
 	}
 
 	public static bool StringToBool(string s, bool defaultValue) {
@@ -70,7 +63,7 @@ internal static class Helper {
 				xml.Load(xmlFilePath);
 			}
 		} catch (Exception e) {
-			ShowException(e);
+			MaidVoicePitch.LogError(e);
 		}
 		return xml;
 	}
@@ -81,21 +74,5 @@ internal static class Helper {
 			return defaultValue;
 		}
 		return (TEnum)Enum.Parse(typeof(TEnum), strEnumValue);
-	}
-
-	public static void ShowStackFrames(StackFrame[] stackFrames) {
-		foreach (var f in stackFrames) {
-			Console.WriteLine(
-				"{0}({1}.{2}) : {3}.{4}",
-				f.GetFileName(), f.GetFileLineNumber(), f.GetFileColumnNumber(),
-				f.GetMethod().DeclaringType, f.GetMethod()
-			);
-		}
-	}
-
-	public static void ShowException(Exception ex) {
-		Console.WriteLine(ex.Message);
-		var st = new StackTrace(ex, true);
-		ShowStackFrames(st.GetFrames());
 	}
 }

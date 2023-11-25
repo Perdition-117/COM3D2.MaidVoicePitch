@@ -91,7 +91,7 @@ internal static class SliderTemplates {
 					result = true;
 				}
 			} catch (Exception e) {
-				Helper.ShowException(e);
+				MaidVoicePitch.LogError(e);
 			}
 			return result;
 		}

@@ -1,8 +1,9 @@
 using CM3D2.ExternalSaveData.Managed;
+using CM3D2.MaidVoicePitch.Plugin;
 using UnityEngine;
 
 class TBodyMoveHeadAndEye {
-	static string PluginName => CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch.PluginName;
+	static string PluginName => MaidVoicePitch.PluginName;
 
 	public class ExternalValues : MonoBehaviour {
 		public TBody tbody;
@@ -61,7 +62,7 @@ class TBodyMoveHeadAndEye {
 			that.EyeEulerAngle = thatEyeEulerAngle;
 
 		} catch (Exception ex) {
-			Helper.ShowException(ex);
+			MaidVoicePitch.LogError(ex);
 		}
 	}
 

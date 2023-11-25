@@ -2,6 +2,7 @@ using System.IO;
 using System.Xml;
 using BepInEx;
 using CM3D2.ExternalSaveData.Managed;
+using CM3D2.MaidVoicePitch.Plugin;
 
 internal static class FaceScriptTemplates {
 	private static readonly Cache FaceScriptTemplateCache = new();
@@ -73,7 +74,7 @@ internal static class FaceScriptTemplates {
 					result = true;
 				}
 			} catch (Exception e) {
-				Helper.ShowException(e);
+				MaidVoicePitch.LogError(e);
 			}
 			return result;
 		}

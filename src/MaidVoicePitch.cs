@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Reflection.Emit;
 using BepInEx;
+using BepInEx.Logging;
 using CM3D2.ExternalPreset.Managed;
 using CM3D2.ExternalPreset.Patcher;
 using CM3D2.ExternalSaveData.Managed;
@@ -11,11 +12,13 @@ using UnityEngine.SceneManagement;
 
 namespace CM3D2.MaidVoicePitch.Plugin;
 
-[BepInPlugin("CM3D2.MaidVoicePitch", "CM3D2 MaidVoicePitch", "0.2.18")]
+[BepInPlugin("CM3D2.MaidVoicePitch", "MaidVoicePitch", "0.2.18")]
 public class MaidVoicePitch : BaseUnityPlugin {
 	public static string PluginName => "CM3D2.MaidVoicePitch";
 
 	internal const string DefaultTemplateFile = "MaidVoicePitchSlider.xml";
+
+	private static ManualLogSource _logger;
 
 	private static bool _deserialized = false;
 
@@ -118,6 +121,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		SceneManager.sceneLoaded += OnSceneLoaded;
 
+		_logger = Logger;
+
 		// ExPresetに外部から登録
 		ExPreset.AddExSaveNode(PluginName);
 		ExPreset.loadNotify.AddListener(MaidVoicePitch_UpdateSliders);
@@ -126,6 +131,14 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		Harmony.CreateAndPatchAll(typeof(ExSaveData));
 		Harmony.CreateAndPatchAll(typeof(ExternalPresetPatch));
+	}
+
+	internal static void LogDebug(object data) {
+		_logger.LogDebug(data);
+	}
+
+	internal static void LogError(object data) {
+		_logger.LogError(data);
 	}
 
 	private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {

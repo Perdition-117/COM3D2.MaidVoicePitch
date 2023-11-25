@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using CM3D2.ExternalSaveData.Managed;
+using CM3D2.MaidVoicePitch.Plugin;
 
 internal static class KagHooks {
 	private static bool kagTagPropSetHooked = false;
@@ -42,7 +42,7 @@ internal static class KagHooks {
 			var str = tagData.GetTagProperty("category").AsString();
 			if (Array.IndexOf(PluginHelper.MpnStrings, str) >= 0) {
 #if DEBUG
-				Console.WriteLine($"PROPSET_OFF(category={str}) -> match");
+				MaidVoicePitch.LogDebug($"PROPSET_OFF(category={str}) -> match");
 				Helper.Log($"PROPSET_OFF(category={str}) -> match");
 #endif
 				return false;
@@ -101,7 +101,7 @@ internal static class KagHooks {
 		}
 
 		if (ExSaveData.GetBool(maidAndMan, _pluginName, "FACEBLEND_OFF", false)) {
-			Trace.WriteLine("FACEBLEND_OFF() -> match");
+			MaidVoicePitch.LogDebug("FACEBLEND_OFF() -> match");
 			return false;
 		}
 
@@ -113,7 +113,7 @@ internal static class KagHooks {
 		}
 
 		var newName = FaceScriptTemplates.ProcFaceBlendName(maidAndMan, _pluginName, oldName);
-		Trace.WriteLine($"TagFaceBlend({oldName})->({newName})");
+		MaidVoicePitch.LogDebug($"TagFaceBlend({oldName})->({newName})");
 
 		if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "ScenePhotoMode") {
 			newName = "オリジナル";
