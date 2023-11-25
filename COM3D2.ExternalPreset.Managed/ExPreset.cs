@@ -1,4 +1,5 @@
 ﻿using CM3D2.ExternalSaveData.Managed;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -62,7 +63,9 @@ namespace CM3D2.ExternalPreset.Managed {
             return xml;
         }
 
-        public static void PostCharacterMgrPresetSaveNotWriteFile(CharacterMgr cMgr, Maid f_maid, CharacterMgr.PresetType f_type) {
+		[HarmonyPatch(typeof(CharacterMgr), nameof(CharacterMgr.PresetSaveNotWriteFile))]
+		[HarmonyPostfix]
+		public static void PostCharacterMgrPresetSaveNotWriteFile(CharacterMgr __instance, Maid f_maid, CharacterMgr.PresetType f_type) {
             if (f_type == CharacterMgr.PresetType.Wear) return;
             var xml = new XmlDocument();
             bool nodeExist = false;

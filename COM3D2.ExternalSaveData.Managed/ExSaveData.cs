@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
+using HarmonyLib;
 using UnityEngine;
 
 namespace CM3D2.ExternalSaveData.Managed
@@ -435,15 +436,9 @@ namespace CM3D2.ExternalSaveData.Managed
             return PluginSettings.SetMaidName(s.guid, s.lastName, s.firstName, s.creationTime);
         }
 
-        //
-        static ExSaveData()
-        {
-            GameMainCallbacks.Deserialize.Callbacks.Add(CallbackName, deserializeCallback);
-            GameMainCallbacks.Serialize.Callbacks.Add(CallbackName, serializeCallback);
-            GameMainCallbacks.DeleteSerializeData.Callbacks.Add(CallbackName, deleteSerializeDataCallback);
-        }
-
-        public static void DummyInitialize(GameMain that)
+		[HarmonyPatch(typeof(GameMain), nameof(GameMain.OnInitialize))]
+		[HarmonyPrefix]
+		public static void DummyInitialize(GameMain __instance)
         {
             // static class の生成を強要するためのダミーメソッド
             //
@@ -458,11 +453,13 @@ namespace CM3D2.ExternalSaveData.Managed
             // 分かっていないのでとりあえずこのまま。
         }
 
-        static void deserializeCallback(GameMain that, int f_nSaveNo)
+		[HarmonyPatch(typeof(GameMain), nameof(GameMain.Deserialize))]
+		[HarmonyPostfix]
+		static void deserializeCallback(GameMain __instance, int f_nSaveNo)
         {
             try
             {
-                string xmlFilePath = makeXmlFilename(that, f_nSaveNo);
+                string xmlFilePath = makeXmlFilename(__instance, f_nSaveNo);
                 saveDataPluginSettings = new SaveDataPluginSettings();
                 if (File.Exists(xmlFilePath))
                 {
@@ -475,7 +472,9 @@ namespace CM3D2.ExternalSaveData.Managed
             }
         }
 
-        static void serializeCallback(GameMain that, int f_nSaveNo, string f_strComment)
+		[HarmonyPatch(typeof(GameMain), nameof(GameMain.Serialize))]
+		[HarmonyPostfix]
+		static void serializeCallback(GameMain __instance, int f_nSaveNo, string f_strComment)
         {
             try
             {
@@ -486,8 +485,8 @@ namespace CM3D2.ExternalSaveData.Managed
                     SetMaidName(maid);
                 }
                 CleanupMaids();
-                string path = GameMainMakeSavePathFileName(that, f_nSaveNo);
-                string xmlFilePath = makeXmlFilename(that, f_nSaveNo);
+                string path = GameMainMakeSavePathFileName(__instance, f_nSaveNo);
+                string xmlFilePath = makeXmlFilename(__instance, f_nSaveNo);
                 PluginSettings.Save(xmlFilePath, path);
             }
             catch (Exception e)
@@ -496,11 +495,13 @@ namespace CM3D2.ExternalSaveData.Managed
             }
         }
 
-        static void deleteSerializeDataCallback(GameMain that, int f_nSaveNo)
+		[HarmonyPatch(typeof(GameMain), nameof(GameMain.DeleteSerializeData))]
+		[HarmonyPostfix]
+		static void deleteSerializeDataCallback(GameMain __instance, int f_nSaveNo)
         {
             try
             {
-                string xmlFilePath = makeXmlFilename(that, f_nSaveNo);
+                string xmlFilePath = makeXmlFilename(__instance, f_nSaveNo);
                 if (File.Exists(xmlFilePath))
                 {
                     File.Delete(xmlFilePath);

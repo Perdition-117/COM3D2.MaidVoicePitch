@@ -9,6 +9,9 @@ using UnityEngine;
 using UnityInjector;
 using UnityInjector.Attributes;
 using UnityEngine.SceneManagement;
+using HarmonyLib;
+using System.Reflection.Emit;
+using CM3D2.ExternalPreset.Patcher;
 
 namespace CM3D2.MaidVoicePitch.Plugin {
 	[PluginName("CM3D2 MaidVoicePitch"), PluginVersion("0.2.18")]
@@ -30,7 +33,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		//    }
 		//}
 
-		TBodyMoveHeadAndEye tbodyMoveHeadAndEye = new TBodyMoveHeadAndEye();
+		static TBodyMoveHeadAndEye tbodyMoveHeadAndEye = new TBodyMoveHeadAndEye();
 
 		static Vector3 skirtScaleBackUp;
 		static Vector3 jiggleBoneScaleBackUp;
@@ -43,7 +46,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		/// 頭に影響が行くボーンを登録する場合は
 		/// WIDESLIDER() 内の ignoreHeadBones にボーン名を書くこと。
 		/// </summary>
-		private string[][] boneAndPropNameList = new string[][]
+		private static string[][] boneAndPropNameList = new string[][]
 		{
 				new string[] { "Bip01 ? Thigh", "THISCL" },         // 下半身
                 new string[] { "momotwist_?", "MTWSCL" },         // ももツイスト
@@ -69,12 +72,12 @@ namespace CM3D2.MaidVoicePitch.Plugin {
                 //new string[] { "", "" },
         };
 
-		FieldInfo f_muneLParent = Helper.GetFieldInfo(typeof(TBody), "m_trHitParentL");
-		FieldInfo f_muneLChild = Helper.GetFieldInfo(typeof(TBody), "m_trHitChildL");
-		FieldInfo f_muneRParent = Helper.GetFieldInfo(typeof(TBody), "m_trHitParentR");
-		FieldInfo f_muneRChild = Helper.GetFieldInfo(typeof(TBody), "m_trHitChildR");
-		FieldInfo f_muneLSub = Helper.GetFieldInfo(typeof(TBody), "m_trsMuneLsub");
-		FieldInfo f_muneRSub = Helper.GetFieldInfo(typeof(TBody), "m_trsMuneRsub");
+		static FieldInfo f_muneLParent = Helper.GetFieldInfo(typeof(TBody), "m_trHitParentL");
+		static FieldInfo f_muneLChild = Helper.GetFieldInfo(typeof(TBody), "m_trHitChildL");
+		static FieldInfo f_muneRParent = Helper.GetFieldInfo(typeof(TBody), "m_trHitParentR");
+		static FieldInfo f_muneRChild = Helper.GetFieldInfo(typeof(TBody), "m_trHitChildR");
+		static FieldInfo f_muneLSub = Helper.GetFieldInfo(typeof(TBody), "m_trsMuneLsub");
+		static FieldInfo f_muneRSub = Helper.GetFieldInfo(typeof(TBody), "m_trsMuneRsub");
 
 		public void Awake() {
 			UnityEngine.GameObject.DontDestroyOnLoad(this);
@@ -93,33 +96,15 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			// ExPresetに外部から登録
 			ExPreset.AddExSaveNode(PluginName);
 			ExPreset.loadNotify.AddListener(MaidVoicePitch_UpdateSliders);
+
+			Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
+
+			Harmony.CreateAndPatchAll(typeof(ExSaveData));
+			Harmony.CreateAndPatchAll(typeof(ExternalPresetPatch));
 		}
 
 		void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
 			KagHooks.SetHook(PluginName, true);
-
-			// TBody.MoveHeadAndEye 処理終了後のコールバック
-			CM3D2.MaidVoicePitch.Managed.Callbacks.TBody.MoveHeadAndEye.Callbacks[PluginName] = tbodyMoveHeadAndEyeCallback;
-
-			// BoneMorph_.Blend 処理終了後のコールバック
-			CM3D2.MaidVoicePitch.Managed.Callbacks.BoneMorph_.Blend.Callbacks[PluginName] = boneMorph_BlendCallback;
-
-			// GameMain.Deserialize処理終了後のコールバック
-			//  ロードが行われたときに呼び出される
-			CM3D2.ExternalSaveData.Managed.GameMainCallbacks.Deserialize.Callbacks[PluginName] =
-				(gameMain, f_nSaveNo) => {
-					bDeserialized = true;
-				};
-
-			// スカート計算用コールバック
-			CM3D2.MaidVoicePitch.Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf.Callbacks[PluginName] = DynamicSkirtBonePreUpdate;
-			CM3D2.MaidVoicePitch.Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf.Callbacks[PluginName] = DynamicSkirtBonePostUpdate;
-
-			// 胸ボーンサイズ調整用コールバック
-			CM3D2.MaidVoicePitch.Managed.Callbacks.jiggleBone.PreLateUpdateSelf.Callbacks[PluginName] = jiggleBonePreLateUpdateSelef;
-			CM3D2.MaidVoicePitch.Managed.Callbacks.jiggleBone.PostLateUpdateSelf.Callbacks[PluginName] = jiggleBonePostLateUpdateSelef;
-
-			CM3D2.MaidVoicePitch.Managed.Callbacks.CharacterMgr.PresetSet.Callbacks[PluginName] = CharacterMgrPresetSet;
 
 			// ロード直後のシーン読み込みなら、初回セットアップを行う
 			if (bDeserialized) {
@@ -156,14 +141,22 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			}
 		}
 
+		[HarmonyPatch(typeof(GameMain), nameof(GameMain.Deserialize))]
+		[HarmonyPostfix]
+		static void deserializeCallback(GameMain __instance, int f_nSaveNo) {
+			bDeserialized = true;
+		}
+
 		/// <summary>
 		/// BoneMorph_.Blend の処理終了後に呼ばれるコールバック。
 		/// 初期化、設定変更時のみ呼び出される。
 		/// ボーンのブレンド処理が行われる際、拡張スライダーに関連する補正は基本的にここで行う。
 		/// 毎フレーム呼び出されるわけではないことに注意
 		/// </summary>
-		void boneMorph_BlendCallback(BoneMorph_ boneMorph_) {
-			Maid maid = PluginHelper.GetMaid(boneMorph_);
+		[HarmonyPatch(typeof(BoneMorph_), nameof(BoneMorph_.Blend))]
+		[HarmonyPostfix]
+		static void boneMorph_BlendCallback(BoneMorph_ __instance) {
+			Maid maid = PluginHelper.GetMaid(__instance);
 			if (maid == null) {
 				return;
 			}
@@ -177,7 +170,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			}
 		}
 
-		void IKPreInit(Maid maid) {
+		static void IKPreInit(Maid maid) {
 			FullBodyIKCtrl fbikc = maid.body0.IKCtrl;
 
 			Transform mouth = (Transform)Helper.GetInstanceField(typeof(FullBodyIKCtrl), fbikc, "m_Mouth");
@@ -201,25 +194,29 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		/// TBody.MoveHeadAndEye の処理終了後に呼ばれるコールバック
 		///  表示されている間は毎フレーム呼び出される
 		/// </summary>
-		void tbodyMoveHeadAndEyeCallback(TBody tbody) {
-			tbodyMoveHeadAndEye.Callback(tbody);
+		[HarmonyPatch(typeof(TBody), nameof(TBody.MoveHeadAndEye))]
+		[HarmonyPrefix]
+		static bool tbodyMoveHeadAndEyeCallback(TBody __instance) {
+			tbodyMoveHeadAndEye.Callback(__instance);
 
-			if (tbody.boMAN || tbody.trsEyeL == null || tbody.trsEyeR == null || tbody.maid == null) {
-				return;
+			if (__instance.boMAN || __instance.trsEyeL == null || __instance.trsEyeR == null || __instance.maid == null) {
+				return false;
 			}
 
-			Maid maid = tbody.maid;
+			Maid maid = __instance.maid;
 
 			if (maid.Visible) {
 				DisableLipSync(maid);
 				DisableFaceAnime(maid);
 				Mabataki(maid);
-				EyeToCam(maid, tbody);
-				HeadToCam(maid, tbody);
-				RotatePupil(maid, tbody);
-				SetLipSyncIntensity(maid, tbody);
+				EyeToCam(maid, __instance);
+				HeadToCam(maid, __instance);
+				RotatePupil(maid, __instance);
+				SetLipSyncIntensity(maid, __instance);
 				ForeArmFixOptimized.ForeArmFix(maid);
 			}
+
+			return false;
 		}
 
 		/// <summary>
@@ -298,35 +295,44 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		/// <summary>
 		/// スカートサイズ変更時の処理
 		/// </summary>
-		void DynamicSkirtBonePreUpdate(DynamicSkirtBone dsb) {
-			Transform targetTransform = ((Transform)Helper.GetInstanceField(typeof(DynamicSkirtBone), dsb, "m_trPanierParent")).parent;
+		[HarmonyPatch(typeof(DynamicSkirtBone), nameof(DynamicSkirtBone.UpdateSelf))]
+		[HarmonyPrefix]
+		static void DynamicSkirtBonePreUpdate(DynamicSkirtBone __instance) {
+			Transform targetTransform = ((Transform)Helper.GetInstanceField(typeof(DynamicSkirtBone), __instance, "m_trPanierParent")).parent;
 			skirtScaleBackUp = targetTransform.localScale;
 			targetTransform.localScale = Vector3.one;
 		}
 
-		void DynamicSkirtBonePostUpdate(DynamicSkirtBone dsb) {
-			Transform targetTransform = ((Transform)Helper.GetInstanceField(typeof(DynamicSkirtBone), dsb, "m_trPanierParent")).parent;
+		[HarmonyPatch(typeof(DynamicSkirtBone), nameof(DynamicSkirtBone.UpdateSelf))]
+		[HarmonyPostfix]
+		static void DynamicSkirtBonePostUpdate(DynamicSkirtBone __instance) {
+			Transform targetTransform = ((Transform)Helper.GetInstanceField(typeof(DynamicSkirtBone), __instance, "m_trPanierParent")).parent;
 			targetTransform.localScale = skirtScaleBackUp;
 		}
 
 		/// <summary>
 		/// 胸サイズ変更処理
 		/// </summary>
-		void jiggleBonePreLateUpdateSelef(jiggleBone jiggleBone) {
-			jiggleBoneScaleBackUp = jiggleBone.transform.localScale;
+		[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
+		[HarmonyPrefix]
+		static void jiggleBonePreLateUpdateSelef(jiggleBone __instance) {
+			jiggleBoneScaleBackUp = __instance.transform.localScale;
 		}
 
 		static Dictionary<jiggleBone, Maid> jigBones = new Dictionary<jiggleBone, Maid>();
-		void jiggleBonePostLateUpdateSelef(jiggleBone jiggleBone) {
+
+		[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
+		[HarmonyPostfix]
+		static void jiggleBonePostLateUpdateSelef(jiggleBone __instance) {
 			// 変更処理が実行されなければ終了
-			if (jiggleBone.transform.localScale == jiggleBoneScaleBackUp) return;
+			if (__instance.transform.localScale == jiggleBoneScaleBackUp) return;
 			// jiggleBoneからMaidを取得
 			Maid maid = null;
 
-			if (jigBones.ContainsKey(jiggleBone)) {
-				maid = jigBones[jiggleBone];
+			if (jigBones.ContainsKey(__instance)) {
+				maid = jigBones[__instance];
 			} else {
-				Transform t = jiggleBone.transform;
+				Transform t = __instance.transform;
 
 				while (maid == null && t != null) {
 					maid = t.GetComponent<Maid>();
@@ -335,7 +341,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 				if (maid == null) return;
 
-				jigBones[jiggleBone] = maid;
+				jigBones[__instance] = maid;
 			}
 
 			// スライダー拡張オフなら何もしない
@@ -347,19 +353,73 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			float sy = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.depth", 1f);
 			float sz = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.width", 1f);
 
-			Vector3 scl = jiggleBone.transform.localScale;
-			jiggleBone.transform.localScale = new Vector3(scl.x * sx, scl.y * sy, scl.z * sz);
+			Vector3 scl = __instance.transform.localScale;
+			__instance.transform.localScale = new Vector3(scl.x * sx, scl.y * sy, scl.z * sz);
 		}
 
-		void CharacterMgrPresetSet(CharacterMgr cMgr, Maid maid, CharacterMgr.Preset preset) {
-			if (maid == null) {
+		[HarmonyPatch(typeof(CharacterMgr), nameof(CharacterMgr.PresetSet), typeof(Maid), typeof(CharacterMgr.Preset))]
+		[HarmonyPrefix]
+		static void CharacterMgrPresetSet(CharacterMgr __instance, Maid f_maid, CharacterMgr.Preset f_prest) {
+			if (f_maid == null) {
 				return;
 			}
-			SliderTemplates.Update(maid, PluginName);
+			SliderTemplates.Update(f_maid, PluginName);
+		}
+
+		[HarmonyPatch(typeof(SceneEdit), nameof(SceneEdit.SlideCallback))]
+		[HarmonyTranspiler]
+		private static IEnumerable<CodeInstruction> Patch_SceneEdit_SlideCallback(IEnumerable<CodeInstruction> instructions) {
+			// SceneEdit.SlideCallback の補間式を変更し、
+			// タブ等を変更してスライダーがアクティブになる度に
+			// 負の値が 0 に近づくのを抑制する
+			//
+			// 元の補間式は以下のようになっている
+			//
+			//      (int) (prop1.min + (prop1.max - prop1.min) * UIProgressBar.current.value + 0.5)
+			//
+			// 例えば prop1.min = -100, prop1.max = 100, UIProgressBar.current.value = 0 の場合、
+			// 以下のようになる
+			//
+			//        (int) (-100 + (100+100) * 0 + 0.5)
+			//		= (int) (-99.5)
+			//		= -99
+			//
+			//      double -> int のキャストについては右記を参照 : https://msdn.microsoft.com/en-us/library/yht2cx7b.aspx
+			//
+			// この値は期待する値 -100 になっていないので、これを以下のように修正したい
+			//
+			//      (int) Math.Round(prop1.min + (prop1.max - prop1.min) * UIProgressBar.current.value)
+			//
+			// ILレベルでは、該当部分は以下のようになっているので
+			//
+			//      IL_004a: callvirt instance float32 UIProgressBar::get_value()
+			//      IL_004f: mul
+			//      IL_0050: add
+			//  --> IL_0051: ldc.r4 0.5
+			//  --> IL_0056: add
+			//      IL_0057: conv.i4
+			//
+			// これを以下のように改変する
+			//
+			//      IL_004a: callvirt instance float32 UIProgressBar::get_value()
+			//      IL_004f: mul
+			//      IL_0050: add
+			//  --> IL_0051: call float64 [mscorlib]System.Math::Round(float64)
+			//  --> IL_0056: nop
+			//      IL_0057: conv.i4
+
+
+			var codes = new List<CodeInstruction>(instructions);
+			var instructionIndex = codes.FindLastIndex(e => e.opcode == OpCodes.Ldc_R4 && (float)e.operand == 0.5f);
+			var instruction = codes[instructionIndex];
+			instruction.opcode = OpCodes.Call;
+			instruction.operand = typeof(Math).GetMethod(nameof(Math.Round), new Type[] { typeof(double) });
+			codes[instructionIndex + 1].opcode = OpCodes.Nop;
+			return codes;
 		}
 
 		// 目を常時カメラに向ける
-		void EyeToCam(Maid maid, TBody tbody) {
+		static void EyeToCam(Maid maid, TBody tbody) {
 			float fEyeToCam = ExSaveData.GetFloat(maid, PluginName, "EYETOCAM", 0f);
 			if (fEyeToCam < -0.5f) {
 				tbody.boEyeToCam = false;
@@ -369,7 +429,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		}
 
 		// 顔を常時カメラに向ける
-		void HeadToCam(Maid maid, TBody tbody) {
+		static void HeadToCam(Maid maid, TBody tbody) {
 			float fHeadToCam = ExSaveData.GetFloat(maid, PluginName, "HEADTOCAM", 0f);
 			if (fHeadToCam < -0.5f) {
 				tbody.boHeadToCam = false;
@@ -379,7 +439,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		}
 
 		// まばたき制限
-		void Mabataki(Maid maid) {
+		static void Mabataki(Maid maid) {
 			float mabatakiVal = (float)Helper.GetInstanceField(typeof(Maid), maid, "MabatakiVal");
 			float f = Mathf.Clamp01(1f - ExSaveData.GetFloat(maid, PluginName, "MABATAKI", 1f));
 			float mMin = Mathf.Asin(f);
@@ -406,7 +466,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		}
 
 		// 瞳の角度を目の角度に合わせて補正
-		void RotatePupil(Maid maid, TBody tbody) {
+		static void RotatePupil(Maid maid, TBody tbody) {
 			/*
                         //  注意：TBody.MoveHeadAndEye内で trsEye[L,R].localRotation が上書きされているため、
                         //  この値は TBody.MoveHeadAndEyeが呼ばれるたびに書き換える必要がある
@@ -418,7 +478,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		}
 
 		// リップシンク強度指定
-		void SetLipSyncIntensity(Maid maid, TBody tbody) {
+		static void SetLipSyncIntensity(Maid maid, TBody tbody) {
 			if (!ExSaveData.GetBool(maid, PluginName, "LIPSYNC_INTENISTY", false)) {
 				return;
 			}
@@ -433,7 +493,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		}
 
 		// リップシンク(口パク)抑制
-		void DisableLipSync(Maid maid) {
+		static void DisableLipSync(Maid maid) {
 			bool bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
 			bool bLipSyncOff = ExSaveData.GetBool(maid, PluginName, "LIPSYNC_OFF", false);
 			if (bLipSyncOff || bMuhyou) {
@@ -442,7 +502,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		}
 
 		// 目と口の表情変化をやめる
-		void DisableFaceAnime(Maid maid) {
+		static void DisableFaceAnime(Maid maid) {
 			bool bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
 			bool bHyoujouOff = ExSaveData.GetBool(maid, PluginName, "HYOUJOU_OFF", false);
 			if (bHyoujouOff || bMuhyou) {
@@ -451,7 +511,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		}
 
 		// スライダー範囲を拡大
-		void WideSlider(Maid maid) {
+		static void WideSlider(Maid maid) {
 			if (!ExSaveData.GetBool(maid, PluginName, "WIDESLIDER", false)) {
 				return;
 			}
@@ -927,7 +987,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 		}
 
-		private void SetBoneScaleFromList(Dictionary<string, Vector3> dictionary, Maid maid, string[][] _boneAndPropNameList) {
+		private static void SetBoneScaleFromList(Dictionary<string, Vector3> dictionary, Maid maid, string[][] _boneAndPropNameList) {
 			foreach (var item in _boneAndPropNameList) {
 				if (item[0].Contains("?")) {
 					string boneNameL = item[0].Replace('?', 'L');
@@ -940,7 +1000,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			}
 		}
 
-		void SetBoneScale(Dictionary<string, Vector3> dictionary, string boneName, Maid maid, string propName) {
+		static void SetBoneScale(Dictionary<string, Vector3> dictionary, string boneName, Maid maid, string propName) {
 			dictionary[boneName] = new Vector3(
 	ExSaveData.GetFloat(maid, PluginName, propName + ".height", 1f),
 	ExSaveData.GetFloat(maid, PluginName, propName + ".depth", 1f),

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
@@ -10,13 +10,13 @@
 
   <ItemGroup>
     <PackageReference Include="COM3D2.GameLibs" Version="2.25.2-r.0" />
+    <PackageReference Include="HarmonyX" Version="2.10.0" />
     <PackageReference Include="UnityEngine" Version="5.6.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\COM3D2.ExternalPreset.Managed\COM3D2.ExternalPreset.Managed.csproj" />
     <ProjectReference Include="..\COM3D2.ExternalSaveData.Managed\COM3D2.ExternalSaveData.Managed.csproj" />
-    <ProjectReference Include="..\COM3D2.MaidVoicePitch.Managed\COM3D2.MaidVoicePitch.Managed.csproj" />
   </ItemGroup>
 
   <ItemGroup>
