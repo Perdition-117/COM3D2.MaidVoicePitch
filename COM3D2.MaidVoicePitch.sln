@@ -3,11 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34009.444
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.MaidVoicePitch.Plugin", "COM3D2.MaidVoicePitch.Plugin\COM3D2.MaidVoicePitch.Plugin.csproj", "{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.ExternalPreset.Managed", "COM3D2.ExternalPreset.Managed\COM3D2.ExternalPreset.Managed.csproj", "{4AF41D1F-0542-4126-8356-04C8C943367A}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.ExternalSaveData.Managed", "COM3D2.ExternalSaveData.Managed\COM3D2.ExternalSaveData.Managed.csproj", "{81B8BE3C-A95A-4FF3-892B-8809DCC6B9DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.MaidVoicePitch.Plugin", "src\COM3D2.MaidVoicePitch.Plugin.csproj", "{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,14 +15,6 @@ Global
 		{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4AF41D1F-0542-4126-8356-04C8C943367A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4AF41D1F-0542-4126-8356-04C8C943367A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4AF41D1F-0542-4126-8356-04C8C943367A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4AF41D1F-0542-4126-8356-04C8C943367A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{81B8BE3C-A95A-4FF3-892B-8809DCC6B9DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{81B8BE3C-A95A-4FF3-892B-8809DCC6B9DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{81B8BE3C-A95A-4FF3-892B-8809DCC6B9DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{81B8BE3C-A95A-4FF3-892B-8809DCC6B9DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
