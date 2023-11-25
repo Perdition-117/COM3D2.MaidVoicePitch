@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using BepInEx;
@@ -70,13 +69,6 @@ namespace CM3D2.MaidVoicePitch.Plugin {
                 new string[] { "Bip01 Neck_SCL_", "NECKSCL" },      // 首
                 //new string[] { "", "" },
         };
-
-		static FieldInfo f_muneLParent = Helper.GetFieldInfo(typeof(TBody), "m_trHitParentL");
-		static FieldInfo f_muneLChild = Helper.GetFieldInfo(typeof(TBody), "m_trHitChildL");
-		static FieldInfo f_muneRParent = Helper.GetFieldInfo(typeof(TBody), "m_trHitParentR");
-		static FieldInfo f_muneRChild = Helper.GetFieldInfo(typeof(TBody), "m_trHitChildR");
-		static FieldInfo f_muneLSub = Helper.GetFieldInfo(typeof(TBody), "m_trsMuneLsub");
-		static FieldInfo f_muneRSub = Helper.GetFieldInfo(typeof(TBody), "m_trsMuneRsub");
 
 		public void Awake() {
 			UnityEngine.GameObject.DontDestroyOnLoad(this);
@@ -176,17 +168,17 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		static void IKPreInit(Maid maid) {
 			FullBodyIKCtrl fbikc = maid.body0.IKCtrl;
 
-			Transform mouth = (Transform)Helper.GetInstanceField(typeof(FullBodyIKCtrl), fbikc, "m_Mouth");
+			Transform mouth = fbikc.m_Mouth;
 			if (mouth) {
 				DestroyImmediate(mouth.gameObject);
 			}
 
-			Transform nippleL = (Transform)Helper.GetInstanceField(typeof(FullBodyIKCtrl), fbikc, "m_NippleL");
+			Transform nippleL = fbikc.m_NippleL;
 			if (nippleL) {
 				DestroyImmediate(nippleL.gameObject);
 			}
 
-			Transform nippleR = (Transform)Helper.GetInstanceField(typeof(FullBodyIKCtrl), fbikc, "m_NippleR");
+			Transform nippleR = fbikc.m_NippleR;
 
 			if (nippleR) {
 				DestroyImmediate(nippleR.gameObject);
@@ -291,7 +283,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 				// 何もしない
 			} else {
 				// エディットシーンではリップシンクを強制的に復活させる
-				Helper.SetInstanceField(typeof(Maid), maid, "m_bFoceKuchipakuSelfUpdateTime", false);
+				maid.m_bFoceKuchipakuSelfUpdateTime = false;
 			}
 		}
 
@@ -301,7 +293,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		[HarmonyPatch(typeof(DynamicSkirtBone), nameof(DynamicSkirtBone.UpdateSelf))]
 		[HarmonyPrefix]
 		static void DynamicSkirtBonePreUpdate(DynamicSkirtBone __instance) {
-			Transform targetTransform = ((Transform)Helper.GetInstanceField(typeof(DynamicSkirtBone), __instance, "m_trPanierParent")).parent;
+			Transform targetTransform = __instance.m_trPanierParent.parent;
 			skirtScaleBackUp = targetTransform.localScale;
 			targetTransform.localScale = Vector3.one;
 		}
@@ -309,7 +301,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		[HarmonyPatch(typeof(DynamicSkirtBone), nameof(DynamicSkirtBone.UpdateSelf))]
 		[HarmonyPostfix]
 		static void DynamicSkirtBonePostUpdate(DynamicSkirtBone __instance) {
-			Transform targetTransform = ((Transform)Helper.GetInstanceField(typeof(DynamicSkirtBone), __instance, "m_trPanierParent")).parent;
+			Transform targetTransform = __instance.m_trPanierParent.parent;
 			targetTransform.localScale = skirtScaleBackUp;
 		}
 
@@ -443,7 +435,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 		// まばたき制限
 		static void Mabataki(Maid maid) {
-			float mabatakiVal = (float)Helper.GetInstanceField(typeof(Maid), maid, "MabatakiVal");
+			float mabatakiVal = maid.MabatakiVal;
 			float f = Mathf.Clamp01(1f - ExSaveData.GetFloat(maid, PluginName, "MABATAKI", 1f));
 			float mMin = Mathf.Asin(f);
 			float mMax = (float)Math.PI - mMin;
@@ -454,7 +446,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 				// 無表情の場合、常に目を固定
 				mabatakiVal = mMin;
 			}
-			Helper.SetInstanceField(typeof(Maid), maid, "MabatakiVal", mabatakiVal);
+			maid.MabatakiVal = mabatakiVal;
 		}
 
 		// 瞳サイズ変更
@@ -500,7 +492,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			bool bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
 			bool bLipSyncOff = ExSaveData.GetBool(maid, PluginName, "LIPSYNC_OFF", false);
 			if (bLipSyncOff || bMuhyou) {
-				Helper.SetInstanceField(typeof(Maid), maid, "m_bFoceKuchipakuSelfUpdateTime", true);
+				maid.m_bFoceKuchipakuSelfUpdateTime = true;
 			}
 		}
 
@@ -828,12 +820,12 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 					pos += bonePosition[name];
 				}
 
-				Transform muneLParent = f_muneLParent.GetValue(tbody) as Transform;
-				Transform muneLChild = f_muneLChild.GetValue(tbody) as Transform;
-				Transform muneRParent = f_muneRParent.GetValue(tbody) as Transform;
-				Transform muneRChild = f_muneRChild.GetValue(tbody) as Transform;
-				Transform muneLSub = f_muneLSub.GetValue(tbody) as Transform;
-				Transform muneRSub = f_muneRSub.GetValue(tbody) as Transform;
+				Transform muneLParent = tbody.m_trHitParentL;
+				Transform muneLChild = tbody.m_trHitChildL;
+				Transform muneRParent = tbody.m_trHitParentR;
+				Transform muneRChild = tbody.m_trHitChildR;
+				Transform muneLSub = tbody.m_trsMuneLsub;
+				Transform muneRSub = tbody.m_trsMuneRsub;
 				if (muneLChild && muneLParent && muneRChild && muneRParent) {
 					muneLChild.localPosition = muneLSub.localPosition;
 					muneLParent.localPosition = muneLSub.localPosition;
@@ -886,19 +878,12 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 			// COM3D2追加処理
 			// ボーンポジション系
-			var listBoneMorphPos = Helper.GetInstanceField(typeof(BoneMorph_), boneMorph_, "m_listBoneMorphPos");
-			var ienumPos = listBoneMorphPos as IEnumerable;
-
-			System.Reflection.Assembly asmPos = System.Reflection.Assembly.GetAssembly(typeof(BoneMorph_));
-			Type listBoneMorphPosType = listBoneMorphPos.GetType();
-			Type boneMorphPosType = asmPos.GetType("BoneMorph_+BoneMorphPos");
-
-			foreach (object o in ienumPos) {
-				string strPropName = (string)Helper.GetInstanceField(boneMorphPosType, o, "strPropName");
-				Transform trs = (Transform)Helper.GetInstanceField(boneMorphPosType, o, "trBone");
-				Vector3 defPos = (Vector3)Helper.GetInstanceField(boneMorphPosType, o, "m_vDefPos");
-				Vector3 addMin = (Vector3)Helper.GetInstanceField(boneMorphPosType, o, "m_vAddMin");
-				Vector3 addMax = (Vector3)Helper.GetInstanceField(boneMorphPosType, o, "m_vAddMax");
+			foreach (var boneMorphPos in boneMorph_.m_listBoneMorphPos) {
+				string strPropName = boneMorphPos.strPropName;
+				Transform trs = boneMorphPos.trBone;
+				Vector3 defPos = boneMorphPos.m_vDefPos;
+				Vector3 addMin = boneMorphPos.m_vAddMin;
+				Vector3 addMax = boneMorphPos.m_vAddMax;
 
 				if (strPropName == "Nosepos")
 					trs.localPosition = Lerp(addMin, defPos, addMax, (float)boneMorph_.POS_Nose, sliderScale);
@@ -918,19 +903,12 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			}
 
 			// ボーンスケール系
-			var listBoneMorphScl = Helper.GetInstanceField(typeof(BoneMorph_), boneMorph_, "m_listBoneMorphScl");
-			var ienumScl = listBoneMorphScl as IEnumerable;
-
-			System.Reflection.Assembly asmScl = System.Reflection.Assembly.GetAssembly(typeof(BoneMorph_));
-			Type listBoneMorphSclType = listBoneMorphScl.GetType();
-			Type boneMorphSclType = asmScl.GetType("BoneMorph_+BoneMorphScl");
-
-			foreach (object o in ienumScl) {
-				string strPropName = (string)Helper.GetInstanceField(boneMorphSclType, o, "strPropName");
-				Transform trs = (Transform)Helper.GetInstanceField(boneMorphSclType, o, "trBone");
-				Vector3 defScl = (Vector3)Helper.GetInstanceField(boneMorphSclType, o, "m_vDefScl");
-				Vector3 addMin = (Vector3)Helper.GetInstanceField(boneMorphSclType, o, "m_vAddMin");
-				Vector3 addMax = (Vector3)Helper.GetInstanceField(boneMorphSclType, o, "m_vAddMax");
+			foreach (var boneMorphScl in boneMorph_.m_listBoneMorphScl) {
+				string strPropName = boneMorphScl.strPropName;
+				Transform trs = boneMorphScl.trBone;
+				Vector3 defScl = boneMorphScl.m_vDefScl;
+				Vector3 addMin = boneMorphScl.m_vAddMin;
+				Vector3 addMax = boneMorphScl.m_vAddMax;
 
 				if (strPropName == "Earscl_L" || strPropName == "Earscl_R") {
 					trs.localScale = Lerp(addMin, defScl, addMax, (float)boneMorph_.SCALE_Ear, sliderScale);
@@ -948,19 +926,12 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			}
 
 			// ボーンローテーション系
-			var listBoneMorphRot = Helper.GetInstanceField(typeof(BoneMorph_), boneMorph_, "m_listBoneMorphRot");
-			var ienumRot = listBoneMorphRot as IEnumerable;
-
-			System.Reflection.Assembly asmRot = System.Reflection.Assembly.GetAssembly(typeof(BoneMorph_));
-			Type listBoneMorphRotType = listBoneMorphRot.GetType();
-			Type boneMorphRotType = asmRot.GetType("BoneMorph_+BoneMorphRotatio");
-
-			foreach (object o in ienumRot) {
-				string strPropName = (string)Helper.GetInstanceField(boneMorphRotType, o, "strPropName");
-				Transform trs = (Transform)Helper.GetInstanceField(boneMorphRotType, o, "trBone");
-				Quaternion defRot = (Quaternion)Helper.GetInstanceField(boneMorphRotType, o, "m_vDefRotate");
-				Quaternion addMin = (Quaternion)Helper.GetInstanceField(boneMorphRotType, o, "m_vAddMin");
-				Quaternion addMax = (Quaternion)Helper.GetInstanceField(boneMorphRotType, o, "m_vAddMax");
+			foreach (var boneMorphRot in boneMorph_.m_listBoneMorphRot) {
+				string strPropName = boneMorphRot.strPropName;
+				Transform trs = boneMorphRot.trBone;
+				Quaternion defRot = boneMorphRot.m_vDefRotate;
+				Quaternion addMin = boneMorphRot.m_vAddMin;
+				Quaternion addMax = boneMorphRot.m_vAddMax;
 
 				if (strPropName == "Earrot_L" || strPropName == "Earrot_R") {
 					trs.localRotation = RotLerp(addMin, defRot, addMax, (float)boneMorph_.ROT_Ear, sliderScale);

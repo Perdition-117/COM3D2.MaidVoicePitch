@@ -110,28 +110,6 @@ internal static class Helper
         return (TEnum)Enum.Parse(typeof(TEnum), strEnumValue);
     }
 
-    // http://stackoverflow.com/a/3303182/2132223
-    public static FieldInfo GetFieldInfo(Type type, string fieldName)
-    {
-        return type.GetField(fieldName,
-                             BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-    }
-
-    public static object GetInstanceField(Type type, object instance, string fieldName)
-    {
-        FieldInfo field = GetFieldInfo(type, fieldName);
-        return field == null ? null : field.GetValue(instance);
-    }
-
-    public static void SetInstanceField(Type type, object instance, string fieldName, object val)
-    {
-        FieldInfo field = GetFieldInfo(type, fieldName);
-        if (field != null)
-        {
-            field.SetValue(instance, val);
-        }
-    }
-
     public static void ShowStackFrames(StackFrame[] stackFrames)
     {
         foreach (StackFrame f in stackFrames)
@@ -149,16 +127,5 @@ internal static class Helper
         Console.WriteLine("{0}", ex.Message);
         StackTrace st = new StackTrace(ex, true);
         ShowStackFrames(st.GetFrames());
-    }
-
-    // http://stackoverflow.com/a/909583/2132223
-    public static System.Reflection.Assembly GetCurrentAssembly()
-    {
-        return System.Reflection.Assembly.GetExecutingAssembly();
-    }
-
-    public static FileVersionInfo GetCurrentAssemblyFileVersionInfo()
-    {
-        return FileVersionInfo.GetVersionInfo(GetCurrentAssembly().Location);
     }
 }

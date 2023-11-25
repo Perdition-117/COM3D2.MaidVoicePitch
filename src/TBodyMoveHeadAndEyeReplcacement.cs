@@ -19,7 +19,7 @@ class TBodyMoveHeadAndEye {
             if (tbody != null) {
                 Maid maid = tbody.maid;
                 if (maid != null) {
-                    jiggleBone jbMuneL = (jiggleBone)Helper.GetInstanceField(typeof(TBody), tbody, "jbMuneL");
+                    jiggleBone jbMuneL = tbody.jbMuneL;
                     if (jbMuneL == null) {
                         //本体側更新によりjbMuneLの取得方法変更 
                         jbMuneL = tbody.jbMuneL;
@@ -51,9 +51,9 @@ class TBodyMoveHeadAndEye {
                 bParamHeadTrack = ExSaveData.GetBool(maid, PluginName, "HEAD_TRACK", false);
             }
 
-            Vector3 thatHeadEulerAngle = (Vector3)Helper.GetInstanceField(typeof(TBody), that, "HeadEulerAngle");
-            Vector3 thatHeadEulerAngleG = (Vector3)Helper.GetInstanceField(typeof(TBody), that, "HeadEulerAngleG");
-            Vector3 thatEyeEulerAngle = (Vector3)Helper.GetInstanceField(typeof(TBody), that, "EyeEulerAngle");
+            Vector3 thatHeadEulerAngle = that.HeadEulerAngle;
+            Vector3 thatHeadEulerAngleG = that.HeadEulerAngleG;
+            Vector3 thatEyeEulerAngle = that.EyeEulerAngle;
 
             if (bParamHeadTrack) {
                 ExternalValues externalValues = PluginHelper.GetOrAddComponent<ExternalValues>(tbody.gameObject);
@@ -63,9 +63,9 @@ class TBodyMoveHeadAndEye {
                 originalTbodyMoveHeadAndEyeCallback2(tbody, ref thatHeadEulerAngle, ref thatHeadEulerAngleG, ref thatEyeEulerAngle);
             }
 
-            Helper.SetInstanceField(typeof(TBody), that, "HeadEulerAngle", thatHeadEulerAngle);
-            Helper.SetInstanceField(typeof(TBody), that, "HeadEulerAngleG", thatHeadEulerAngleG);
-            Helper.SetInstanceField(typeof(TBody), that, "EyeEulerAngle", thatEyeEulerAngle);
+            that.HeadEulerAngle = thatHeadEulerAngle;
+            that.HeadEulerAngleG = thatHeadEulerAngleG;
+            that.EyeEulerAngle = thatEyeEulerAngle;
 
         } catch (Exception ex) {
             Helper.ShowException(ex);

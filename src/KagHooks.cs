@@ -1,14 +1,12 @@
 ﻿using CM3D2.ExternalSaveData.Managed;
 using script;
 using System;
-using System.Reflection;
 using UnityEngine;
 using System.Diagnostics;
 
 internal static class KagHooks {
     static bool bKagTagPropSetHooked = false;
     static string PluginName;
-    static MethodInfo GetWaitEventListMethodInfo;
     delegate bool TagProcDelegate(BaseKagManager baseKagManager, KagTagSupport tag_data);
 
     public static void SetHook(string PluginName_, bool bForceSet) {
@@ -144,22 +142,6 @@ internal static class KagHooks {
     }
 
     static WaitEventList GetWaitEventList(BaseKagManager baseKagManager, string list_name) {
-        // class BaseKagManager protected WaitEventList GetWaitEventList(string list_name)
-        MethodInfo methodInfo = GetWaitEventListMethodInfo;
-        if (methodInfo == null) {
-            methodInfo = typeof(BaseKagManager).GetMethod(
-                "GetWaitEventList",
-                BindingFlags.NonPublic | BindingFlags.Instance,
-                null,
-                new Type[] { typeof(string) },
-                null
-            );
-            GetWaitEventListMethodInfo = methodInfo;
-        }
-        if (methodInfo == null) {
-            return null;
-        }
-        object obj = methodInfo.Invoke(baseKagManager, new object[] { list_name });
-        return obj as WaitEventList;
+        return baseKagManager.GetWaitEventList(list_name);
     }
 }

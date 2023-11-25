@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 internal static class PluginHelper
@@ -89,15 +88,7 @@ internal static class PluginHelper
     // BoneMorph_.SetScaleを呼び出す
     public static void BoneMorphSetScale(string tag, string bname, float x, float y, float z, float x2, float y2, float z2)
     {
-        // class BoneMorph { private static void SetScale(string, string, float, float, float, float, float, float); }
-        MethodInfo methodInfo = typeof(BoneMorph).GetMethod(
-            "SetScale",
-            BindingFlags.NonPublic | BindingFlags.Static,
-            null,
-            new Type[] { typeof(string), typeof(string), typeof(float), typeof(float), typeof(float), typeof(float), typeof(float), typeof(float) },
-            null
-        );
-        methodInfo.Invoke(null, new object[] { tag, bname, x, y, z, x2, y2, z2 });
+        BoneMorph.SetScale(tag, bname, x, y, z, x2, y2, z2);
     }
 
     public static void DebugGui()
