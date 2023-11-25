@@ -23,8 +23,8 @@ internal static class KagHooks {
 
     static void HookTagCallback(string tagName, TagProcDelegate tagProcDelegate) {
         foreach (var kv in GameMain.Instance.ScriptMgr.kag_mot_dic) {
-            BaseKagManager mgr = kv.Value;
-            KagScript kag = mgr.kag;
+			var mgr = kv.Value;
+			var kag = mgr.kag;
             kag.RemoveTagCallBack(tagName);
             if (tagProcDelegate == null) continue;
             kag.AddTagCallBack(tagName, new KagScript.KagTagCallBack(delegate (KagTagSupport tag_data) {
@@ -33,8 +33,8 @@ internal static class KagHooks {
         }
 
         {
-            BaseKagManager mgr = GameMain.Instance.ScriptMgr.adv_kag;
-            KagScript kag = mgr.kag;
+			var mgr = GameMain.Instance.ScriptMgr.adv_kag;
+			var kag = mgr.kag;
             kag.RemoveTagCallBack(tagName);
             if (tagProcDelegate != null) {
                 kag.AddTagCallBack(tagName, new KagScript.KagTagCallBack(delegate (KagTagSupport tag_data) {
@@ -44,8 +44,8 @@ internal static class KagHooks {
         }
 
         {
-            BaseKagManager mgr = GameMain.Instance.ScriptMgr.yotogi_kag;
-            KagScript kag = mgr.kag;
+			var mgr = GameMain.Instance.ScriptMgr.yotogi_kag;
+			var kag = mgr.kag;
             kag.RemoveTagCallBack(tagName);
             if (tagProcDelegate != null) {
                 kag.AddTagCallBack(tagName, new KagScript.KagTagCallBack(delegate (KagTagSupport tag_data) {
@@ -56,9 +56,9 @@ internal static class KagHooks {
     }
 
     static bool TagPropSet(BaseKagManager baseKagManager, KagTagSupport tag_data) {
-        Maid maidAndMan = baseKagManager.GetMaidAndMan(tag_data);
+		var maidAndMan = baseKagManager.GetMaidAndMan(tag_data);
         if (maidAndMan != null && ExSaveData.GetBool(maidAndMan, PluginName, "PROPSET_OFF", false)) {
-            string str = tag_data.GetTagProperty("category").AsString();
+			var str = tag_data.GetTagProperty("category").AsString();
             if (Array.IndexOf(PluginHelper.MpnStrings, str) >= 0) {
 #if DEBUG
                 Console.WriteLine("PROPSET_OFF(category={0}) -> match", str);
@@ -72,7 +72,7 @@ internal static class KagHooks {
     }
 
     static bool TagEyeToCamera(BaseKagManager baseKagManager, KagTagSupport tag_data) {
-        Maid maidAndMan = baseKagManager.GetMaidAndMan(tag_data);
+		var maidAndMan = baseKagManager.GetMaidAndMan(tag_data);
         if (maidAndMan != null && ExSaveData.GetBool(maidAndMan, PluginName, "EYETOCAMERA_OFF", false)) {
             return false;
         }
@@ -80,7 +80,7 @@ internal static class KagHooks {
     }
 
     static bool TagFace(BaseKagManager baseKagManager, KagTagSupport tag_data) {
-        Maid maidAndMan = baseKagManager.GetMaidAndMan(tag_data);
+		var maidAndMan = baseKagManager.GetMaidAndMan(tag_data);
         if (maidAndMan == null) {
             return false;
         }
@@ -91,12 +91,12 @@ internal static class KagHooks {
 
         baseKagManager.CheckAbsolutelyNecessaryTag(tag_data, "face", new string[] { "name" });
 
-        string oldName = tag_data.GetTagProperty("name").AsString();
-        string newName = FaceScriptTemplates.ProcFaceName(maidAndMan, PluginName, oldName);
-        // Helper.Log("TagFace({0})->({1})", oldName, newName);
+		var oldName = tag_data.GetTagProperty("name").AsString();
+		var newName = FaceScriptTemplates.ProcFaceName(maidAndMan, PluginName, oldName);
+		// Helper.Log("TagFace({0})->({1})", oldName, newName);
 
-        WaitEventList waitEventList = GetWaitEventList(baseKagManager, "face");
-        int num = 0;
+		var waitEventList = GetWaitEventList(baseKagManager, "face");
+		var num = 0;
         if (tag_data.IsValid("wait")) {
             num = tag_data.GetTagProperty("wait").AsInteger();
         }
@@ -114,7 +114,7 @@ internal static class KagHooks {
     }
 
     static bool TagFaceBlend(BaseKagManager baseKagManager, KagTagSupport tag_data) {
-        Maid maidAndMan = baseKagManager.GetMaidAndMan(tag_data);
+		var maidAndMan = baseKagManager.GetMaidAndMan(tag_data);
         if (maidAndMan == null) {
             return false;
         }
@@ -125,13 +125,13 @@ internal static class KagHooks {
 
         baseKagManager.CheckAbsolutelyNecessaryTag(tag_data, "faceblend", new string[] { "name" });
 
-        string oldName = tag_data.GetTagProperty("name").AsString();
+		var oldName = tag_data.GetTagProperty("name").AsString();
         if (oldName == "なし") {
             oldName = "無し";
         }
 
-        string newName = FaceScriptTemplates.ProcFaceBlendName(maidAndMan, PluginName, oldName);
-        Trace.WriteLine(string.Format("TagFaceBlend({0})->({1})", oldName, newName));
+		var newName = FaceScriptTemplates.ProcFaceBlendName(maidAndMan, PluginName, oldName);
+        Trace.WriteLine($"TagFaceBlend({oldName})->({newName})");
 
         if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "ScenePhotoMode") {
             newName = "オリジナル";

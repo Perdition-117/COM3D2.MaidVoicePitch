@@ -23,8 +23,8 @@ internal static class Helper
         }
         if (logStreamWriter == null)
         {
-            string fname = (@".\Log_" + now.ToString("yyyyMMdd_HHmmss") + ".log");
-            logStreamWriter = new StreamWriter(fname, true);
+			var fname = ($".\\Log_{now:yyyyMMdd_HHmmss}.log");
+            logStreamWriter = new(fname, true);
         }
         logStreamWriter.Write(s);
         logStreamWriter.Write("\n");
@@ -42,22 +42,19 @@ internal static class Helper
 
     public static bool StringToBool(string s, bool defaultValue)
     {
-        bool v;
         if (s == null)
         {
             return defaultValue;
         }
-        if (bool.TryParse(s, out v))
+        if (bool.TryParse(s, out var v))
         {
             return v;
         }
-        float f;
-        if (float.TryParse(s, out f))
+        if (float.TryParse(s, out var f))
         {
             return f > 0.5f;
         }
-        int i;
-        if (int.TryParse(s, out i))
+        if (int.TryParse(s, out var i))
         {
             return i > 0;
         }
@@ -66,8 +63,7 @@ internal static class Helper
 
     public static int StringToInt(string s, int defaultValue)
     {
-        int v;
-        if (s == null || !int.TryParse(s, out v))
+        if (s == null || !int.TryParse(s, out var v))
         {
             v = defaultValue;
         }
@@ -77,8 +73,7 @@ internal static class Helper
     //  public static float FloatTryParse(string s, float defaultValue)
     public static float StringToFloat(string s, float defaultValue)
     {
-        float v;
-        if (s == null || !float.TryParse(s, out v))
+        if (s == null || !float.TryParse(s, out var v))
         {
             v = defaultValue;
         }
@@ -87,7 +82,7 @@ internal static class Helper
 
     public static XmlDocument LoadXmlDocument(string xmlFilePath)
     {
-        XmlDocument xml = new XmlDocument();
+		var xml = new XmlDocument();
         try
         {
             if (File.Exists(xmlFilePath))
@@ -112,7 +107,7 @@ internal static class Helper
 
     public static void ShowStackFrames(StackFrame[] stackFrames)
     {
-        foreach (StackFrame f in stackFrames)
+        foreach (var f in stackFrames)
         {
             Console.WriteLine(
                 "{0}({1}.{2}) : {3}.{4}",
@@ -124,8 +119,8 @@ internal static class Helper
 
     public static void ShowException(Exception ex)
     {
-        Console.WriteLine("{0}", ex.Message);
-        StackTrace st = new StackTrace(ex, true);
+        Console.WriteLine(ex.Message);
+		var st = new StackTrace(ex, true);
         ShowStackFrames(st.GetFrames());
     }
 }

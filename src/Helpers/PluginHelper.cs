@@ -12,12 +12,12 @@ internal static class PluginHelper
     public static bool bDebugEnable = false;
 #endif
 
-    public static List<string> debugLines = new List<string>();
+    public static List<string> debugLines = new();
     public static int debugLinesMax = 100;
-    public static Vector2 debugScrollPosition = new Vector2(0f, 0f);
+    public static Vector2 debugScrollPosition = new(0f, 0f);
     const int margin = 20;
     const int windowId = 0x123456;
-    public static Rect debugWindowRect = new Rect(margin, margin, Screen.width / 2 - (margin * 2), Screen.height - (margin * 2));
+    public static Rect debugWindowRect = new(margin, margin, Screen.width / 2 - (margin * 2), Screen.height - (margin * 2));
 
     public static string[] MpnStrings
     {
@@ -27,8 +27,8 @@ internal static class PluginHelper
             mpnStrings = new string[mpnValues.Length];
             for (int i = 0, n = mpnValues.Length; i < n; i++)
             {
-                MPN mpn = (MPN)mpnValues.GetValue(i);
-                mpnStrings[i] = mpn.ToString("G");
+				var mpn = (MPN)mpnValues.GetValue(i);
+                mpnStrings[i] = $"{mpn:G}";
             }
             return mpnStrings;
         }
@@ -46,10 +46,10 @@ internal static class PluginHelper
         {
             return null;
         }
-        CharacterMgr cm = GameMain.Instance.CharacterMgr;
+		var cm = GameMain.Instance.CharacterMgr;
         for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++)
         {
-            Maid maid = cm.GetStockMaid(i);
+			var maid = cm.GetStockMaid(i);
             if (maid.AudioMan == null)
             {
                 continue;
@@ -69,10 +69,10 @@ internal static class PluginHelper
         {
             return null;
         }
-        CharacterMgr cm = GameMain.Instance.CharacterMgr;
+		var cm = GameMain.Instance.CharacterMgr;
         for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++)
         {
-            Maid maid = cm.GetStockMaid(i);
+			var maid = cm.GetStockMaid(i);
             if (maid.body0 == null || maid.body0.bonemorph == null)
             {
                 continue;
@@ -102,7 +102,7 @@ internal static class PluginHelper
     public static void DebugGuiWindow(int windowId)
     {
         debugScrollPosition = GUILayout.BeginScrollView(debugScrollPosition);
-        foreach (string line in debugLines)
+        foreach (var line in debugLines)
         {
             GUILayout.Label(line);
         }
@@ -151,7 +151,7 @@ internal static class PluginHelper
 
     public static Vector3 NormalizeEulerAngles(Vector3 eulerAngles)
     {
-        return new Vector3(
+        return new(
             NormalizeAngle(eulerAngles.x),
             NormalizeAngle(eulerAngles.y),
             NormalizeAngle(eulerAngles.z));
@@ -165,7 +165,7 @@ internal static class PluginHelper
             t = gameObject.GetComponent<T>();
             if (t == null)
             {
-                t = (T)gameObject.AddComponent<T>();
+                t = gameObject.AddComponent<T>();
             }
         }
         return t;

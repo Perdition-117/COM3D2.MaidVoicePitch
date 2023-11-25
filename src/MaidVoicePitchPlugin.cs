@@ -14,7 +14,7 @@ using CM3D2.ExternalPreset.Patcher;
 namespace CM3D2.MaidVoicePitch.Plugin {
 	[BepInPlugin("CM3D2.MaidVoicePitch", "CM3D2 MaidVoicePitch", "0.2.18")]
 	public class MaidVoicePitch : BaseUnityPlugin {
-		public static string PluginName { get { return "CM3D2.MaidVoicePitch"; } }
+		public static string PluginName => "CM3D2.MaidVoicePitch";
 		static bool bDeserialized = false;
 
 		//static string[] boneMorph_PropNames;
@@ -31,7 +31,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		//    }
 		//}
 
-		static TBodyMoveHeadAndEye tbodyMoveHeadAndEye = new TBodyMoveHeadAndEye();
+		static TBodyMoveHeadAndEye tbodyMoveHeadAndEye = new();
 
 		static Vector3 skirtScaleBackUp;
 		static Vector3 jiggleBoneScaleBackUp;
@@ -44,30 +44,30 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		/// 頭に影響が行くボーンを登録する場合は
 		/// WIDESLIDER() 内の ignoreHeadBones にボーン名を書くこと。
 		/// </summary>
-		private static string[][] boneAndPropNameList = new string[][]
+		private static string[][] boneAndPropNameList =
 		{
-				new string[] { "Bip01 ? Thigh", "THISCL" },         // 下半身
-                new string[] { "momotwist_?", "MTWSCL" },         // ももツイスト
-                new string[] { "momoniku_?", "MMNSCL" },         // もも肉
-                new string[] { "Bip01 Pelvis_SCL_", "PELSCL" },     // 骨盤
-                new string[] { "Bip01 ? Thigh_SCL_", "THISCL2" },   // 膝
-                new string[] { "Bip01 ? Calf", "CALFSCL" },         // 膝下
-                new string[] { "Bip01 ? Foot", "FOOTSCL" },         // 足首より下
-                new string[] { "Skirt", "SKTSCL" },                 // スカート
-                new string[] { "Bip01 Spine_SCL_", "SPISCL" },      // 胴(下腹部周辺)
-                new string[] { "Bip01 Spine0a_SCL_", "S0ASCL" },    // 胴0a(腹部周辺)
-                new string[] { "Bip01 Spine1_SCL_", "S1_SCL" },     // 胴1_(みぞおち周辺)
-                new string[] { "Bip01 Spine1a_SCL_", "S1ASCL" },    // 胴1a(首・肋骨周辺)
-                new string[] { "Bip01 Spine1a", "S1ABASESCL" },     // 胴1a(胸より上)※頭に影響有り
-                new string[] { "Kata_?", "KATASCL" },               // 肩
-                new string[] { "Bip01 ? UpperArm", "UPARMSCL" },    // 上腕
-                new string[] { "Bip01 ? Forearm", "FARMSCL" },      // 前腕
-                new string[] { "Bip01 ? Hand", "HANDSCL" },         // 手
-                new string[] { "Bip01 ? Clavicle", "CLVSCL" },      // 鎖骨
-                new string[] { "Mune_?", "MUNESCL" },               // 胸
-                new string[] { "Mune_?_sub", "MUNESUBSCL" },        // 胸サブ
-                new string[] { "Bip01 Neck_SCL_", "NECKSCL" },      // 首
-                //new string[] { "", "" },
+				new[] { "Bip01 ? Thigh", "THISCL" },         // 下半身
+                new[] { "momotwist_?", "MTWSCL" },         // ももツイスト
+                new[] { "momoniku_?", "MMNSCL" },         // もも肉
+                new[] { "Bip01 Pelvis_SCL_", "PELSCL" },     // 骨盤
+                new[] { "Bip01 ? Thigh_SCL_", "THISCL2" },   // 膝
+                new[] { "Bip01 ? Calf", "CALFSCL" },         // 膝下
+                new[] { "Bip01 ? Foot", "FOOTSCL" },         // 足首より下
+                new[] { "Skirt", "SKTSCL" },                 // スカート
+                new[] { "Bip01 Spine_SCL_", "SPISCL" },      // 胴(下腹部周辺)
+                new[] { "Bip01 Spine0a_SCL_", "S0ASCL" },    // 胴0a(腹部周辺)
+                new[] { "Bip01 Spine1_SCL_", "S1_SCL" },     // 胴1_(みぞおち周辺)
+                new[] { "Bip01 Spine1a_SCL_", "S1ASCL" },    // 胴1a(首・肋骨周辺)
+                new[] { "Bip01 Spine1a", "S1ABASESCL" },     // 胴1a(胸より上)※頭に影響有り
+                new[] { "Kata_?", "KATASCL" },               // 肩
+                new[] { "Bip01 ? UpperArm", "UPARMSCL" },    // 上腕
+                new[] { "Bip01 ? Forearm", "FARMSCL" },      // 前腕
+                new[] { "Bip01 ? Hand", "HANDSCL" },         // 手
+                new[] { "Bip01 ? Clavicle", "CLVSCL" },      // 鎖骨
+                new[] { "Mune_?", "MUNESCL" },               // 胸
+                new[] { "Mune_?_sub", "MUNESUBSCL" },        // 胸サブ
+                new[] { "Bip01 Neck_SCL_", "NECKSCL" },      // 首
+                //new[] { "", "" },
         };
 
 		public void Awake() {
@@ -114,8 +114,8 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 			// エディット画面にいる場合は特別処理として毎フレームアップデートを行う
 			if (SceneManager.GetActiveScene().name == "SceneEdit") {
-				if (GameMain.Instance != null && GameMain.Instance.CharacterMgr != null) {
-					CharacterMgr cm = GameMain.Instance.CharacterMgr;
+				if (GameMain.Instance?.CharacterMgr != null) {
+					var cm = GameMain.Instance.CharacterMgr;
 					for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
 						EditSceneMaidUpdate(cm.GetStockMaid(i));
 					}
@@ -126,10 +126,10 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		[HarmonyPatch(typeof(BoneMorph), nameof(BoneMorph.Init))]
 		[HarmonyPostfix]
 		static void BoneMorph_OnInit() {
-			string tag = "sintyou";
-			foreach (string[] boneAndPropName in boneAndPropNameList) {
-				string bname = boneAndPropName[0];
-				string key = string.Concat("min+" + tag, "*", bname.Replace('?', 'L'));
+			var tag = "sintyou";
+			foreach (var boneAndPropName in boneAndPropNameList) {
+				var bname = boneAndPropName[0];
+				var key = ($"min+{tag}*{bname.Replace('?', 'L')}");
 				if (!BoneMorph.dic.ContainsKey(key)) {
 					PluginHelper.BoneMorphSetScale(tag, bname, 1f, 1f, 1f, 1f, 1f, 1f);
 				}
@@ -151,7 +151,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		[HarmonyPatch(typeof(BoneMorph_), nameof(BoneMorph_.Blend))]
 		[HarmonyPostfix]
 		static void boneMorph_BlendCallback(BoneMorph_ __instance) {
-			Maid maid = PluginHelper.GetMaid(__instance);
+			var maid = PluginHelper.GetMaid(__instance);
 			if (maid == null) {
 				return;
 			}
@@ -166,19 +166,19 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		}
 
 		static void IKPreInit(Maid maid) {
-			FullBodyIKCtrl fbikc = maid.body0.IKCtrl;
+			var fbikc = maid.body0.IKCtrl;
 
-			Transform mouth = fbikc.m_Mouth;
+			var mouth = fbikc.m_Mouth;
 			if (mouth) {
 				DestroyImmediate(mouth.gameObject);
 			}
 
-			Transform nippleL = fbikc.m_NippleL;
+			var nippleL = fbikc.m_NippleL;
 			if (nippleL) {
 				DestroyImmediate(nippleL.gameObject);
 			}
 
-			Transform nippleR = fbikc.m_NippleR;
+			var nippleR = fbikc.m_NippleR;
 
 			if (nippleR) {
 				DestroyImmediate(nippleR.gameObject);
@@ -198,7 +198,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 				return false;
 			}
 
-			Maid maid = __instance.maid;
+			var maid = __instance.maid;
 
 			if (maid.Visible) {
 				DisableLipSync(maid);
@@ -219,11 +219,11 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		/// ピッチ変更を行う
 		/// </summary>
 		static void SetAudioPitch(AudioSourceMgr audioSourceMgr) {
-			Maid maid = PluginHelper.GetMaid(audioSourceMgr);
+			var maid = PluginHelper.GetMaid(audioSourceMgr);
 			if (maid == null || audioSourceMgr.audiosource == null || !audioSourceMgr.audiosource.isPlaying) {
 				return;
 			}
-			float f = ExSaveData.GetFloat(maid, PluginName, "PITCH", 0f);
+			var f = ExSaveData.GetFloat(maid, PluginName, "PITCH", 0f);
 			audioSourceMgr.audiosource.pitch = 1f + f;
 		}
 
@@ -234,11 +234,11 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		public void MaidVoicePitch_UpdateSliders() {
 			//Console.WriteLine("Updating sliders....");
 
-			if (GameMain.Instance != null && GameMain.Instance.CharacterMgr != null) {
-				CharacterMgr cm = GameMain.Instance.CharacterMgr;
+			if (GameMain.Instance?.CharacterMgr != null) {
+				var cm = GameMain.Instance.CharacterMgr;
 				for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
-					Maid maid = cm.GetStockMaid(i);
-					if (maid != null && maid.body0 != null && maid.body0.bonemorph != null) {
+					var maid = cm.GetStockMaid(i);
+					if (maid?.body0?.bonemorph != null) {
 						//
 						//	todo	本当にこの方法しかないのか調べること
 						//
@@ -247,8 +247,8 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 						//	boneMorphLocal.linkT が null になっていて例外がおきるので
 						//	あらかじめ linkT を調べる
 						//
-						bool safe = true;
-						foreach (BoneMorphLocal boneMorphLocal in maid.body0.bonemorph.bones) {
+						var safe = true;
+						foreach (var boneMorphLocal in maid.body0.bonemorph.bones) {
 							if (boneMorphLocal.linkT == null) {
 								safe = false;
 							}
@@ -257,7 +257,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 							try {
 
 								// 同じ "sintyou" の値を入れて、強制的にモーフ再計算を行う
-								float SCALE_Sintyou = maid.body0.bonemorph.SCALE_Sintyou;
+								var SCALE_Sintyou = maid.body0.bonemorph.SCALE_Sintyou;
 								maid.body0.BoneMorph_FromProcItem("sintyou", SCALE_Sintyou);
 
 							} catch (Exception) {
@@ -277,8 +277,8 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 				return;
 			}
 
-			bool bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
-			bool bLipSyncOff = ExSaveData.GetBool(maid, PluginName, "LIPSYNC_OFF", false);
+			var bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
+			var bLipSyncOff = ExSaveData.GetBool(maid, PluginName, "LIPSYNC_OFF", false);
 			if (bLipSyncOff || bMuhyou || maid.MicLipSync) {
 				// 何もしない
 			} else {
@@ -293,7 +293,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		[HarmonyPatch(typeof(DynamicSkirtBone), nameof(DynamicSkirtBone.UpdateSelf))]
 		[HarmonyPrefix]
 		static void DynamicSkirtBonePreUpdate(DynamicSkirtBone __instance) {
-			Transform targetTransform = __instance.m_trPanierParent.parent;
+			var targetTransform = __instance.m_trPanierParent.parent;
 			skirtScaleBackUp = targetTransform.localScale;
 			targetTransform.localScale = Vector3.one;
 		}
@@ -301,7 +301,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		[HarmonyPatch(typeof(DynamicSkirtBone), nameof(DynamicSkirtBone.UpdateSelf))]
 		[HarmonyPostfix]
 		static void DynamicSkirtBonePostUpdate(DynamicSkirtBone __instance) {
-			Transform targetTransform = __instance.m_trPanierParent.parent;
+			var targetTransform = __instance.m_trPanierParent.parent;
 			targetTransform.localScale = skirtScaleBackUp;
 		}
 
@@ -314,7 +314,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			jiggleBoneScaleBackUp = __instance.transform.localScale;
 		}
 
-		static Dictionary<jiggleBone, Maid> jigBones = new Dictionary<jiggleBone, Maid>();
+		static Dictionary<jiggleBone, Maid> jigBones = new();
 
 		[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
 		[HarmonyPostfix]
@@ -327,7 +327,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			if (jigBones.ContainsKey(__instance)) {
 				maid = jigBones[__instance];
 			} else {
-				Transform t = __instance.transform;
+				var t = __instance.transform;
 
 				while (maid == null && t != null) {
 					maid = t.GetComponent<Maid>();
@@ -344,12 +344,12 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 				return;
 			}
 
-			float sx = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.height", 1f);
-			float sy = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.depth", 1f);
-			float sz = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.width", 1f);
+			var sx = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.height", 1f);
+			var sy = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.depth", 1f);
+			var sz = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.width", 1f);
 
-			Vector3 scl = __instance.transform.localScale;
-			__instance.transform.localScale = new Vector3(scl.x * sx, scl.y * sy, scl.z * sz);
+			var scl = __instance.transform.localScale;
+			__instance.transform.localScale = new(scl.x * sx, scl.y * sy, scl.z * sz);
 		}
 
 		[HarmonyPatch(typeof(CharacterMgr), nameof(CharacterMgr.PresetSet), typeof(Maid), typeof(CharacterMgr.Preset))]
@@ -415,7 +415,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 		// 目を常時カメラに向ける
 		static void EyeToCam(Maid maid, TBody tbody) {
-			float fEyeToCam = ExSaveData.GetFloat(maid, PluginName, "EYETOCAM", 0f);
+			var fEyeToCam = ExSaveData.GetFloat(maid, PluginName, "EYETOCAM", 0f);
 			if (fEyeToCam < -0.5f) {
 				tbody.boEyeToCam = false;
 			} else if (fEyeToCam > 0.5f) {
@@ -425,7 +425,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 		// 顔を常時カメラに向ける
 		static void HeadToCam(Maid maid, TBody tbody) {
-			float fHeadToCam = ExSaveData.GetFloat(maid, PluginName, "HEADTOCAM", 0f);
+			var fHeadToCam = ExSaveData.GetFloat(maid, PluginName, "HEADTOCAM", 0f);
 			if (fHeadToCam < -0.5f) {
 				tbody.boHeadToCam = false;
 			} else if (fHeadToCam > 0.5f) {
@@ -435,10 +435,10 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 		// まばたき制限
 		static void Mabataki(Maid maid) {
-			float mabatakiVal = maid.MabatakiVal;
-			float f = Mathf.Clamp01(1f - ExSaveData.GetFloat(maid, PluginName, "MABATAKI", 1f));
-			float mMin = Mathf.Asin(f);
-			float mMax = (float)Math.PI - mMin;
+			var mabatakiVal = maid.MabatakiVal;
+			var f = Mathf.Clamp01(1f - ExSaveData.GetFloat(maid, PluginName, "MABATAKI", 1f));
+			var mMin = Mathf.Asin(f);
+			var mMax = (float)Math.PI - mMin;
 			mMin = Mathf.Pow(mMin / (float)Math.PI, 0.5f);
 			mMax = Mathf.Pow(mMax / (float)Math.PI, 0.5f);
 			mabatakiVal = Mathf.Clamp(mabatakiVal, mMin, mMax);
@@ -451,12 +451,12 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 		// 瞳サイズ変更
 		void EyeBall(Maid maid) {
-			TBody tbody = maid.body0;
+			var tbody = maid.body0;
 			if (tbody != null && tbody.trsEyeL != null && tbody.trsEyeR != null) {
-				float w = ExSaveData.GetFloat(maid, PluginName, "EYEBALL.width", 1f);
-				float h = ExSaveData.GetFloat(maid, PluginName, "EYEBALL.height", 1f);
-				tbody.trsEyeL.localScale = new Vector3(1f, h, w);
-				tbody.trsEyeR.localScale = new Vector3(1f, h, w);
+				var w = ExSaveData.GetFloat(maid, PluginName, "EYEBALL.width", 1f);
+				var h = ExSaveData.GetFloat(maid, PluginName, "EYEBALL.height", 1f);
+				tbody.trsEyeL.localScale = new(1f, h, w);
+				tbody.trsEyeR.localScale = new(1f, h, w);
 			}
 		}
 
@@ -477,7 +477,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			if (!ExSaveData.GetBool(maid, PluginName, "LIPSYNC_INTENISTY", false)) {
 				return;
 			}
-			float f1 = Mathf.Clamp01(ExSaveData.GetFloat(maid, PluginName, "LIPSYNC_INTENISTY.value", 1f));
+			var f1 = Mathf.Clamp01(ExSaveData.GetFloat(maid, PluginName, "LIPSYNC_INTENISTY.value", 1f));
 			maid.VoicePara_1 = f1 * 0.5f;
 			maid.VoicePara_2 = f1 * 0.074f;
 			maid.VoicePara_3 = f1 * 0.5f;
@@ -489,8 +489,8 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 		// リップシンク(口パク)抑制
 		static void DisableLipSync(Maid maid) {
-			bool bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
-			bool bLipSyncOff = ExSaveData.GetBool(maid, PluginName, "LIPSYNC_OFF", false);
+			var bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
+			var bLipSyncOff = ExSaveData.GetBool(maid, PluginName, "LIPSYNC_OFF", false);
 			if (bLipSyncOff || bMuhyou) {
 				maid.m_bFoceKuchipakuSelfUpdateTime = true;
 			}
@@ -498,8 +498,8 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 		// 目と口の表情変化をやめる
 		static void DisableFaceAnime(Maid maid) {
-			bool bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
-			bool bHyoujouOff = ExSaveData.GetBool(maid, PluginName, "HYOUJOU_OFF", false);
+			var bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
+			var bHyoujouOff = ExSaveData.GetBool(maid, PluginName, "HYOUJOU_OFF", false);
 			if (bHyoujouOff || bMuhyou) {
 				maid.FaceAnime("", 0f, 0);
 			}
@@ -511,30 +511,30 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 				return;
 			}
 
-			TBody tbody = maid.body0;
+			var tbody = maid.body0;
 			//string[] PropNames = BoneMorph_PropNames;
 			if (tbody == null || tbody.bonemorph == null || tbody.bonemorph.bones == null) {
 				return;
 			}
-			BoneMorph_ boneMorph_ = tbody.bonemorph;
+			var boneMorph_ = tbody.bonemorph;
 
 			// スケール変更するボーンのリスト
-			Dictionary<string, Vector3> boneScale = new Dictionary<string, Vector3>();
+			var boneScale = new Dictionary<string, Vector3>();
 
 			// ポジション変更するボーンのリスト
-			Dictionary<string, Vector3> bonePosition = new Dictionary<string, Vector3>();
+			var bonePosition = new Dictionary<string, Vector3>();
 
 			//この配列に記載があるボーンは頭に影響を与えずにTransformを反映させる。
 			//ただしボディに繋がっている中のアレは影響を受ける。
-			string[] ignoreHeadBones = new string[] { "Bip01 Spine1a" };
+			var ignoreHeadBones = new[] { "Bip01 Spine1a" };
 
 			float eyeAngAngle;
 			float eyeAngX;
 			float eyeAngY;
 			{
-				float ra = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.angle", 0f);
-				float rx = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.x", 0f);
-				float ry = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.y", 0f);
+				var ra = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.angle", 0f);
+				var rx = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.x", 0f);
+				var ry = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.y", 0f);
 
 				rx += -9f;
 				ry += -17f;
@@ -547,7 +547,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 				eyeAngY = ry;
 			}
 
-			Vector3 thiScl = new Vector3(
+			var thiScl = new Vector3(
 				1.0f,
 				ExSaveData.GetFloat(maid, PluginName, "THISCL.depth", 1f),
 				ExSaveData.GetFloat(maid, PluginName, "THISCL.width", 1f));
@@ -555,11 +555,11 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			Vector3 thiPosL;
 			Vector3 thiPosR;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "THIPOS.x", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "THIPOS.z", 0f);
-				float dy = 0.0f;
-				thiPosL = new Vector3(dy, dz / 1000f, -dx / 1000f);
-				thiPosR = new Vector3(dy, dz / 1000f, dx / 1000f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "THIPOS.x", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "THIPOS.z", 0f);
+				var dy = 0.0f;
+				thiPosL = new(dy, dz / 1000f, -dx / 1000f);
+				thiPosR = new(dy, dz / 1000f, dx / 1000f);
 			}
 			bonePosition["Bip01 L Thigh"] = thiPosL;
 			bonePosition["Bip01 R Thigh"] = thiPosR;
@@ -567,11 +567,11 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			Vector3 thi2PosL;
 			Vector3 thi2PosR;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "THI2POS.x", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "THI2POS.z", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "THI2POS.y", 0f);
-				thi2PosL = new Vector3(dy / 1000f, dz / 1000f, -dx / 1000f);
-				thi2PosR = new Vector3(dy / 1000f, dz / 1000f, dx / 1000f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "THI2POS.x", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "THI2POS.z", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "THI2POS.y", 0f);
+				thi2PosL = new(dy / 1000f, dz / 1000f, -dx / 1000f);
+				thi2PosR = new(dy / 1000f, dz / 1000f, dx / 1000f);
 			}
 			bonePosition["Bip01 L Thigh_SCL_"] = thi2PosL;
 			bonePosition["Bip01 R Thigh_SCL_"] = thi2PosR;
@@ -580,11 +580,11 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			Vector3 hipPosL;
 			Vector3 hipPosR;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "HIPPOS.x", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "HIPPOS.y", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "HIPPOS.z", 0f);
-				hipPosL = new Vector3(dy / 1000f, dz / 1000f, -dx / 1000f);
-				hipPosR = new Vector3(dy / 1000f, dz / 1000f, dx / 1000f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "HIPPOS.x", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "HIPPOS.y", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "HIPPOS.z", 0f);
+				hipPosL = new(dy / 1000f, dz / 1000f, -dx / 1000f);
+				hipPosR = new(dy / 1000f, dz / 1000f, dx / 1000f);
 			}
 			bonePosition["Hip_L"] = thiPosL + hipPosL;
 			bonePosition["Hip_R"] = thiPosR + hipPosR;
@@ -592,11 +592,11 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			Vector3 mtwPosL;
 			Vector3 mtwPosR;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "MTWPOS.x", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "MTWPOS.y", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "MTWPOS.z", 0f);
-				mtwPosL = new Vector3(dx / 10f, dy / 10f, dz / 10f);
-				mtwPosR = new Vector3(dx / 10f, dy / 10f, -dz / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "MTWPOS.x", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "MTWPOS.y", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "MTWPOS.z", 0f);
+				mtwPosL = new(dx / 10f, dy / 10f, dz / 10f);
+				mtwPosR = new(dx / 10f, dy / 10f, -dz / 10f);
 			}
 			bonePosition["momotwist_L"] = mtwPosL;
 			bonePosition["momotwist_R"] = mtwPosR;
@@ -604,77 +604,77 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			Vector3 mmnPosL;
 			Vector3 mmnPosR;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "MMNPOS.x", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "MMNPOS.y", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "MMNPOS.z", 0f);
-				mmnPosL = new Vector3(dx / 10f, dy / 10f, dz / 10f);
-				mmnPosR = new Vector3(dx / 10f, -dy / 10f, dz / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "MMNPOS.x", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "MMNPOS.y", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "MMNPOS.z", 0f);
+				mmnPosL = new(dx / 10f, dy / 10f, dz / 10f);
+				mmnPosR = new(dx / 10f, -dy / 10f, dz / 10f);
 			}
 			bonePosition["momoniku_L"] = mmnPosL;
 			bonePosition["momoniku_R"] = mmnPosR;
 
 			Vector3 skirtPos;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "SKTPOS.x", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "SKTPOS.y", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "SKTPOS.z", 0f);
-				skirtPos = new Vector3(-dz / 10f, -dy / 10f, dx / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "SKTPOS.x", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "SKTPOS.y", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "SKTPOS.z", 0f);
+				skirtPos = new(-dz / 10f, -dy / 10f, dx / 10f);
 			}
 			bonePosition["Skirt"] = skirtPos;
 
 			Vector3 spinePos;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "SPIPOS.x", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "SPIPOS.y", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "SPIPOS.z", 0f);
-				spinePos = new Vector3(-dx / 10f, dy / 10f, dz / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "SPIPOS.x", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "SPIPOS.y", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "SPIPOS.z", 0f);
+				spinePos = new(-dx / 10f, dy / 10f, dz / 10f);
 			}
 			bonePosition["Bip01 Spine"] = spinePos;
 
 			Vector3 spine0aPos;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "S0APOS.x", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "S0APOS.y", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "S0APOS.z", 0f);
-				spine0aPos = new Vector3(-dx / 10f, dy / 10f, dz / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "S0APOS.x", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "S0APOS.y", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "S0APOS.z", 0f);
+				spine0aPos = new(-dx / 10f, dy / 10f, dz / 10f);
 			}
 			bonePosition["Bip01 Spine0a"] = spine0aPos;
 
 			Vector3 spine1Pos;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "S1POS.x", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "S1POS.y", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "S1POS.z", 0f);
-				spine1Pos = new Vector3(-dx / 10f, dy / 10f, dz / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "S1POS.x", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "S1POS.y", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "S1POS.z", 0f);
+				spine1Pos = new(-dx / 10f, dy / 10f, dz / 10f);
 			}
 			bonePosition["Bip01 Spine1"] = spine1Pos;
 
 			Vector3 spine1aPos;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "S1APOS.x", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "S1APOS.y", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "S1APOS.z", 0f);
-				spine1aPos = new Vector3(-dx / 10f, dy / 10f, dz / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "S1APOS.x", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "S1APOS.y", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "S1APOS.z", 0f);
+				spine1aPos = new(-dx / 10f, dy / 10f, dz / 10f);
 			}
 			bonePosition["Bip01 Spine1a"] = spine1aPos;
 
 			Vector3 neckPos;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "NECKPOS.x", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "NECKPOS.y", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "NECKPOS.z", 0f);
-				neckPos = new Vector3(-dx / 10f, dy / 10f, dz / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "NECKPOS.x", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "NECKPOS.y", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "NECKPOS.z", 0f);
+				neckPos = new(-dx / 10f, dy / 10f, dz / 10f);
 			}
 			bonePosition["Bip01 Neck"] = neckPos;
 
 			Vector3 clvPosL;
 			Vector3 clvPosR;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "CLVPOS.x", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "CLVPOS.z", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "CLVPOS.y", 0f);
-				clvPosL = new Vector3(-dx / 10f, dy / 10f, dz / 10f);
-				clvPosR = new Vector3(-dx / 10f, dy / 10f, -dz / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "CLVPOS.x", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "CLVPOS.z", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "CLVPOS.y", 0f);
+				clvPosL = new(-dx / 10f, dy / 10f, dz / 10f);
+				clvPosR = new(-dx / 10f, dy / 10f, -dz / 10f);
 			}
 			bonePosition["Bip01 L Clavicle"] = clvPosL;
 			bonePosition["Bip01 R Clavicle"] = clvPosR;
@@ -682,11 +682,11 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			Vector3 muneSubPosL;
 			Vector3 muneSubPosR;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "MUNESUBPOS.x", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "MUNESUBPOS.z", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "MUNESUBPOS.y", 0f);
-				muneSubPosL = new Vector3(-dy / 10f, dz / 10f, -dx / 10f);
-				muneSubPosR = new Vector3(-dy / 10f, -dz / 10f, -dx / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "MUNESUBPOS.x", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "MUNESUBPOS.z", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "MUNESUBPOS.y", 0f);
+				muneSubPosL = new(-dy / 10f, dz / 10f, -dx / 10f);
+				muneSubPosR = new(-dy / 10f, -dz / 10f, -dx / 10f);
 			}
 			bonePosition["Mune_L_sub"] = muneSubPosL;
 			bonePosition["Mune_R_sub"] = muneSubPosR;
@@ -694,11 +694,11 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			Vector3 munePosL;
 			Vector3 munePosR;
 			{
-				float dx = ExSaveData.GetFloat(maid, PluginName, "MUNEPOS.x", 0f);
-				float dz = ExSaveData.GetFloat(maid, PluginName, "MUNEPOS.z", 0f);
-				float dy = ExSaveData.GetFloat(maid, PluginName, "MUNEPOS.y", 0f);
-				munePosL = new Vector3(dz / 10f, -dy / 10f, dx / 10f);
-				munePosR = new Vector3(dz / 10f, -dy / 10f, -dx / 10f);
+				var dx = ExSaveData.GetFloat(maid, PluginName, "MUNEPOS.x", 0f);
+				var dz = ExSaveData.GetFloat(maid, PluginName, "MUNEPOS.z", 0f);
+				var dy = ExSaveData.GetFloat(maid, PluginName, "MUNEPOS.y", 0f);
+				munePosL = new(dz / 10f, -dy / 10f, dx / 10f);
+				munePosR = new(dz / 10f, -dy / 10f, -dx / 10f);
 			}
 			bonePosition["Mune_L"] = munePosL;
 			bonePosition["Mune_R"] = munePosR;
@@ -708,11 +708,11 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 			// 元々尻はPELSCLに連動していたが単体でも設定できるようにする
 			// ただし元との整合性をとるため乗算する
-			Vector3 pelScl = new Vector3(
+			var pelScl = new Vector3(
 				ExSaveData.GetFloat(maid, PluginName, "PELSCL.height", 1f),
 				ExSaveData.GetFloat(maid, PluginName, "PELSCL.depth", 1f),
 				ExSaveData.GetFloat(maid, PluginName, "PELSCL.width", 1f));
-			Vector3 hipScl = new Vector3(
+			var hipScl = new Vector3(
 				ExSaveData.GetFloat(maid, PluginName, "HIPSCL.height", 1f) * pelScl.x,
 				ExSaveData.GetFloat(maid, PluginName, "HIPSCL.depth", 1f) * pelScl.y,
 				ExSaveData.GetFloat(maid, PluginName, "HIPSCL.width", 1f) * pelScl.z);
@@ -722,89 +722,62 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			Transform tEyePosL = null;
 			Transform tEyePosR = null;
 
-			float sliderScale = 20f;
-			for (int i = boneMorph_.bones.Count - 1; i >= 0; i--) {
-				BoneMorphLocal boneMorphLocal = boneMorph_.bones[i];
-				Vector3 scl = new Vector3(1f, 1f, 1f);
-				Vector3 pos = boneMorphLocal.pos;
+			var sliderScale = 20f;
+			for (var i = boneMorph_.bones.Count - 1; i >= 0; i--) {
+				var boneMorphLocal = boneMorph_.bones[i];
+				var scl = new Vector3(1f, 1f, 1f);
+				var pos = boneMorphLocal.pos;
 				//for (int j = 0; j < (int)PropNames.Length; j++)
-				for (int j = 0; j < BoneMorph.PropNames.Length; j++) {
-					float s = 1f;
-					switch (j) {
-						case 0:
-							s = boneMorph_.SCALE_Kubi;
-							break;
-						case 1:
-							s = boneMorph_.SCALE_Ude;
-							break;
-						case 2:
-							s = boneMorph_.SCALE_EyeX;
-							break;
-						case 3:
-							s = boneMorph_.SCALE_EyeY;
-							break;
-						case 4:
-							s = boneMorph_.Postion_EyeX * (0.5f + boneMorph_.Postion_EyeY * 0.5f);
-							break;
-						case 5:
-							s = boneMorph_.Postion_EyeY;
-							break;
-						case 6:
-							s = boneMorph_.SCALE_HeadX;
-							break;
-						case 7:
-							s = boneMorph_.SCALE_HeadY;
-							break;
-						case 8:
-							s = boneMorph_.SCALE_DouPer;
-							if (boneMorphLocal.Kahanshin == 0f) {
-								s = 1f - s;
-							}
-							break;
-						case 9:
-							s = boneMorph_.SCALE_Sintyou;
-							break;
-						case 10:
-							s = boneMorph_.SCALE_Koshi;
-							break;
-						case 11:
-							s = boneMorph_.SCALE_Kata;
-							break;
-						case 12:
-							s = boneMorph_.SCALE_West;
-							break;
-						default:
-							s = 1f;
-							break;
+				for (var j = 0; j < BoneMorph.PropNames.Length; j++) {
+					var s = 1f;
+					s = j switch {
+						0 => boneMorph_.SCALE_Kubi,
+						1 => boneMorph_.SCALE_Ude,
+						2 => boneMorph_.SCALE_EyeX,
+						3 => boneMorph_.SCALE_EyeY,
+						4 => boneMorph_.Postion_EyeX * (0.5f + boneMorph_.Postion_EyeY * 0.5f),
+						5 => boneMorph_.Postion_EyeY,
+						6 => boneMorph_.SCALE_HeadX,
+						7 => boneMorph_.SCALE_HeadY,
+						8 => boneMorph_.SCALE_DouPer,
+						9 => boneMorph_.SCALE_Sintyou,
+						10 => boneMorph_.SCALE_Koshi,
+						11 => boneMorph_.SCALE_Kata,
+						12 => boneMorph_.SCALE_West,
+						_ => 1f,
+					};
+
+					if (j == 8 && boneMorphLocal.Kahanshin == 0f) {
+						s = 1f - s;
 					}
 
 					if ((boneMorphLocal.atr & 1L << (j & 63)) != 0L) {
-						Vector3 v0 = boneMorphLocal.vecs_min[j];
-						Vector3 v1 = boneMorphLocal.vecs_max[j];
+						var v0 = boneMorphLocal.vecs_min[j];
+						var v1 = boneMorphLocal.vecs_max[j];
 
-						Vector3 n0 = v0 * sliderScale - v1 * (sliderScale - 1f);
-						Vector3 n1 = v1 * sliderScale - v0 * (sliderScale - 1f);
-						float f = (s + sliderScale - 1f) * (1f / (sliderScale * 2.0f - 1f));
+						var n0 = v0 * sliderScale - v1 * (sliderScale - 1f);
+						var n1 = v1 * sliderScale - v0 * (sliderScale - 1f);
+						var f = (s + sliderScale - 1f) * (1f / (sliderScale * 2.0f - 1f));
 						scl = Vector3.Scale(scl, Vector3.Lerp(n0, n1, f));
 					}
 
 					if ((boneMorphLocal.atr & 1L << (j + 32 & 63)) != 0L) {
-						Vector3 v0 = boneMorphLocal.vecs_min[j + 32];
-						Vector3 v1 = boneMorphLocal.vecs_max[j + 32];
+						var v0 = boneMorphLocal.vecs_min[j + 32];
+						var v1 = boneMorphLocal.vecs_max[j + 32];
 
-						Vector3 n0 = v0 * sliderScale - v1 * (sliderScale - 1f);
-						Vector3 n1 = v1 * sliderScale - v0 * (sliderScale - 1f);
-						float f = (s + sliderScale - 1f) * (1f / (sliderScale * 2.0f - 1f));
+						var n0 = v0 * sliderScale - v1 * (sliderScale - 1f);
+						var n1 = v1 * sliderScale - v0 * (sliderScale - 1f);
+						var f = (s + sliderScale - 1f) * (1f / (sliderScale * 2.0f - 1f));
 						pos = Vector3.Scale(pos, Vector3.Lerp(n0, n1, f));
 					}
 				}
 
-				Transform linkT = boneMorphLocal.linkT;
+				var linkT = boneMorphLocal.linkT;
 				if (linkT == null) {
 					continue;
 				}
 
-				string name = linkT.name;
+				var name = linkT.name;
 
 				if (name != null && name.Contains("Thigh_SCL_")) {
 					boneMorph_.SnityouOutScale = Mathf.Pow(scl.x, 0.9f);
@@ -820,12 +793,12 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 					pos += bonePosition[name];
 				}
 
-				Transform muneLParent = tbody.m_trHitParentL;
-				Transform muneLChild = tbody.m_trHitChildL;
-				Transform muneRParent = tbody.m_trHitParentR;
-				Transform muneRChild = tbody.m_trHitChildR;
-				Transform muneLSub = tbody.m_trsMuneLsub;
-				Transform muneRSub = tbody.m_trsMuneRsub;
+				var muneLParent = tbody.m_trHitParentL;
+				var muneLChild = tbody.m_trHitChildL;
+				var muneRParent = tbody.m_trHitParentR;
+				var muneRChild = tbody.m_trHitChildR;
+				var muneLSub = tbody.m_trsMuneLsub;
+				var muneRSub = tbody.m_trsMuneRsub;
 				if (muneLChild && muneLParent && muneRChild && muneRParent) {
 					muneLChild.localPosition = muneLSub.localPosition;
 					muneLParent.localPosition = muneLSub.localPosition;
@@ -856,34 +829,34 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			// その１>>923
 			// http://jbbs.shitaraba.net/bbs/read.cgi/game/55179/1438196715/923
 			if (tEyePosL != null) {
-				Transform linkT = tEyePosL;
-				Vector3 localCenter = linkT.localPosition + (new Vector3(0f, eyeAngY, eyeAngX)); // ローカル座標系での回転中心位置
-				Vector3 worldCenter = linkT.parent.TransformPoint(localCenter);         // ワールド座標系での回転中心位置
-				Vector3 localAxis = new Vector3(-1f, 0f, 0f);                       // ローカル座標系での回転軸
-				Vector3 worldAxis = linkT.TransformDirection(localAxis);               // ワールド座標系での回転軸
+				var linkT = tEyePosL;
+				var localCenter = linkT.localPosition + (new Vector3(0f, eyeAngY, eyeAngX)); // ローカル座標系での回転中心位置
+				var worldCenter = linkT.parent.TransformPoint(localCenter);         // ワールド座標系での回転中心位置
+				var localAxis = new Vector3(-1f, 0f, 0f);                       // ローカル座標系での回転軸
+				var worldAxis = linkT.TransformDirection(localAxis);               // ワールド座標系での回転軸
 
-				linkT.localRotation = new Quaternion(-0.00560432f, -0.001345155f, 0.06805823f, 0.9976647f);    // 初期の回転量
+				linkT.localRotation = new(-0.00560432f, -0.001345155f, 0.06805823f, 0.9976647f);    // 初期の回転量
 				linkT.RotateAround(worldCenter, worldAxis, eyeAngAngle);
 			}
 			if (tEyePosR != null) {
-				Transform linkT = tEyePosR;
-				Vector3 localCenter = linkT.localPosition + (new Vector3(0f, eyeAngY, -eyeAngX));    // ローカル座標系での回転中心位置
-				Vector3 worldCenter = linkT.parent.TransformPoint(localCenter);             // ワールド座標系での回転中心位置
-				Vector3 localAxis = new Vector3(-1f, 0f, 0f);                           // ローカル座標系での回転軸
-				Vector3 worldAxis = linkT.TransformDirection(localAxis);                   // ワールド座標系での回転軸
+				var linkT = tEyePosR;
+				var localCenter = linkT.localPosition + (new Vector3(0f, eyeAngY, -eyeAngX));    // ローカル座標系での回転中心位置
+				var worldCenter = linkT.parent.TransformPoint(localCenter);             // ワールド座標系での回転中心位置
+				var localAxis = new Vector3(-1f, 0f, 0f);                           // ローカル座標系での回転軸
+				var worldAxis = linkT.TransformDirection(localAxis);                   // ワールド座標系での回転軸
 
-				linkT.localRotation = new Quaternion(0.9976647f, 0.06805764f, -0.001350592f, -0.005603582f);   // 初期の回転量
+				linkT.localRotation = new(0.9976647f, 0.06805764f, -0.001350592f, -0.005603582f);   // 初期の回転量
 				linkT.RotateAround(worldCenter, worldAxis, -eyeAngAngle);
 			}
 
 			// COM3D2追加処理
 			// ボーンポジション系
 			foreach (var boneMorphPos in boneMorph_.m_listBoneMorphPos) {
-				string strPropName = boneMorphPos.strPropName;
-				Transform trs = boneMorphPos.trBone;
-				Vector3 defPos = boneMorphPos.m_vDefPos;
-				Vector3 addMin = boneMorphPos.m_vAddMin;
-				Vector3 addMax = boneMorphPos.m_vAddMax;
+				var strPropName = boneMorphPos.strPropName;
+				var trs = boneMorphPos.trBone;
+				var defPos = boneMorphPos.m_vDefPos;
+				var addMin = boneMorphPos.m_vAddMin;
+				var addMax = boneMorphPos.m_vAddMax;
 
 				if (strPropName == "Nosepos")
 					trs.localPosition = Lerp(addMin, defPos, addMax, (float)boneMorph_.POS_Nose, sliderScale);
@@ -892,34 +865,34 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 				} else if (strPropName == "EyeBallPosYL" || strPropName == "EyeBallPosYR") {
 					trs.localPosition = Lerp(addMin, defPos, addMax, (float)boneMorph_.EyeBallPosY, sliderScale);
 				} else if (strPropName == "Mayupos_L" || strPropName == "Mayupos_R") {
-					Vector3 vector3_1 = Lerp(addMin, defPos, addMax, (float)boneMorph_.POS_MayuY, sliderScale);
-					float x1 = addMin.x;
+					var vector3_1 = Lerp(addMin, defPos, addMax, (float)boneMorph_.POS_MayuY, sliderScale);
+					var x1 = addMin.x;
 					addMin.x = addMax.x;
 					addMax.x = x1;
-					Vector3 vector3_2 = Lerp(addMin, defPos, addMax, (float)boneMorph_.POS_MayuX, sliderScale);
-					float x3 = vector3_2.x + vector3_1.x - defPos.x;
-					trs.localPosition = new Vector3(x3, vector3_1.y, vector3_2.z);
+					var vector3_2 = Lerp(addMin, defPos, addMax, (float)boneMorph_.POS_MayuX, sliderScale);
+					var x3 = vector3_2.x + vector3_1.x - defPos.x;
+					trs.localPosition = new(x3, vector3_1.y, vector3_2.z);
 				}
 			}
 
 			// ボーンスケール系
 			foreach (var boneMorphScl in boneMorph_.m_listBoneMorphScl) {
-				string strPropName = boneMorphScl.strPropName;
-				Transform trs = boneMorphScl.trBone;
-				Vector3 defScl = boneMorphScl.m_vDefScl;
-				Vector3 addMin = boneMorphScl.m_vAddMin;
-				Vector3 addMax = boneMorphScl.m_vAddMax;
+				var strPropName = boneMorphScl.strPropName;
+				var trs = boneMorphScl.trBone;
+				var defScl = boneMorphScl.m_vDefScl;
+				var addMin = boneMorphScl.m_vAddMin;
+				var addMax = boneMorphScl.m_vAddMax;
 
 				if (strPropName == "Earscl_L" || strPropName == "Earscl_R") {
 					trs.localScale = Lerp(addMin, defScl, addMax, (float)boneMorph_.SCALE_Ear, sliderScale);
 				} else if (strPropName == "Nosescl") {
 					trs.localScale = Lerp(addMin, defScl, addMax, (float)boneMorph_.SCALE_Nose, sliderScale);
 				} else if (strPropName == "EyeBallSclXL" || strPropName == "EyeBallSclXR") {
-					Vector3 localScale = trs.localScale;
+					var localScale = trs.localScale;
 					localScale.z = Lerp(addMin, defScl, addMax, (float)boneMorph_.EyeBallSclX, sliderScale).z;
 					trs.localScale = localScale;
 				} else if (strPropName == "EyeBallSclYL" || strPropName == "EyeBallSclYR") {
-					Vector3 localScale = trs.localScale;
+					var localScale = trs.localScale;
 					localScale.y = Lerp(addMin, defScl, addMax, (float)boneMorph_.EyeBallSclY, sliderScale).y;
 					trs.localScale = localScale;
 				}
@@ -927,11 +900,11 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 			// ボーンローテーション系
 			foreach (var boneMorphRot in boneMorph_.m_listBoneMorphRot) {
-				string strPropName = boneMorphRot.strPropName;
-				Transform trs = boneMorphRot.trBone;
-				Quaternion defRot = boneMorphRot.m_vDefRotate;
-				Quaternion addMin = boneMorphRot.m_vAddMin;
-				Quaternion addMax = boneMorphRot.m_vAddMax;
+				var strPropName = boneMorphRot.strPropName;
+				var trs = boneMorphRot.trBone;
+				var defRot = boneMorphRot.m_vDefRotate;
+				var addMin = boneMorphRot.m_vAddMin;
+				var addMax = boneMorphRot.m_vAddMax;
 
 				if (strPropName == "Earrot_L" || strPropName == "Earrot_R") {
 					trs.localRotation = RotLerp(addMin, defRot, addMax, (float)boneMorph_.ROT_Ear, sliderScale);
@@ -943,18 +916,18 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 
 		public static Vector3 Lerp(Vector3 min, Vector3 def, Vector3 max, float t, float sliderScale) {
 			if ((double)t >= 0.5) {
-				Vector3 n1 = max + (max - def) * (sliderScale - 1f) * 2;
-				float f = (t - 0.5f) * (1f / (sliderScale * 2.0f - 1f)) * 2.0f;
+				var n1 = max + (max - def) * (sliderScale - 1f) * 2;
+				var f = (t - 0.5f) * (1f / (sliderScale * 2.0f - 1f)) * 2.0f;
 				return Vector3.Lerp(def, n1, f);
 			} else {
-				Vector3 n0 = min - (def - min) * (sliderScale - 1f) * 2;
-				float f = (t + sliderScale - 1f) * (1f / (sliderScale * 2.0f - 1f)) * 2.0f;
+				var n0 = min - (def - min) * (sliderScale - 1f) * 2;
+				var f = (t + sliderScale - 1f) * (1f / (sliderScale * 2.0f - 1f)) * 2.0f;
 				return Vector3.Lerp(n0, def, f);
 			}
 		}
 
 		public static Quaternion RotLerp(Quaternion min, Quaternion def, Quaternion max, float t, float sliderScale) {
-			float t1 = (double)t > 0.5 ? (float)(((double)t - 0.5) / 0.5) : t / 0.5f;
+			var t1 = (double)t > 0.5 ? (float)(((double)t - 0.5) / 0.5) : t / 0.5f;
 			if ((double)t <= 0.5)
 				return Quaternion.LerpUnclamped(min, def, t1);
 			return Quaternion.LerpUnclamped(def, max, t1);
@@ -964,8 +937,8 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		private static void SetBoneScaleFromList(Dictionary<string, Vector3> dictionary, Maid maid, string[][] _boneAndPropNameList) {
 			foreach (var item in _boneAndPropNameList) {
 				if (item[0].Contains("?")) {
-					string boneNameL = item[0].Replace('?', 'L');
-					string boneNameR = item[0].Replace('?', 'R');
+					var boneNameL = item[0].Replace('?', 'L');
+					var boneNameR = item[0].Replace('?', 'R');
 					SetBoneScale(dictionary, boneNameL, maid, item[1]);
 					dictionary[boneNameR] = dictionary[boneNameL];
 				} else {
@@ -975,7 +948,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 		}
 
 		static void SetBoneScale(Dictionary<string, Vector3> dictionary, string boneName, Maid maid, string propName) {
-			dictionary[boneName] = new Vector3(
+			dictionary[boneName] = new(
 	ExSaveData.GetFloat(maid, PluginName, propName + ".height", 1f),
 	ExSaveData.GetFloat(maid, PluginName, propName + ".depth", 1f),
 	ExSaveData.GetFloat(maid, PluginName, propName + ".width", 1f));
@@ -985,7 +958,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			if (!t) {
 				return string.Empty;
 			}
-			string hiraerchy = "/" + t.name;
+			var hiraerchy = "/" + t.name;
 			while (t.parent) {
 				t = t.parent;
 				hiraerchy = "/" + t.name + hiraerchy;
@@ -1010,15 +983,15 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 				"MABATAKI_SPEED",
 				"PELVIS", "PELVIS.x", "PELVIS.y", "PELVIS.z",
 			};
-			CharacterMgr cm = GameMain.Instance.CharacterMgr;
+			var cm = GameMain.Instance.CharacterMgr;
 			for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
-				Maid maid = cm.GetStockMaid(i);
-				foreach (string s in obsoleteSettings) {
+				var maid = cm.GetStockMaid(i);
+				foreach (var s in obsoleteSettings) {
 					ExSaveData.Remove(maid, PluginName, s);
 				}
 
 				{
-					string fname = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", null);
+					var fname = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", null);
 					if (string.IsNullOrEmpty(fname)) {
 						ExSaveData.Set(maid, PluginName, "SLIDER_TEMPLATE", "MaidVoicePitchSlider.xml", true);
 					}
@@ -1028,7 +1001,7 @@ namespace CM3D2.MaidVoicePitch.Plugin {
 			string[] obsoleteGlobalSettings = {
 				"TEST_GLOBAL_KEY"
 			};
-			foreach (string s in obsoleteGlobalSettings) {
+			foreach (var s in obsoleteGlobalSettings) {
 				ExSaveData.GlobalRemove(PluginName, s);
 			}
 		}

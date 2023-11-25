@@ -3,7 +3,7 @@ using System;
 using UnityEngine;
 
 class TBodyMoveHeadAndEye {
-    static string PluginName { get { return CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch.PluginName; } }
+	static string PluginName => CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch.PluginName;
 
     public class ExternalValues : MonoBehaviour {
         public TBody tbody;
@@ -16,47 +16,42 @@ class TBodyMoveHeadAndEye {
 
         public void Update() {
             // 前回よりも角度の差が大きい場合はリセットする
-            if (tbody != null) {
-                Maid maid = tbody.maid;
-                if (maid != null) {
-                    jiggleBone jbMuneL = tbody.jbMuneL;
-                    if (jbMuneL == null) {
-                        //本体側更新によりjbMuneLの取得方法変更 
-                        jbMuneL = tbody.jbMuneL;
-                    }
-                    if (jbMuneL.boWarpInit) {
-                        bReset = true;
-                    }
-                }
-            }
+			var maid = tbody?.maid;
+			if (maid != null) {
+				//本体側更新によりjbMuneLの取得方法変更 
+				var jbMuneL = tbody.jbMuneL ?? tbody.jbMuneL;
+				if (jbMuneL.boWarpInit) {
+					bReset = true;
+				}
+			}
         }
     }
 
     public void Callback(TBody tbody) {
 
-        TBody that = tbody;
+		var that = tbody;
 
         if (that.trsHead == null) {
             return;
         }
-        CameraMain mainCamera = GameMain.Instance.MainCamera;
+		var mainCamera = GameMain.Instance.MainCamera;
         if (mainCamera == null) {
             return;
         }
 
         try {
-            bool bParamHeadTrack = false;
-            Maid maid = tbody.maid;
+			var bParamHeadTrack = false;
+			var maid = tbody.maid;
             if (maid != null) {
                 bParamHeadTrack = ExSaveData.GetBool(maid, PluginName, "HEAD_TRACK", false);
             }
 
-            Vector3 thatHeadEulerAngle = that.HeadEulerAngle;
-            Vector3 thatHeadEulerAngleG = that.HeadEulerAngleG;
-            Vector3 thatEyeEulerAngle = that.EyeEulerAngle;
+            var thatHeadEulerAngle = that.HeadEulerAngle;
+            var thatHeadEulerAngleG = that.HeadEulerAngleG;
+			var thatEyeEulerAngle = that.EyeEulerAngle;
 
             if (bParamHeadTrack) {
-                ExternalValues externalValues = PluginHelper.GetOrAddComponent<ExternalValues>(tbody.gameObject);
+				var externalValues = PluginHelper.GetOrAddComponent<ExternalValues>(tbody.gameObject);
                 externalValues.tbody = tbody;
                 newTbodyMoveHeadAndEyeCallback2(externalValues, tbody, ref thatHeadEulerAngle, ref thatHeadEulerAngleG, ref thatEyeEulerAngle);
             } else {
@@ -75,11 +70,11 @@ class TBodyMoveHeadAndEye {
 
     // 元の MoveHeadAndEye 相当の処理
     void originalTbodyMoveHeadAndEyeCallback2(TBody tbody, ref Vector3 thatHeadEulerAngle, ref Vector3 thatHeadEulerAngleG, ref Vector3 thatEyeEulerAngle) {
-        TBody that = tbody;
-        CameraMain mainCamera = GameMain.Instance.MainCamera;
+		var that = tbody;
+		var mainCamera = GameMain.Instance.MainCamera;
 
-        // eyeTargetWorldPos：ワールド座標系での視線のターゲット位置
-        Vector3 eyeTargetWorldPos = updateEyeTargetPos(tbody);
+		// eyeTargetWorldPos：ワールド座標系での視線のターゲット位置
+		var eyeTargetWorldPos = updateEyeTargetPos(tbody);
 
         // COM3D2の追加処理
         if (tbody.boLockHeadAndEye) return;
@@ -103,21 +98,21 @@ class TBodyMoveHeadAndEye {
 
         // 目の追従処理
         if (that.boEyeToCam && that.boChkEye) {
-            Vector3 toDirection2 = Quaternion.Inverse(that.trsHead.rotation) * (eyeTargetWorldPos - that.trsHead.position);
-            Quaternion quaternion2 = new Quaternion();
+			var toDirection2 = Quaternion.Inverse(that.trsHead.rotation) * (eyeTargetWorldPos - that.trsHead.position);
+			var quaternion2 = new Quaternion();
             quaternion2.SetFromToRotation(Vector3.up, toDirection2);
-            Vector3 eulerAngles2 = PluginHelper.NormalizeEulerAngles(quaternion2.eulerAngles);
-            Vector3 view = Vector3.Normalize(eyeTargetWorldPos - that.trsEyeL.position);
+			var eulerAngles2 = PluginHelper.NormalizeEulerAngles(quaternion2.eulerAngles);
+			var view = Vector3.Normalize(eyeTargetWorldPos - that.trsEyeL.position);
             quaternion2.SetLookRotation(view, Vector3.up);
-            Quaternion quaternion3 = quaternion2 * Quaternion.Euler(0.0f, 90f, 0.0f);
+			var quaternion3 = quaternion2 * Quaternion.Euler(0.0f, 90f, 0.0f);
 
-            float num = 0.5f;
+			var num = 0.5f;
             if (that.boEyeSorashi) {
                 num = 0.05f;
             }
             thatEyeEulerAngle = thatEyeEulerAngle * (1f - num) + eulerAngles2 * num;
         } else {
-            thatEyeEulerAngle = thatEyeEulerAngle * 0.95f;
+            thatEyeEulerAngle *= 0.95f;
         }
 
         that.trsEyeL.localRotation = that.quaDefEyeL * Quaternion.Euler(0.0f, thatEyeEulerAngle.x * -0.2f + that.m_editYorime, thatEyeEulerAngle.z * -0.1f);
@@ -125,8 +120,8 @@ class TBodyMoveHeadAndEye {
     }
 
     Vector3 updateEyeTargetPos(TBody tbody) {
-        TBody that = tbody;
-        CameraMain mainCamera = GameMain.Instance.MainCamera;
+		var that = tbody;
+		var mainCamera = GameMain.Instance.MainCamera;
 
         // eyeTargetWorldPos：ワールド座標系での視線のターゲット位置
         Vector3 eyeTargetWorldPos;
@@ -134,7 +129,7 @@ class TBodyMoveHeadAndEye {
             eyeTargetWorldPos = that.trsHead.TransformPoint(that.offsetLookTarget);
             if (that.boEyeSorashi) {
                 // num : 顔の前方と顔→カメラベクトルの内積。1.0に近ければ、カメラが顔の正面にある
-                float num = Vector3.Dot(
+                var num = Vector3.Dot(
                     (eyeTargetWorldPos - that.trsHead.position).normalized,
                     (mainCamera.transform.position - that.trsHead.position).normalized);
 
@@ -159,15 +154,15 @@ class TBodyMoveHeadAndEye {
     }
 
     void originalMoveHead(TBody tbody, ref Vector3 thatHeadEulerAngle, ref Vector3 thatHeadEulerAngleG, ref Vector3 thatEyeEulerAngle, Vector3 eyeTargetWorldPos) {
-        TBody that = tbody;
+		var that = tbody;
         //        CameraMain mainCamera = GameMain.Instance.MainCamera;
 
         // eulerAngles1：顔の正面向きのベクトルから見た、視線ターゲットまでの回転量
         Vector3 eulerAngles1;
-        Quaternion quaternion1 = new Quaternion();
+		var quaternion1 = new Quaternion();
         {
-            // toDirection1：顔からターゲットを見た向き（顔の座標系）
-            Vector3 toDirection1 = Quaternion.Inverse(that.trsNeck.rotation) * (eyeTargetWorldPos - that.trsNeck.position);
+			// toDirection1：顔からターゲットを見た向き（顔の座標系）
+			var toDirection1 = Quaternion.Inverse(that.trsNeck.rotation) * (eyeTargetWorldPos - that.trsNeck.position);
 
             // quaternion1：(0,1,0) (顔の正面向きのベクトル) から見たときの、toDirection1 までの回転量
             quaternion1.SetFromToRotation(Vector3.up, toDirection1);
@@ -190,7 +185,7 @@ class TBodyMoveHeadAndEye {
         if (that.boHeadToCamInMode) {
             // 追従モード
             that.boChkEye = true;
-            float num = 0.3f;
+			var num = 0.3f;
 
             if (eulerAngles1.x > thatHeadEulerAngle.x + 10.0f) {
                 thatHeadEulerAngleG.x += num;
@@ -208,8 +203,8 @@ class TBodyMoveHeadAndEye {
                 thatHeadEulerAngleG.z *= 0.95f;
             }
         } else {
-            // 自由モード
-            float num = 0.1f;
+			// 自由モード
+			var num = 0.1f;
             if (0.0f > thatHeadEulerAngle.x + 10.0) {
                 thatHeadEulerAngleG.x += num;
             }
@@ -227,7 +222,7 @@ class TBodyMoveHeadAndEye {
         thatHeadEulerAngleG *= 0.95f;
         thatHeadEulerAngle += thatHeadEulerAngleG;
 
-        float uScale = 0.4f;
+		var uScale = 0.4f;
         that.trsHead.localRotation = Quaternion.Slerp(
             that.trsHead.localRotation,
             that.quaDefHead *
@@ -241,12 +236,12 @@ class TBodyMoveHeadAndEye {
 
     // 新しい MoveHeadAndEye
     void newTbodyMoveHeadAndEyeCallback2(ExternalValues externalValues, TBody tbody, ref Vector3 thatHeadEulerAngle, ref Vector3 thatHeadEulerAngleG, ref Vector3 thatEyeEulerAngle) {
-        TBody that = tbody;
-        Maid maid = tbody.maid;
-        CameraMain mainCamera = GameMain.Instance.MainCamera;
+		var that = tbody;
+		var maid = tbody.maid;
+		var mainCamera = GameMain.Instance.MainCamera;
 
-        // eyeTarget_world：視線の目標位置（ワールド座標系）
-        Vector3 eyeTarget_world = updateEyeTargetPos(tbody);
+		// eyeTarget_world：視線の目標位置（ワールド座標系）
+		var eyeTarget_world = updateEyeTargetPos(tbody);
 
         // COM3D2の追加処理
         if (tbody.boLockHeadAndEye) return;
@@ -271,18 +266,18 @@ class TBodyMoveHeadAndEye {
 
         that.boChkEye = false;
         {
-            float paramEyeAng = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.angle", 0f);
+			var paramEyeAng = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.angle", 0f);
             paramEyeAng = Mathf.Clamp(paramEyeAng, -180f, 180f);
-            float paramSpeed = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.speed", 0.05f);
+			var paramSpeed = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.speed", 0.05f);
 
-            float paramInside = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.inside", 60f);
-            float paramOutside = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.outside", 60f);
-            float paramAbove = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.above", 40f);
-            float paramBelow = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.below", 20f);
-            float paramBehind = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.behind", 170f);
-            float paramOfsX = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.ofsx", 0f);
-            float paramOfsY = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.ofsy", 0f);
-            Vector3 targetPosition = eyeTarget_world;
+            var paramInside = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.inside", 60f);
+            var paramOutside = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.outside", 60f);
+            var paramAbove = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.above", 40f);
+            var paramBelow = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.below", 20f);
+            var paramBehind = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.behind", 170f);
+            var paramOfsX = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.ofsx", 0f);
+			var paramOfsY = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.ofsy", 0f);
+			var targetPosition = eyeTarget_world;
 
             if (!that.boEyeToCam) {
                 // 視線を正面に戻す
@@ -290,12 +285,12 @@ class TBodyMoveHeadAndEye {
             }
 
             {
-                Transform trsEye = that.trsEyeL;
-                Quaternion defQuat = that.quaDefEyeL * Quaternion.Euler(paramEyeAng, -paramOfsX, -paramOfsY);
-                Quaternion prevQuat = externalValues.prevLeftEyeQuat;
+				var trsEye = that.trsEyeL;
+				var defQuat = that.quaDefEyeL * Quaternion.Euler(paramEyeAng, -paramOfsX, -paramOfsY);
+				var prevQuat = externalValues.prevLeftEyeQuat;
 
-                Transform trsParent = trsEye.parent;
-                Quaternion newRotation_world = CalcNewEyeRotation(
+				var trsParent = trsEye.parent;
+				var newRotation_world = CalcNewEyeRotation(
                     paramOutside,
                     paramInside,
                     paramBelow,
@@ -306,7 +301,7 @@ class TBodyMoveHeadAndEye {
                     eyeTarget_world,
                     eyeTarget_world
                 );
-                Quaternion q = Quaternion.Inverse(trsParent.rotation) * newRotation_world;
+				var q = Quaternion.Inverse(trsParent.rotation) * newRotation_world;
                 q = Quaternion.Slerp(Quaternion.identity, q, 0.2f);     // 眼球モデルの中心に、眼球のトランスフォームの原点が無いため、ごまかしている
                 q = Quaternion.Slerp(prevQuat, q, paramSpeed);
                 prevQuat = q;
@@ -316,12 +311,12 @@ class TBodyMoveHeadAndEye {
             }
 
             {
-                Transform trsEye = that.trsEyeR;
-                Quaternion defQuat = that.quaDefEyeR * Quaternion.Euler(-paramEyeAng, -paramOfsX, paramOfsY);
-                Quaternion prevQuat = externalValues.prevRightEyeQuat;
+				var trsEye = that.trsEyeR;
+				var defQuat = that.quaDefEyeR * Quaternion.Euler(-paramEyeAng, -paramOfsX, paramOfsY);
+				var prevQuat = externalValues.prevRightEyeQuat;
 
-                Transform trsParent = trsEye.parent;
-                Quaternion newRotation_world = CalcNewEyeRotation(
+				var trsParent = trsEye.parent;
+				var newRotation_world = CalcNewEyeRotation(
                     paramOutside,
                     paramInside,
                     paramAbove,
@@ -332,7 +327,7 @@ class TBodyMoveHeadAndEye {
                     eyeTarget_world,
                     eyeTarget_world
                 );
-                Quaternion q = Quaternion.Inverse(trsParent.rotation) * newRotation_world;
+				var q = Quaternion.Inverse(trsParent.rotation) * newRotation_world;
                 q = Quaternion.Slerp(Quaternion.identity, q, 0.2f);
                 q = Quaternion.Slerp(prevQuat, q, paramSpeed);
                 prevQuat = q;
@@ -344,39 +339,39 @@ class TBodyMoveHeadAndEye {
     }
 
     void newMoveHead(ExternalValues externalValues, TBody tbody, ref Vector3 thatHeadEulerAngle, ref Vector3 thatHeadEulerAngleG, ref Vector3 thatEyeEulerAngle, Vector3 eyeTarget_world) {
-        TBody that = tbody;
-        Maid maid = tbody.maid;
+		var that = tbody;
+		var maid = tbody.maid;
 
-        float paramSpeed = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.speed", 0.05f);
-        float paramLateral = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.lateral", 60.0f);
-        float paramAbove = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.above", 40.0f);
-        float paramBelow = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.below", 20.0f);
-        float paramBehind = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.behind", 170.0f);
-        float paramOfsX = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.ofsx", 0.0f);
-        float paramOfsY = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.ofsy", 0.0f);
-        float paramOfsZ = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.ofsz", 0.0f);
+        var paramSpeed = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.speed", 0.05f);
+        var paramLateral = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.lateral", 60.0f);
+        var paramAbove = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.above", 40.0f);
+        var paramBelow = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.below", 20.0f);
+        var paramBehind = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.behind", 170.0f);
+        var paramOfsX = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.ofsx", 0.0f);
+        var paramOfsY = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.ofsy", 0.0f);
+		var paramOfsZ = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.ofsz", 0.0f);
 
-        // 正面の角度
-        float frontangle = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.frontangle", 0f);
-        Quaternion frontquaternion = Quaternion.Euler(0f, 0f, frontangle);
+		// 正面の角度
+		var frontangle = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.frontangle", 0f);
+		var frontquaternion = Quaternion.Euler(0f, 0f, frontangle);
 
         // モーションにしたがっている場合 (HeadToCamPer=0f) はオフセットをつけない
         paramOfsX *= that.HeadToCamPer;
         paramOfsY *= that.HeadToCamPer;
         paramOfsZ *= that.HeadToCamPer;
 
-        Vector3 basePosition = that.trsHead.position;
-        Quaternion baseRotation = that.trsNeck.rotation * frontquaternion;
-        Vector3 target_local = Quaternion.Inverse(baseRotation) * (eyeTarget_world - basePosition);
+		var basePosition = that.trsHead.position;
+		var baseRotation = that.trsNeck.rotation * frontquaternion;
+		var target_local = Quaternion.Inverse(baseRotation) * (eyeTarget_world - basePosition);
 
-        //追従割合
-        Quaternion local_angle = Quaternion.FromToRotation(Vector3.up, target_local);
-        Vector3 local_auler = local_angle.eulerAngles;
-        float headrateup = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.headrateup", 1f);
-        float headratedown = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.headratedown", 1f);
-        float headratehorizon = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.headratehorizon", 1f);
-        float dx = 0;
-        float dy = 0;
+		//追従割合
+		var local_angle = Quaternion.FromToRotation(Vector3.up, target_local);
+		var local_auler = local_angle.eulerAngles;
+        var headrateup = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.headrateup", 1f);
+        var headratedown = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.headratedown", 1f);
+        var headratehorizon = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.headratehorizon", 1f);
+        var dx = 0f;
+		var dy = 0f;
         if (local_auler.x < 180f) {
             dx = local_auler.x * (headratehorizon - 1f);
         } else {
@@ -390,10 +385,10 @@ class TBodyMoveHeadAndEye {
         target_local = Quaternion.Euler(dx, 0f, dy) * target_local;
 
         target_local = Quaternion.Euler(paramOfsX, 0f, paramOfsY) * target_local;
-        Vector3 target_world = (baseRotation * target_local) + basePosition;
+		var target_world = (baseRotation * target_local) + basePosition;
 
-        // 顔が向くべき方向を算出
-        Quaternion newHeadRotation_world = CalcNewHeadRotation(
+		// 顔が向くべき方向を算出
+		var newHeadRotation_world = CalcNewHeadRotation(
             paramLateral,
             paramAbove,
             paramBelow,
@@ -403,29 +398,29 @@ class TBodyMoveHeadAndEye {
             target_world,
             eyeTarget_world);
 
-        newHeadRotation_world = newHeadRotation_world * Quaternion.Euler(0f, paramOfsZ, 0f);
+        newHeadRotation_world *= Quaternion.Euler(0f, paramOfsZ, 0f);
 
         // TBody.HeadToCamPer を「正面向き度合い」として加味する
         newHeadRotation_world = Quaternion.Slerp(that.trsHead.rotation, newHeadRotation_world, that.HeadToCamPer);
 
-        // 角度
-        float inclinerate = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.inclinerate", 0f);
-        Quaternion newHeadRotation_Local = Quaternion.Inverse(baseRotation) * newHeadRotation_world;
-        Vector3 newHeadRotationEulerLocal = newHeadRotation_Local.eulerAngles;
+		// 角度
+		var inclinerate = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.inclinerate", 0f);
+		var newHeadRotation_Local = Quaternion.Inverse(baseRotation) * newHeadRotation_world;
+		var newHeadRotationEulerLocal = newHeadRotation_Local.eulerAngles;
         if (newHeadRotationEulerLocal.x > 180f) {
-            newHeadRotationEulerLocal = new Vector3(
+            newHeadRotationEulerLocal = new(
                 newHeadRotationEulerLocal.x - 360f,
                 newHeadRotationEulerLocal.y,
                 newHeadRotationEulerLocal.z);
         }
-        newHeadRotationEulerLocal = new Vector3(
+        newHeadRotationEulerLocal = new(
             newHeadRotationEulerLocal.x,
             newHeadRotationEulerLocal.y + (newHeadRotationEulerLocal.x * inclinerate),
             newHeadRotationEulerLocal.z);
         newHeadRotation_Local = Quaternion.Euler(newHeadRotationEulerLocal);
         newHeadRotation_world = baseRotation * newHeadRotation_Local;
 
-        float s = paramSpeed;
+		var s = paramSpeed;
 
         // 前回の回転よりも差が大きすぎる場合はリセットする
         if (externalValues.bReset) {
@@ -488,19 +483,19 @@ class TBodyMoveHeadAndEye {
         Vector3 origTargetPosition
     ) {
         Quaternion newHeadRotation_world;
-        // 「正面」の方向 (TBody.trsNeck座標系)
-        Vector3 headForward_neck = forwardVector;
+		// 「正面」の方向 (TBody.trsNeck座標系)
+		var headForward_neck = forwardVector;
 
-        // 「正面」の方向（ワールド座標系）
-        Vector3 headForward_world = neckRotation * headForward_neck;
+		// 「正面」の方向（ワールド座標系）
+		var headForward_world = neckRotation * headForward_neck;
 
-        // headから視線目標点への方向 (ワールド座標系。正規化済み)
-        Vector3 headToTargetDirection_world = (targetPosition - headPosition).normalized;
-        Vector3 origHeadToTargetDirection_world = (origTargetPosition - headPosition).normalized;
+		// headから視線目標点への方向 (ワールド座標系。正規化済み)
+		var headToTargetDirection_world = (targetPosition - headPosition).normalized;
+		var origHeadToTargetDirection_world = (origTargetPosition - headPosition).normalized;
 
-        // 現在の「正面」から目標までの角度
-        float currentAngle = Vector3.Angle(headForward_world, headToTargetDirection_world);
-        float origCurrentAngle = Vector3.Angle(headForward_world, origHeadToTargetDirection_world);
+		// 現在の「正面」から目標までの角度
+		var currentAngle = Vector3.Angle(headForward_world, headToTargetDirection_world);
+		var origCurrentAngle = Vector3.Angle(headForward_world, origHeadToTargetDirection_world);
 
         // 視線目標点が首から見て真後ろ付近なら、目標方向は正面にする
         if (origCurrentAngle >= paramBehind) {
@@ -508,25 +503,25 @@ class TBodyMoveHeadAndEye {
             currentAngle = Vector3.Angle(headForward_world, headToTargetDirection_world);
         }
 
-        // headから視線目標点への方向 (TBody.trsNeck座標系。正規化済み)
-        Vector3 headToTargetDirection_neck = Quaternion.Inverse(neckRotation) * headToTargetDirection_world;
+		// headから視線目標点への方向 (TBody.trsNeck座標系。正規化済み)
+		var headToTargetDirection_neck = Quaternion.Inverse(neckRotation) * headToTargetDirection_world;
 
-        // headForward(正面)の向きからheadToTargetDirectionの向きへの回転 (TBody.trsNeck座標系)
-        Quaternion headForwardToTargetRotation_neck = new Quaternion();
+		// headForward(正面)の向きからheadToTargetDirectionの向きへの回転 (TBody.trsNeck座標系)
+		var headForwardToTargetRotation_neck = new Quaternion();
         headForwardToTargetRotation_neck.SetFromToRotation(headForward_neck, headToTargetDirection_neck);
 
-        //  rad : neck座標系の「正面」から見た（投影した）時の目標点の向き (trsNeck XZ 平面)
-        float dx = Vector3.Dot(headToTargetDirection_neck, rightVector);
-        float dy = Vector3.Dot(headToTargetDirection_neck, upVector);
-        float deg = PluginHelper.NormalizeAngle(Mathf.Rad2Deg * Mathf.Atan2(dy, dx));
+		//  rad : neck座標系の「正面」から見た（投影した）時の目標点の向き (trsNeck XZ 平面)
+		var dx = Vector3.Dot(headToTargetDirection_neck, rightVector);
+		var dy = Vector3.Dot(headToTargetDirection_neck, upVector);
+		var deg = PluginHelper.NormalizeAngle(Mathf.Rad2Deg * Mathf.Atan2(dy, dx));
 
-        // 向きに応じた限界角度を算出
-        float angMax = GetMaxAngle(deg, paramLeft, paramRight, paramAbove, paramBelow);
+		// 向きに応じた限界角度を算出
+		var angMax = GetMaxAngle(deg, paramLeft, paramRight, paramAbove, paramBelow);
 
         // 限界角度を超えているか？
         if (currentAngle > angMax) {
-            // 超えているので補正する
-            float a = angMax / currentAngle;
+			// 超えているので補正する
+			var a = angMax / currentAngle;
             headForwardToTargetRotation_neck = Quaternion.Slerp(Quaternion.identity, headForwardToTargetRotation_neck, a);
         }
 

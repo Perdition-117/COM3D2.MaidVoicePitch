@@ -8,7 +8,7 @@ using System.Xml;
 
 internal static class SliderTemplates {
     class Cache : TemplateFiles<SliderTemplate> { }
-    static Cache sliderTemplates = new Cache();
+    static Cache sliderTemplates = new();
 
     public static void Clear() {
         sliderTemplates.Clear();
@@ -19,7 +19,7 @@ internal static class SliderTemplates {
         if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "SceneEdit") {
             return;
         }
-        CharacterMgr cm = GameMain.Instance.CharacterMgr;
+		var cm = GameMain.Instance.CharacterMgr;
         for (int i = 0, n = cm.GetStockMaidCount(); i < n; i++) {
             Maid maid = cm.GetStockMaid(i);
             Update(maid, PluginName);
@@ -30,11 +30,11 @@ internal static class SliderTemplates {
         if (!maid.Visible) {
             return;
         }
-        string fname = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", "MaidVoicePitchSlider.xml");
+		var fname = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", "MaidVoicePitchSlider.xml");
         fname = Path.Combine(Paths.ConfigPath, fname);
 		PathCheck(maid, PluginName, fname);
-        SliderTemplate sliderTemplate = sliderTemplates.Get(fname);
-        string guid = maid.status.guid;
+		var sliderTemplate = sliderTemplates.Get(fname);
+		var guid = maid.status.guid;
         if (sliderTemplate != null && !sliderTemplate.LoadedMaidGuids.Contains(guid)) {
             sliderTemplate.WriteProps(maid);
             sliderTemplate.LoadedMaidGuids.Add(guid);
@@ -55,18 +55,18 @@ internal static class SliderTemplates {
         }
 
         public Dictionary<string, Slider> Sliders { get; set; }
-        public HashSet<string> LoadedMaidGuids = new HashSet<string>();
+        public HashSet<string> LoadedMaidGuids = new();
 
         public SliderTemplate() {
             Clear();
         }
 
         void Clear() {
-            Sliders = new Dictionary<string, Slider>();
+            Sliders = new();
         }
 
         public bool Load(string fname) {
-            bool result = false;
+			var result = false;
             Clear();
             var xd = new XmlDocument();
             try {
@@ -76,7 +76,7 @@ internal static class SliderTemplates {
 #endif
                     xd.Load(fname);
                     foreach (XmlNode e in xd.SelectNodes("/slidertemplate/sliders/slider")) {
-                        Sliders[e.Attributes["name"].Value] = new Slider {
+                        Sliders[e.Attributes["name"].Value] = new() {
                             min = Helper.StringToFloat(e.Attributes["min"].Value, 0f),
                             max = Helper.StringToFloat(e.Attributes["max"].Value, 100f)
                         };
@@ -99,11 +99,11 @@ internal static class SliderTemplates {
 
         public void WriteProps(Maid maid) {
             foreach (var kv in Sliders) {
-                string name = kv.Key;
-                Slider slider = kv.Value;
-                MPN mpn = Helper.ToEnum<MPN>(name, MPN.null_mpn);
+				var name = kv.Key;
+				var slider = kv.Value;
+				var mpn = Helper.ToEnum<MPN>(name, MPN.null_mpn);
                 if (mpn != MPN.null_mpn) {
-                    MaidProp maidProp = maid.GetProp(mpn);
+					var maidProp = maid.GetProp(mpn);
                     maidProp.min = (int)slider.min;
                     maidProp.max = (int)slider.max;
                 }
