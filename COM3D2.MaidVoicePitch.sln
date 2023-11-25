@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34009.444
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.MaidVoicePitch.Plugin", "COM3D2.MaidVoicePitch.Plugin\COM3D2.MaidVoicePitch.Plugin.csproj", "{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.MaidVoicePitch.Managed", "COM3D2.MaidVoicePitch.Managed\COM3D2.MaidVoicePitch.Managed.csproj", "{190AC69A-A935-4071-8B40-FF1325E6C12F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.MaidVoicePitch.Patcher", "COM3D2.MaidVoicePitch.Patcher\COM3D2.MaidVoicePitch.Patcher.csproj", "{C815AB0D-E05E-41C8-B06F-F9BE56F1C2AA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.ExternalPreset.Managed", "COM3D2.ExternalPreset.Managed\COM3D2.ExternalPreset.Managed.csproj", "{4AF41D1F-0542-4126-8356-04C8C943367A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.ExternalPreset.Patcher", "COM3D2.ExternalPreset.Patcher\COM3D2.ExternalPreset.Patcher.csproj", "{FBC50894-5ED7-461A-B68A-2C28096F69D3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.ExternalSaveData.Managed", "COM3D2.ExternalSaveData.Managed\COM3D2.ExternalSaveData.Managed.csproj", "{81B8BE3C-A95A-4FF3-892B-8809DCC6B9DC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.ExternalSaveData.Patcher", "COM3D2.ExternalSaveData.Patcher\COM3D2.ExternalSaveData.Patcher.csproj", "{4E406C1E-7FBC-4ABA-B869-6465E45B1CFE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{190AC69A-A935-4071-8B40-FF1325E6C12F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{190AC69A-A935-4071-8B40-FF1325E6C12F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{190AC69A-A935-4071-8B40-FF1325E6C12F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{190AC69A-A935-4071-8B40-FF1325E6C12F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C815AB0D-E05E-41C8-B06F-F9BE56F1C2AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C815AB0D-E05E-41C8-B06F-F9BE56F1C2AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C815AB0D-E05E-41C8-B06F-F9BE56F1C2AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C815AB0D-E05E-41C8-B06F-F9BE56F1C2AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AF41D1F-0542-4126-8356-04C8C943367A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AF41D1F-0542-4126-8356-04C8C943367A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AF41D1F-0542-4126-8356-04C8C943367A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AF41D1F-0542-4126-8356-04C8C943367A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBC50894-5ED7-461A-B68A-2C28096F69D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBC50894-5ED7-461A-B68A-2C28096F69D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBC50894-5ED7-461A-B68A-2C28096F69D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBC50894-5ED7-461A-B68A-2C28096F69D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81B8BE3C-A95A-4FF3-892B-8809DCC6B9DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81B8BE3C-A95A-4FF3-892B-8809DCC6B9DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81B8BE3C-A95A-4FF3-892B-8809DCC6B9DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81B8BE3C-A95A-4FF3-892B-8809DCC6B9DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E406C1E-7FBC-4ABA-B869-6465E45B1CFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E406C1E-7FBC-4ABA-B869-6465E45B1CFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E406C1E-7FBC-4ABA-B869-6465E45B1CFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E406C1E-7FBC-4ABA-B869-6465E45B1CFE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4A21CF55-23EA-42FF-B4AF-5B0F1A4E8F45}
+	EndGlobalSection
+EndGlobal

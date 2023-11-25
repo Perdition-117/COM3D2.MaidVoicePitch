@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <UseCommonOutputDirectory>true</UseCommonOutputDirectory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="COM3D2.GameLibs" Version="2.25.2-r.0" />
+    <PackageReference Include="UnityEngine" Version="5.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\COM3D2.ExternalPreset.Managed\COM3D2.ExternalPreset.Managed.csproj" />
+    <ProjectReference Include="..\COM3D2.ExternalSaveData.Managed\COM3D2.ExternalSaveData.Managed.csproj" />
+    <ProjectReference Include="..\COM3D2.MaidVoicePitch.Managed\COM3D2.MaidVoicePitch.Managed.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityInjector">
+      <HintPath>..\lib\UnityInjector.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
