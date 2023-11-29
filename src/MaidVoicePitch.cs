@@ -187,7 +187,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			var boneName = boneAndPropName.Key;
 			var key = $"min+{tag}*{boneName.Replace('?', 'L')}";
 			if (!BoneMorph.dic.ContainsKey(key)) {
-				PluginHelper.BoneMorphSetScale(tag, boneName, 1f, 1f, 1f, 1f, 1f, 1f);
+				BoneMorph.SetScale(tag, boneName, 1f, 1f, 1f, 1f, 1f, 1f);
 			}
 		}
 	}

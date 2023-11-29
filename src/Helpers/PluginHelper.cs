@@ -68,11 +68,6 @@ internal static class PluginHelper {
 		return null;
 	}
 
-	// BoneMorph_.SetScaleを呼び出す
-	public static void BoneMorphSetScale(string tag, string bname, float x, float y, float z, float x2, float y2, float z2) {
-		BoneMorph.SetScale(tag, bname, x, y, z, x2, y2, z2);
-	}
-
 	public static void DebugGui() {
 		if (bDebugEnable && debugLines != null && debugLines.Count > 0) {
 			debugWindowRect = GUILayout.Window(windowId, debugWindowRect, DebugGuiWindow, "Debug");
