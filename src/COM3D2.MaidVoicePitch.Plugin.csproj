@@ -17,4 +17,10 @@
     <PackageReference Include="UnityEngine" Version="5.6.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="MaidVoicePitchSlider.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- その１>>804、その２>>12 さんの値 -->
+<slidertemplate>
+	<sliders>
+		<slider name="FaceShapeSlim" min="0"    max="200"/>
+		<slider name="EyeSclX"       min="-400" max="300"/>
+		<slider name="EyeSclY"       min="-400" max="300"/>
+		<slider name="EyePosX"       min="-100" max="130"/>
+		<slider name="EyePosY"       min="-100" max="200"/>
+		<slider name="MayuX"         min="-100" max="200"/>
+		<slider name="MayuY"         min="-100" max="200"/>
+		<slider name="MayuRot"       min="-100" max="200"/>
+		<slider name="EyeBallPosY"   min="-100" max="200"/>
+		<slider name="EyeBallSclX"   min="-100" max="200"/>
+		<slider name="EyeBallSclY"   min="-100" max="200"/>
+		<slider name="EarScl"        min="0"    max="200"/>
+		<slider name="EarRot"        min="-100" max="200"/>
+		<slider name="EarElf"        min="0"    max="200"/>
+		<slider name="NosePos"       min="0"    max="200"/>
+		<slider name="NoseScl"       min="-30"  max="200"/>
+
+		<slider name="MuneL"         min="0"    max="195"/> <!-- breast size -->
+		<slider name="MuneUpDown"    min="-50"  max="300"/> <!-- nipple position -->
+		<slider name="MuneYori"      min="-50"  max="200"/> <!-- breast direction -->
+		<slider name="MuneYawaraka"  min="0"    max="200"/> <!-- breast shake -->
+
+		<slider name="sintyou"       min="-300" max="100"/> <!-- height -->
+		<slider name="KubiScl"       min="0"    max="200"/> <!-- neck length -->
+		<slider name="kata"          min="-400" max="100"/> <!-- shoulder width -->
+		<slider name="west"          min="-30"  max="100"/> <!-- waist -->
+		<slider name="Hara"          min="0"    max="200"/> <!-- belly -->
+		<slider name="koshi"         min="-160" max="200"/> <!-- hip -->
+		<slider name="DouPer"        min="-100" max="500"/> <!-- leg length -->
+	</sliders>
+</slidertemplate>
