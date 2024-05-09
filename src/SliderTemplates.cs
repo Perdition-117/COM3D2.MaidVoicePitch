@@ -70,22 +70,12 @@ internal static class SliderTemplates {
 			var document = new XmlDocument();
 			try {
 				if (File.Exists(fileName)) {
-#if DEBUG
-					Helper.Log($"SliderTemplates.SliderTemplate.Load({fileName})");
-#endif
 					document.Load(fileName);
 					foreach (XmlNode node in document.SelectNodes("/slidertemplate/sliders/slider")) {
 						Sliders[node.Attributes["name"].Value] = new() {
 							Min = Helper.StringToFloat(node.Attributes["min"].Value, 0f),
-							Max = Helper.StringToFloat(node.Attributes["max"].Value, 100f)
+							Max = Helper.StringToFloat(node.Attributes["max"].Value, 100f),
 						};
-#if DEBUG
-						{
-							var name = node.Attributes["name"].Value;
-							var slider = Sliders[name];
-							Helper.Log($"  {name} .min={slider.Min:F6}, .max={slider.Max:F6}");
-						}
-#endif
 					}
 					// Helper.Log($"SliderTemplates.SliderTemplate.Load({fileName}) -> ok");
 					result = true;

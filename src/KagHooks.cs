@@ -43,7 +43,6 @@ internal static class KagHooks {
 			if (Array.IndexOf(PluginHelper.MpnStrings, str) >= 0) {
 #if DEBUG
 				MaidVoicePitch.LogDebug($"PROPSET_OFF(category={str}) -> match");
-				Helper.Log($"PROPSET_OFF(category={str}) -> match");
 #endif
 				return false;
 			}
