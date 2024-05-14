@@ -3,7 +3,6 @@ using System.Reflection.Emit;
 using BepInEx;
 using BepInEx.Logging;
 using CM3D2.ExternalPreset.Managed;
-using CM3D2.ExternalPreset.Patcher;
 using CM3D2.ExternalSaveData.Managed;
 using ExtensionMethods;
 using HarmonyLib;
@@ -13,6 +12,8 @@ using UnityEngine.SceneManagement;
 namespace CM3D2.MaidVoicePitch.Plugin;
 
 [BepInPlugin("CM3D2.MaidVoicePitch", "MaidVoicePitch", "0.2.18")]
+[BepInDependency("COM3D2.ExternalSaveData")]
+[BepInDependency("COM3D2.ExternalPresetData")]
 public class MaidVoicePitch : BaseUnityPlugin {
 	public static string PluginName => "CM3D2.MaidVoicePitch";
 
@@ -128,9 +129,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		ExPreset.loadNotify.AddListener(MaidVoicePitch_UpdateSliders);
 
 		Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
-
-		Harmony.CreateAndPatchAll(typeof(ExSaveData));
-		Harmony.CreateAndPatchAll(typeof(ExternalPresetPatch));
 	}
 
 	internal static void LogDebug(object data) {

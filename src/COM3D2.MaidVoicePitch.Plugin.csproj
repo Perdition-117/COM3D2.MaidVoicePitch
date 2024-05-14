@@ -18,6 +18,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="COM3D2.ExternalSaveData.Managed">
+      <HintPath>..\lib\COM3D2.ExternalSaveData.Managed.dll</HintPath>
+    </Reference>
+    <Reference Include="COM3D2.ExternalPreset.Managed">
+      <HintPath>..\lib\COM3D2.ExternalPreset.Managed.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="MaidVoicePitchSlider.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
