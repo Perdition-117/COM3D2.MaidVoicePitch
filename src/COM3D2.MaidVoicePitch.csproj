@@ -4,6 +4,7 @@
     <TargetFramework>net35</TargetFramework>
     <LangVersion>10</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>COM3D2.MaidVoicePitch.Managed</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup>
