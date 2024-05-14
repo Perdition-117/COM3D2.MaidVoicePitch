@@ -4,6 +4,7 @@ using BepInEx;
 using BepInEx.Logging;
 using CM3D2.ExternalPreset.Managed;
 using CM3D2.ExternalSaveData.Managed;
+using COM3D2.MaidVoicePitch;
 using ExtensionMethods;
 using HarmonyLib;
 using UnityEngine;
@@ -11,7 +12,7 @@ using UnityEngine.SceneManagement;
 
 namespace CM3D2.MaidVoicePitch.Plugin;
 
-[BepInPlugin("CM3D2.MaidVoicePitch", "MaidVoicePitch", "0.2.18")]
+[BepInPlugin("COM3D2.MaidVoicePitch", MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInDependency("COM3D2.ExternalSaveData")]
 [BepInDependency("COM3D2.ExternalPresetData")]
 public class MaidVoicePitch : BaseUnityPlugin {
