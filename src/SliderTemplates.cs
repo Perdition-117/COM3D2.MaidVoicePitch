@@ -16,9 +16,7 @@ internal static class SliderTemplates {
 		if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "SceneEdit") {
 			return;
 		}
-		var cm = GameMain.Instance.CharacterMgr;
-		for (var i = 0; i < cm.GetStockMaidCount(); i++) {
-			var maid = cm.GetStockMaid(i);
+		foreach (var maid in PluginHelper.GetMaids()) {
 			Update(maid, PluginName);
 		}
 	}

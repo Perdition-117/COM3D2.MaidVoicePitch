@@ -1,8 +1,7 @@
+using System.Linq;
 using UnityEngine;
 
 internal static class PluginHelper {
-	static string[] mpnStrings;
-
 #if DEBUG
 	public static bool bDebugEnable = true;
 #else
@@ -16,56 +15,35 @@ internal static class PluginHelper {
 	const int windowId = 0x123456;
 	public static Rect debugWindowRect = new(margin, margin, Screen.width / 2 - (margin * 2), Screen.height - (margin * 2));
 
-	public static string[] MpnStrings {
-		get {
-			var mpnValues = Enum.GetValues(typeof(MPN));
-			mpnStrings = new string[mpnValues.Length];
-			for (int i = 0, n = mpnValues.Length; i < n; i++) {
-				var mpn = (MPN)mpnValues.GetValue(i);
-				mpnStrings[i] = $"{mpn:G}";
-			}
-			return mpnStrings;
-		}
-	}
-
 	public static Maid GetMaid(TBody tbody) {
 		return tbody.maid;
 	}
 
 	// AudioSourceMgrを手がかりに、Maidを得る
-	public static Maid GetMaid(AudioSourceMgr audioSourceMgr) {
+	public static bool TryGetMaid(AudioSourceMgr audioSourceMgr, out Maid maid) {
+		maid = null;
 		if (audioSourceMgr == null) {
-			return null;
+			return false;
 		}
-		var cm = GameMain.Instance.CharacterMgr;
-		for (var i = 0; i < cm.GetStockMaidCount(); i++) {
-			var maid = cm.GetStockMaid(i);
-			if (maid.AudioMan == null) {
-				continue;
-			}
-			if (ReferenceEquals(maid.AudioMan, audioSourceMgr)) {
-				return maid;
-			}
-		}
-		return null;
+		maid = GetMaids().FirstOrDefault(e => e.AudioMan != null && e.AudioMan == audioSourceMgr);
+		return maid;
 	}
 
 	// BoneMorph_を手がかりに、Maidを得る
-	public static Maid GetMaid(BoneMorph_ boneMorph_) {
+	public static bool TryGetMaid(BoneMorph_ boneMorph_, out Maid maid) {
+		maid = null;
 		if (boneMorph_ == null) {
-			return null;
+			return false;
 		}
-		var cm = GameMain.Instance.CharacterMgr;
-		for (var i = 0; i < cm.GetStockMaidCount(); i++) {
-			var maid = cm.GetStockMaid(i);
-			if (maid.body0 == null || maid.body0.bonemorph == null) {
-				continue;
-			}
-			if (ReferenceEquals(maid.body0.bonemorph, boneMorph_)) {
-				return maid;
-			}
+		maid = GetMaids().FirstOrDefault(e => e.body0?.bonemorph != null && e.body0.bonemorph == boneMorph_);
+		return maid;
+	}
+
+	public static IEnumerable<Maid> GetMaids() {
+		var characterManager = GameMain.Instance.CharacterMgr;
+		for (var i = 0; i < characterManager.GetStockMaidCount(); i++) {
+			yield return characterManager.GetStockMaid(i);
 		}
-		return null;
 	}
 
 	public static void DebugGui() {

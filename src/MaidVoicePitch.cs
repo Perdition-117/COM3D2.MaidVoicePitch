@@ -168,12 +168,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		SliderTemplates.Update(PluginName);
 
 		// エディット画面にいる場合は特別処理として毎フレームアップデートを行う
-		if (SceneManager.GetActiveScene().name == "SceneEdit") {
-			if (GameMain.Instance?.CharacterMgr != null) {
-				var cm = GameMain.Instance.CharacterMgr;
-				for (var i = 0; i < cm.GetStockMaidCount(); i++) {
-					EditSceneMaidUpdate(cm.GetStockMaid(i));
-				}
+		if (SceneManager.GetActiveScene().name == "SceneEdit" && GameMain.Instance?.CharacterMgr != null) {
+			foreach (var maid in PluginHelper.GetMaids()) {
+				EditSceneMaidUpdate(maid);
 			}
 		}
 	}
@@ -206,17 +203,15 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	[HarmonyPatch(typeof(BoneMorph_), nameof(BoneMorph_.Blend))]
 	[HarmonyPostfix]
 	private static void BoneMorph_BlendCallback(BoneMorph_ __instance) {
-		var maid = PluginHelper.GetMaid(__instance);
-		if (maid == null) {
-			return;
-		}
-		WideSlider(maid);
-		//EyeBall(maid);
+		if (PluginHelper.TryGetMaid(__instance, out var maid)) {
+			WideSlider(maid);
+			//EyeBall(maid);
 
-		if (SceneManager.GetActiveScene().name != "ScenePhotoMode" && maid.body0 != null && maid.body0.isLoadedBody) {
-			IKPreInit(maid);
-			maid.body0.IKCtrl.Init();
-			//.IKCtrl.Init();
+			if (SceneManager.GetActiveScene().name != "ScenePhotoMode" && maid.body0 != null && maid.body0.isLoadedBody) {
+				IKPreInit(maid);
+				maid.body0.IKCtrl.Init();
+				//.IKCtrl.Init();
+			}
 		}
 	}
 
@@ -274,12 +269,10 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// ピッチ変更を行う
 	/// </summary>
 	private static void SetAudioPitch(AudioSourceMgr audioSourceMgr) {
-		var maid = PluginHelper.GetMaid(audioSourceMgr);
-		if (maid == null || audioSourceMgr.audiosource == null || !audioSourceMgr.audiosource.isPlaying) {
-			return;
+		if (PluginHelper.TryGetMaid(audioSourceMgr, out var maid) && audioSourceMgr.audiosource != null && audioSourceMgr.audiosource.isPlaying) {
+			var pitch = ExSaveData.GetFloat(maid, PluginName, "PITCH", 0f);
+			audioSourceMgr.audiosource.pitch = 1f + pitch;
 		}
-		var f = ExSaveData.GetFloat(maid, PluginName, "PITCH", 0f);
-		audioSourceMgr.audiosource.pitch = 1f + f;
 	}
 
 	/// <summary>
@@ -289,35 +282,25 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	public void MaidVoicePitch_UpdateSliders() {
 		//Console.WriteLine("Updating sliders....");
 
-		if (GameMain.Instance?.CharacterMgr != null) {
-			var cm = GameMain.Instance.CharacterMgr;
-			for (var i = 0; i < cm.GetStockMaidCount(); i++) {
-				var maid = cm.GetStockMaid(i);
-				if (maid?.body0?.bonemorph != null) {
-					//
-					//	todo	本当にこの方法しかないのか調べること
-					//
-					//	１人目のメイドをエディットし、管理画面に戻り、
-					//	続けて２人目をエディットしようとすると、１人目のメイドの
-					//	boneMorphLocal.linkT が null になっていて例外がおきるので
-					//	あらかじめ linkT を調べる
-					//
-					var safe = true;
-					foreach (var boneMorphLocal in maid.body0.bonemorph.bones) {
-						if (boneMorphLocal.linkT == null) {
-							safe = false;
-						}
-					}
-					if (safe) {
-						try {
-							// 同じ "sintyou" の値を入れて、強制的にモーフ再計算を行う
-							var sintyouScale = maid.body0.bonemorph.SCALE_Sintyou;
-							maid.body0.BoneMorph_FromProcItem("sintyou", sintyouScale);
+		if (GameMain.Instance?.CharacterMgr == null) {
+			return;
+		}
 
-						} catch (Exception) {
-							;
-						}
-					}
+		foreach (var maid in PluginHelper.GetMaids().Where(e => e?.body0?.bonemorph != null)) {
+			//
+			//	todo	本当にこの方法しかないのか調べること
+			//
+			//	１人目のメイドをエディットし、管理画面に戻り、
+			//	続けて２人目をエディットしようとすると、１人目のメイドの
+			//	boneMorphLocal.linkT が null になっていて例外がおきるので
+			//	あらかじめ linkT を調べる
+			//
+			if (maid.body0.bonemorph.bones.All(e => e.linkT != null)) {
+				try {
+					// 同じ "sintyou" の値を入れて、強制的にモーフ再計算を行う
+					var sintyouScale = maid.body0.bonemorph.SCALE_Sintyou;
+					maid.body0.BoneMorph_FromProcItem("sintyou", sintyouScale);
+				} catch (Exception) {
 				}
 			}
 		}
@@ -956,9 +939,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	// 動作していない古い設定を削除する
 	private static void CleanupExSave() {
-		var cm = GameMain.Instance.CharacterMgr;
-		for (var i = 0; i < cm.GetStockMaidCount(); i++) {
-			var maid = cm.GetStockMaid(i);
+		foreach (var maid in PluginHelper.GetMaids()) {
 			foreach (var setting in ObsoleteSettings) {
 				ExSaveData.Remove(maid, PluginName, setting);
 			}

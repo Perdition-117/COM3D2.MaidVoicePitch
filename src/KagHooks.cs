@@ -40,7 +40,7 @@ internal static class KagHooks {
 		var maidAndMan = baseKagManager.GetMaidAndMan(tagData);
 		if (maidAndMan != null && ExSaveData.GetBool(maidAndMan, _pluginName, "PROPSET_OFF", false)) {
 			var str = tagData.GetTagProperty("category").AsString();
-			if (Array.IndexOf(PluginHelper.MpnStrings, str) >= 0) {
+			if (Enum.IsDefined(typeof(MPN), str)) {
 #if DEBUG
 				MaidVoicePitch.LogDebug($"PROPSET_OFF(category={str}) -> match");
 #endif
