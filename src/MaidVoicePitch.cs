@@ -501,7 +501,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// 瞳サイズ変更
-	private void EyeBall(Maid maid) {
+	public static void EyeBall(Maid maid) {
 		var tbody = maid.body0;
 		if (tbody != null && tbody.trsEyeL != null && tbody.trsEyeR != null) {
 			var w = ExSaveData.GetFloat(maid, PluginName, "EYEBALL.width", 1f);
@@ -557,7 +557,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// スライダー範囲を拡大
-	private static void WideSlider(Maid maid) {
+	public static void WideSlider(Maid maid) {
 		if (!ExSaveData.GetBool(maid, PluginName, "WIDESLIDER", false)) {
 			return;
 		}
