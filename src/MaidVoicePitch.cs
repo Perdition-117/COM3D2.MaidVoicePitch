@@ -42,6 +42,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	private static readonly Dictionary<jiggleBone, Maid> JiggleBones = new();
 
+	private static Vector3 _skirtScaleBackUp;
+	private static Vector3 _jiggleBoneScaleBackUp;
+
 	/// <summary>
 	/// Transform変形を行うボーンのリスト。
 	/// ここに書いておくと自動でBoneMorphに登録されTransform処理されます。
@@ -129,6 +132,17 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		ExPreset.AddExSaveNode(PluginName);
 		ExPreset.loadNotify.AddListener(MaidVoicePitch_UpdateSliders);
 
+		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.TBody.LateUpdate));
+		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.TBody.MoveHeadAndEye));
+		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.BoneMorph_.Blend));
+		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.AudioSourceMgr.Play));
+		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.AudioSourceMgr.PlayOneShot));
+		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.CharacterMgr.PresetSet));
+		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf));
+		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf));
+		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.jiggleBone.PreLateUpdateSelf));
+		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.jiggleBone.PostLateUpdateSelf));
+
 		Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
 	}
 
@@ -142,6 +156,26 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
 		KagHooks.SetHook(PluginName, true);
+
+		// TBody.MoveHeadAndEye 処理終了後のコールバック
+		Managed.Callbacks.TBody.MoveHeadAndEye.Callbacks[PluginName] = TBody_MoveHeadAndEyeCallback;
+
+		// BoneMorph_.Blend 処理終了後のコールバック
+		Managed.Callbacks.BoneMorph_.Blend.Callbacks[PluginName] = BoneMorph_BlendCallback;
+
+		// GameMain.Deserialize処理終了後のコールバック
+		//  ロードが行われたときに呼び出される
+		ExternalSaveData.Managed.GameMainCallbacks.Deserialize.Callbacks[PluginName] = (gameMain, f_nSaveNo) => _deserialized = true;
+
+		// スカート計算用コールバック
+		Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf.Callbacks[PluginName] = DynamicSkirtBonePreUpdate;
+		Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf.Callbacks[PluginName] = DynamicSkirtBonePostUpdate;
+
+		// 胸ボーンサイズ調整用コールバック
+		Managed.Callbacks.jiggleBone.PreLateUpdateSelf.Callbacks[PluginName] = jiggleBone_PreLateUpdateSelf;
+		Managed.Callbacks.jiggleBone.PostLateUpdateSelf.Callbacks[PluginName] = jiggleBone_PostLateUpdateSelf;
+
+		Managed.Callbacks.CharacterMgr.PresetSet.Callbacks[PluginName] = CharacterMgrPresetSet;
 
 		// ロード直後のシーン読み込みなら、初回セットアップを行う
 		if (_deserialized) {
@@ -188,22 +222,14 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		}
 	}
 
-	[HarmonyPatch(typeof(GameMain), nameof(GameMain.Deserialize))]
-	[HarmonyPostfix]
-	private static void GameMain_DeserializeCallback(GameMain __instance, int f_nSaveNo) {
-		_deserialized = true;
-	}
-
 	/// <summary>
 	/// BoneMorph_.Blend の処理終了後に呼ばれるコールバック。
 	/// 初期化、設定変更時のみ呼び出される。
 	/// ボーンのブレンド処理が行われる際、拡張スライダーに関連する補正は基本的にここで行う。
 	/// 毎フレーム呼び出されるわけではないことに注意
 	/// </summary>
-	[HarmonyPatch(typeof(BoneMorph_), nameof(BoneMorph_.Blend))]
-	[HarmonyPostfix]
-	private static void BoneMorph_BlendCallback(BoneMorph_ __instance) {
-		if (PluginHelper.TryGetMaid(__instance, out var maid)) {
+	private static void BoneMorph_BlendCallback(BoneMorph_ boneMorph) {
+		if (PluginHelper.TryGetMaid(boneMorph, out var maid)) {
 			WideSlider(maid);
 			//EyeBall(maid);
 
@@ -239,29 +265,27 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// TBody.MoveHeadAndEye の処理終了後に呼ばれるコールバック
 	///  表示されている間は毎フレーム呼び出される
 	/// </summary>
-	[HarmonyPatch(typeof(TBody), nameof(TBody.MoveHeadAndEye))]
-	[HarmonyPrefix]
-	private static bool TBody_MoveHeadAndEyeCallback(TBody __instance) {
-		TBodyMoveHeadAndEye.Callback(__instance);
+	private static void TBody_MoveHeadAndEyeCallback(TBody tbody) {
+		TBodyMoveHeadAndEye.Callback(tbody);
 
-		if (__instance.boMAN || __instance.trsEyeL == null || __instance.trsEyeR == null || __instance.maid == null) {
-			return false;
+		if (tbody.boMAN || tbody.trsEyeL == null || tbody.trsEyeR == null || tbody.maid == null) {
+			return;
 		}
 
-		var maid = __instance.maid;
+		var maid = tbody.maid;
 
 		if (maid.Visible) {
 			DisableLipSync(maid);
 			DisableFaceAnime(maid);
 			Mabataki(maid);
-			EyeToCam(maid, __instance);
-			HeadToCam(maid, __instance);
-			RotatePupil(maid, __instance);
-			SetLipSyncIntensity(maid, __instance);
+			EyeToCam(maid, tbody);
+			HeadToCam(maid, tbody);
+			RotatePupil(maid, tbody);
+			SetLipSyncIntensity(maid, tbody);
 			ForeArmFixOptimized.ForeArmFix(maid);
 		}
 
-		return false;
+		return;
 	}
 
 	/// <summary>
@@ -327,44 +351,36 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// <summary>
 	/// スカートサイズ変更時の処理
 	/// </summary>
-	[HarmonyPatch(typeof(DynamicSkirtBone), nameof(DynamicSkirtBone.UpdateSelf))]
-	[HarmonyPrefix]
-	private static void DynamicSkirtBonePreUpdate(DynamicSkirtBone __instance, ref Vector3 __state) {
-		var targetTransform = __instance.m_trPanierParent.parent;
-		__state = targetTransform.localScale;
+	private static void DynamicSkirtBonePreUpdate(DynamicSkirtBone bone) {
+		var targetTransform = bone.m_trPanierParent.parent;
+		_skirtScaleBackUp = targetTransform.localScale;
 		targetTransform.localScale = Vector3.one;
 	}
 
-	[HarmonyPatch(typeof(DynamicSkirtBone), nameof(DynamicSkirtBone.UpdateSelf))]
-	[HarmonyPostfix]
-	private static void DynamicSkirtBonePostUpdate(DynamicSkirtBone __instance, Vector3 __state) {
-		var targetTransform = __instance.m_trPanierParent.parent;
-		targetTransform.localScale = __state;
+	private static void DynamicSkirtBonePostUpdate(DynamicSkirtBone bone) {
+		var targetTransform = bone.m_trPanierParent.parent;
+		targetTransform.localScale = _skirtScaleBackUp;
 	}
 
 	/// <summary>
 	/// 胸サイズ変更処理
 	/// </summary>
-	[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
-	[HarmonyPrefix]
-	private static void jiggleBone_PreLateUpdateSelf(jiggleBone __instance, ref Vector3 __state) {
-		__state = __instance.transform.localScale;
+	private static void jiggleBone_PreLateUpdateSelf(jiggleBone bone) {
+		_jiggleBoneScaleBackUp = bone.transform.localScale;
 	}
 
-	[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
-	[HarmonyPostfix]
-	private static void jiggleBone_PostLateUpdateSelf(jiggleBone __instance, Vector3 __state) {
+	private static void jiggleBone_PostLateUpdateSelf(jiggleBone bone) {
 		// 変更処理が実行されなければ終了
-		if (__instance.transform.localScale == __state) {
+		if (bone.transform.localScale == _jiggleBoneScaleBackUp) {
 			return;
 		}
 		// jiggleBoneからMaidを取得
 		Maid maid = null;
 
-		if (JiggleBones.ContainsKey(__instance)) {
-			maid = JiggleBones[__instance];
+		if (JiggleBones.ContainsKey(bone)) {
+			maid = JiggleBones[bone];
 		} else {
-			var transform = __instance.transform;
+			var transform = bone.transform;
 
 			while (maid == null && transform != null) {
 				maid = transform.GetComponent<Maid>();
@@ -373,7 +389,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 			if (maid == null) return;
 
-			JiggleBones[__instance] = maid;
+			JiggleBones[bone] = maid;
 		}
 
 		// スライダー拡張オフなら何もしない
@@ -385,12 +401,10 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		var sy = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.depth", 1f);
 		var sz = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.width", 1f);
 
-		var scale = __instance.transform.localScale;
-		__instance.transform.localScale = new(scale.x * sx, scale.y * sy, scale.z * sz);
+		var scale = bone.transform.localScale;
+		bone.transform.localScale = new(scale.x * sx, scale.y * sy, scale.z * sz);
 	}
 
-	[HarmonyPatch(typeof(CharacterMgr), nameof(CharacterMgr.PresetSet), typeof(Maid), typeof(CharacterMgr.Preset))]
-	[HarmonyPrefix]
 	private static void CharacterMgrPresetSet(CharacterMgr __instance, Maid f_maid, CharacterMgr.Preset f_prest) {
 		if (f_maid == null) {
 			return;
@@ -398,8 +412,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		SliderTemplates.Update(f_maid, PluginName);
 	}
 
-	[HarmonyPatch(typeof(SceneEdit), nameof(SceneEdit.SlideCallback))]
 	[HarmonyTranspiler]
+	[HarmonyPatch(typeof(SceneEdit), nameof(SceneEdit.SlideCallback))]
 	private static IEnumerable<CodeInstruction> SceneEdit_SlideCallback(IEnumerable<CodeInstruction> instructions) {
 		// SceneEdit.SlideCallback の補間式を変更し、
 		// タブ等を変更してスライダーがアクティブになる度に
