@@ -620,8 +620,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		// 元々足の位置と連動しており、追加するときに整合性を保つため足の位置との和で計算
 		{
 			var (x, y, z) = GetBonePosition(maid, "HIPPOS");
-			bonePosition["Hip_L"] = new Vector3(y, z, -x) / 1000f;
-			bonePosition["Hip_R"] = new Vector3(y, z, x) / 1000f;
+			bonePosition["Hip_L"] = bonePosition["Bip01 L Thigh"] + new Vector3(y, z, -x) / 1000f;
+			bonePosition["Hip_R"] = bonePosition["Bip01 R Thigh"] + new Vector3(y, z, x) / 1000f;
 		}
 
 		{
