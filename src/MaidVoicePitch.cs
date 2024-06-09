@@ -24,20 +24,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	private static bool _deserialized = false;
 
-	//static string[] boneMorph_PropNames;
-
-	//static string[] BoneMorph_PropNames
-	//{
-	//    get
-	//    {
-	//        if (boneMorph_PropNames == null)
-	//        {
-	//            boneMorph_PropNames = Helper.GetInstanceField(typeof(BoneMorph_), null, "PropNames") as string[];
-	//        }
-	//        return boneMorph_PropNames;
-	//    }
-	//}
-
 	private static readonly TBodyMoveHeadAndEye TBodyMoveHeadAndEye = new();
 
 	private static readonly Dictionary<jiggleBone, Maid> JiggleBones = new();
@@ -75,7 +61,12 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		["Mune_?"]             = "MUNESCL",    // 胸
 		["Mune_?_sub"]         = "MUNESUBSCL", // 胸サブ
 		["Bip01 Neck_SCL_"]    = "NECKSCL",    // 首
-		//[""] = "",
+	};
+
+	//この配列に記載があるボーンは頭に影響を与えずにTransformを反映させる。
+	//ただしボディに繋がっている中のアレは影響を受ける。
+	private static readonly string[] IgnoreHeadBones = {
+		"Bip01 Spine1a",
 	};
 
 	private static readonly string[] ObsoleteSettings = {
@@ -172,8 +163,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf.Callbacks[PluginName] = DynamicSkirtBonePostUpdate;
 
 		// 胸ボーンサイズ調整用コールバック
-		Managed.Callbacks.jiggleBone.PreLateUpdateSelf.Callbacks[PluginName] = jiggleBone_PreLateUpdateSelf;
-		Managed.Callbacks.jiggleBone.PostLateUpdateSelf.Callbacks[PluginName] = jiggleBone_PostLateUpdateSelf;
+		Managed.Callbacks.jiggleBone.PreLateUpdateSelf.Callbacks[PluginName] = JiggleBone_PreLateUpdateSelf;
+		Managed.Callbacks.jiggleBone.PostLateUpdateSelf.Callbacks[PluginName] = JiggleBone_PostLateUpdateSelf;
 
 		Managed.Callbacks.CharacterMgr.PresetSet.Callbacks[PluginName] = CharacterMgrPresetSet;
 
@@ -304,8 +295,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// 呼び出し方法は this.gameObject.SendMessage("MaidVoicePitch.TestUpdateSliders");
 	/// </summary>
 	public void MaidVoicePitch_UpdateSliders() {
-		//Console.WriteLine("Updating sliders....");
-
 		if (GameMain.Instance?.CharacterMgr == null) {
 			return;
 		}
@@ -365,11 +354,11 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// <summary>
 	/// 胸サイズ変更処理
 	/// </summary>
-	private static void jiggleBone_PreLateUpdateSelf(jiggleBone bone) {
+	private static void JiggleBone_PreLateUpdateSelf(jiggleBone bone) {
 		_jiggleBoneScaleBackUp = bone.transform.localScale;
 	}
 
-	private static void jiggleBone_PostLateUpdateSelf(jiggleBone bone) {
+	private static void JiggleBone_PostLateUpdateSelf(jiggleBone bone) {
 		// 変更処理が実行されなければ終了
 		if (bone.transform.localScale == _jiggleBoneScaleBackUp) {
 			return;
@@ -397,12 +386,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			return;
 		}
 
-		var sx = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.height", 1f);
-		var sy = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.depth", 1f);
-		var sz = ExSaveData.GetFloat(maid, PluginName, "MUNESCL.width", 1f);
-
-		var scale = bone.transform.localScale;
-		bone.transform.localScale = new(scale.x * sx, scale.y * sy, scale.z * sz);
+		var breastScale = GetBoneScale(maid, "MUNESCL");
+		bone.transform.localScale = Vector3.Scale(bone.transform.localScale, breastScale);
 	}
 
 	private static void CharacterMgrPresetSet(CharacterMgr __instance, Maid f_maid, CharacterMgr.Preset f_prest) {
@@ -504,8 +489,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	public static void EyeBall(Maid maid) {
 		var tbody = maid.body0;
 		if (tbody != null && tbody.trsEyeL != null && tbody.trsEyeR != null) {
-			var w = ExSaveData.GetFloat(maid, PluginName, "EYEBALL.width", 1f);
-			var h = ExSaveData.GetFloat(maid, PluginName, "EYEBALL.height", 1f);
+			var (h, _, w) = GetBoneScale(maid, "EYEBALL");
 			tbody.trsEyeL.localScale = new(1f, h, w);
 			tbody.trsEyeR.localScale = new(1f, h, w);
 		}
@@ -563,10 +547,10 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		}
 
 		var tbody = maid.body0;
-		//string[] PropNames = BoneMorph_PropNames;
-		if (tbody == null || tbody.bonemorph == null || tbody.bonemorph.bones == null) {
+		if (tbody?.bonemorph?.bones == null) {
 			return;
 		}
+
 		var boneMorph = tbody.bonemorph;
 
 		// スケール変更するボーンのリスト
@@ -574,10 +558,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		// ポジション変更するボーンのリスト
 		var bonePosition = new Dictionary<string, Vector3>();
-
-		//この配列に記載があるボーンは頭に影響を与えずにTransformを反映させる。
-		//ただしボディに繋がっている中のアレは影響を受ける。
-		var ignoreHeadBones = new[] { "Bip01 Spine1a" };
 
 		float eyeAngAngle;
 		float eyeAngX;
@@ -689,9 +669,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		// 元々尻はPELSCLに連動していたが単体でも設定できるようにする
 		// ただし元との整合性をとるため乗算する
-		var pelScale = GetBoneScale(maid, "PELSCL");
+		var pelvisScale = GetBoneScale(maid, "PELSCL");
 		var hipScale = GetBoneScale(maid, "HIPSCL");
-		hipScale = new(hipScale.x * pelScale.x, hipScale.y * pelScale.y, hipScale.z * pelScale.z);
+		hipScale = Vector3.Scale(hipScale, pelvisScale);
 		boneScale["Hip_L"] = hipScale;
 		boneScale["Hip_R"] = hipScale;
 
@@ -703,7 +683,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			var boneMorphLocal = boneMorph.bones[i];
 			var scale = new Vector3(1f, 1f, 1f);
 			var position = boneMorphLocal.pos;
-			//for (int j = 0; j < (int)PropNames.Length; j++)
 			for (var j = 0; j < BoneMorph.PropNames.Length; j++) {
 				var s = j switch {
 					0 => boneMorph.SCALE_Kubi,
@@ -754,18 +733,20 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 			var name = linkT.name;
 
-			if (name != null && name.Contains("Thigh_SCL_")) {
-				boneMorph.SnityouOutScale = Mathf.Pow(scale.x, 0.9f);
-			}
+			if (name != null) {
+				if (name.Contains("Thigh_SCL_")) {
+					boneMorph.SnityouOutScale = Mathf.Pow(scale.x, 0.9f);
+				}
 
-			// リストに登録されているボーンのスケール設定
-			if (name != null && boneScale.ContainsKey(name)) {
-				scale = Vector3.Scale(scale, boneScale[name]);
-			}
+				// リストに登録されているボーンのスケール設定
+				if (boneScale.ContainsKey(name)) {
+					scale = Vector3.Scale(scale, boneScale[name]);
+				}
 
-			// リストに登録されているボーンのポジション設定
-			if (name != null && bonePosition.ContainsKey(name)) {
-				position += bonePosition[name];
+				// リストに登録されているボーンのポジション設定
+				if (bonePosition.ContainsKey(name)) {
+					position += bonePosition[name];
+				}
 			}
 
 			var muneLParent = tbody.m_trHitParentL;
@@ -783,18 +764,17 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 			// ignoreHeadBonesに登録されている場合はヒラエルキーを辿って頭のツリーを無視
 			if (name != null) {
-				if (!(ignoreHeadBones.Contains(name) && CMT.SearchObjObj(maid.body0.m_Bones.transform.Find("Bip01"), linkT))) {
+				if (!(IgnoreHeadBones.Contains(name) && CMT.SearchObjObj(maid.body0.m_Bones.transform.Find("Bip01"), linkT))) {
 					linkT.localScale = scale;
 				}
 				linkT.localPosition = position;
 			}
 
-			if (name != null) {
-				if (name == "Eyepos_L") {
-					tEyePosL = linkT;
-				} else if (name == "Eyepos_R") {
-					tEyePosR = linkT;
-				}
+			if (name == "Eyepos_L") {
+				tEyePosL = linkT;
+			}
+			if (name == "Eyepos_R") {
+				tEyePosR = linkT;
 			}
 		}
 
@@ -907,7 +887,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			return Quaternion.LerpUnclamped(min, def, t1);
 		}
 		return Quaternion.LerpUnclamped(def, max, t1);
-
 	}
 
 	private static Vector3 GetBoneScale(Maid maid, string propName) {

@@ -11,13 +11,13 @@ internal static class SliderTemplates {
 		SliderTemplateCache.Clear();
 	}
 
-	public static void Update(string PluginName) {
+	public static void Update(string pluginName) {
 		// エディット画面以外では何もせず終了
 		if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "SceneEdit") {
 			return;
 		}
 		foreach (var maid in PluginHelper.GetMaids()) {
-			Update(maid, PluginName);
+			Update(maid, pluginName);
 		}
 	}
 
