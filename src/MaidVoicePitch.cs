@@ -137,6 +137,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.jiggleBone.PostLateUpdateSelf));
 
 		Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
+		Harmony.CreateAndPatchAll(typeof(DistortCorrect));
 	}
 
 	internal static void LogDebug(object data) {
@@ -555,19 +556,25 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		var boneMorph = tbody.bonemorph;
 
+		var fixLimbs = ExSaveData.GetBool(maid, PluginName, "LIMBSFIX", false);
+
 		// スケール変更するボーンのリスト
-		var boneScales = GetBoneScales(maid);
+		var boneScales = fixLimbs ? DistortCorrect.GetBoneScales(maid) : GetBoneScales(maid);
 
 		// ポジション変更するボーンのリスト
 		var bonePositions = GetBonePositions(maid);
 
-		// 元々尻はPELSCLに連動していたが単体でも設定できるようにする
-		// ただし元との整合性をとるため乗算する
-		var pelvisScale = GetBoneScale(maid, "PELSCL");
-		var hipScale = GetBoneScale(maid, "HIPSCL");
-		hipScale = Vector3.Scale(hipScale, pelvisScale);
-		boneScales["Hip_L"] = hipScale;
-		boneScales["Hip_R"] = hipScale;
+		var bonePositionRates = fixLimbs ? DistortCorrect.GetBonePositionRates(maid) : null;
+
+		if (!fixLimbs) {
+			// 元々尻はPELSCLに連動していたが単体でも設定できるようにする
+			// ただし元との整合性をとるため乗算する
+			var pelvisScale = GetBoneScale(maid, "PELSCL");
+			var hipScale = GetBoneScale(maid, "HIPSCL");
+			hipScale = Vector3.Scale(hipScale, pelvisScale);
+			boneScales["Hip_L"] = hipScale;
+			boneScales["Hip_R"] = hipScale;
+		}
 
 		Transform tEyePosL = null;
 		Transform tEyePosR = null;
@@ -597,6 +604,11 @@ public class MaidVoicePitch : BaseUnityPlugin {
 				// リストに登録されているボーンのポジション設定
 				if (bonePositions.TryGetValue(name, out var bonePosition)) {
 					position += bonePosition;
+				}
+
+				// リストに登録されているボーンのポジション設定
+				if (fixLimbs && bonePositionRates.TryGetValue(name, out var bonePositionRate)) {
+					position = Vector3.Scale(position, bonePositionRate);
 				}
 			}
 
@@ -900,7 +912,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		return Quaternion.LerpUnclamped(def, max, t1);
 	}
 
-	private static Vector3 GetBoneScale(Maid maid, string propName) {
+	internal static Vector3 GetBoneScale(Maid maid, string propName) {
 		float GetBoneProperty(string axis) => ExSaveData.GetFloat(maid, PluginName, propName + axis, 1f);
 		var x = GetBoneProperty(".height");
 		var y = GetBoneProperty(".depth");
