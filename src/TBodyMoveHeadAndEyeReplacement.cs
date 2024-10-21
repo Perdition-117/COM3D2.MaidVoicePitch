@@ -1,10 +1,7 @@
-using CM3D2.ExternalSaveData.Managed;
 using CM3D2.MaidVoicePitch.Plugin;
 using UnityEngine;
 
 class TBodyMoveHeadAndEye {
-	static string PluginName => MaidVoicePitch.PluginName;
-
 	public class ExternalValues : MonoBehaviour {
 		public TBody tbody;
 		public Quaternion prevQuat = Quaternion.identity;
@@ -42,7 +39,7 @@ class TBodyMoveHeadAndEye {
 			var bParamHeadTrack = false;
 			var maid = tbody.maid;
 			if (maid != null) {
-				bParamHeadTrack = ExSaveData.GetBool(maid, PluginName, "HEAD_TRACK", false);
+				bParamHeadTrack = MaidVoicePitch.GetBooleanProperty(maid, "HEAD_TRACK", false);
 			}
 
 			var thatHeadEulerAngle = that.HeadEulerAngle;
@@ -260,17 +257,19 @@ class TBodyMoveHeadAndEye {
 
 		that.boChkEye = false;
 		{
-			var paramEyeAng = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.angle", 0f);
-			paramEyeAng = Mathf.Clamp(paramEyeAng, -180f, 180f);
-			var paramSpeed = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.speed", 0.05f);
+			var maidData = MaidVoicePitch.PluginSaveData.GetMaidData(maid);
 
-			var paramInside = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.inside", 60f);
-			var paramOutside = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.outside", 60f);
-			var paramAbove = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.above", 40f);
-			var paramBelow = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.below", 20f);
-			var paramBehind = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.behind", 170f);
-			var paramOfsX = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.ofsx", 0f);
-			var paramOfsY = ExSaveData.GetFloat(maid, PluginName, "EYE_TRACK.ofsy", 0f);
+			var paramEyeAng = maidData.GetFloat("EYE_ANG.angle", 0f);
+			paramEyeAng = Mathf.Clamp(paramEyeAng, -180f, 180f);
+			var paramSpeed = maidData.GetFloat("EYE_TRACK.speed", 0.05f);
+
+			var paramInside = maidData.GetFloat("EYE_TRACK.inside", 60f);
+			var paramOutside = maidData.GetFloat("EYE_TRACK.outside", 60f);
+			var paramAbove = maidData.GetFloat("EYE_TRACK.above", 40f);
+			var paramBelow = maidData.GetFloat("EYE_TRACK.below", 20f);
+			var paramBehind = maidData.GetFloat("EYE_TRACK.behind", 170f);
+			var paramOfsX = maidData.GetFloat("EYE_TRACK.ofsx", 0f);
+			var paramOfsY = maidData.GetFloat("EYE_TRACK.ofsy", 0f);
 			var targetPosition = eyeTarget_world;
 
 			if (!that.boEyeToCam) {
@@ -336,17 +335,19 @@ class TBodyMoveHeadAndEye {
 		var that = tbody;
 		var maid = tbody.maid;
 
-		var paramSpeed = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.speed", 0.05f);
-		var paramLateral = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.lateral", 60.0f);
-		var paramAbove = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.above", 40.0f);
-		var paramBelow = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.below", 20.0f);
-		var paramBehind = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.behind", 170.0f);
-		var paramOfsX = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.ofsx", 0.0f);
-		var paramOfsY = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.ofsy", 0.0f);
-		var paramOfsZ = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.ofsz", 0.0f);
+		var maidData = MaidVoicePitch.PluginSaveData.GetMaidData(maid);
+
+		var paramSpeed = maidData.GetFloat("HEAD_TRACK.speed", 0.05f);
+		var paramLateral = maidData.GetFloat("HEAD_TRACK.lateral", 60.0f);
+		var paramAbove = maidData.GetFloat("HEAD_TRACK.above", 40.0f);
+		var paramBelow = maidData.GetFloat("HEAD_TRACK.below", 20.0f);
+		var paramBehind = maidData.GetFloat("HEAD_TRACK.behind", 170.0f);
+		var paramOfsX = maidData.GetFloat("HEAD_TRACK.ofsx", 0.0f);
+		var paramOfsY = maidData.GetFloat("HEAD_TRACK.ofsy", 0.0f);
+		var paramOfsZ = maidData.GetFloat("HEAD_TRACK.ofsz", 0.0f);
 
 		// 正面の角度
-		var frontangle = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.frontangle", 0f);
+		var frontangle = maidData.GetFloat("HEAD_TRACK.frontangle", 0f);
 		var frontquaternion = Quaternion.Euler(0f, 0f, frontangle);
 
 		// モーションにしたがっている場合 (HeadToCamPer=0f) はオフセットをつけない
@@ -361,9 +362,9 @@ class TBodyMoveHeadAndEye {
 		//追従割合
 		var local_angle = Quaternion.FromToRotation(Vector3.up, target_local);
 		var local_auler = local_angle.eulerAngles;
-		var headrateup = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.headrateup", 1f);
-		var headratedown = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.headratedown", 1f);
-		var headratehorizon = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.headratehorizon", 1f);
+		var headrateup = maidData.GetFloat("HEAD_TRACK.headrateup", 1f);
+		var headratedown = maidData.GetFloat("HEAD_TRACK.headratedown", 1f);
+		var headratehorizon = maidData.GetFloat("HEAD_TRACK.headratehorizon", 1f);
 		var dx = 0f;
 		var dy = 0f;
 		if (local_auler.x < 180f) {
@@ -398,7 +399,7 @@ class TBodyMoveHeadAndEye {
 		newHeadRotation_world = Quaternion.Slerp(that.trsHead.rotation, newHeadRotation_world, that.HeadToCamPer);
 
 		// 角度
-		var inclinerate = ExSaveData.GetFloat(maid, PluginName, "HEAD_TRACK.inclinerate", 0f);
+		var inclinerate = maidData.GetFloat("HEAD_TRACK.inclinerate", 0f);
 		var newHeadRotation_Local = Quaternion.Inverse(baseRotation) * newHeadRotation_world;
 		var newHeadRotationEulerLocal = newHeadRotation_Local.eulerAngles;
 		if (newHeadRotationEulerLocal.x > 180f) {

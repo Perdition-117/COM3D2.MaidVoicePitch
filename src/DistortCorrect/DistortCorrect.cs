@@ -140,8 +140,8 @@ public class DistortCorrect {
 			return;
 		}
 
-		var wideSlider = ExSaveData.GetBool(maid, "CM3D2.MaidVoicePitch", "WIDESLIDER", false);
-		var limbFix = ExSaveData.GetBool(maid, "CM3D2.MaidVoicePitch", "LIMBSFIX", false);
+		var wideSlider = MaidVoicePitch.GetBooleanProperty(maid, "WIDESLIDER", false);
+		var limbFix = MaidVoicePitch.GetBooleanProperty(maid, "LIMBSFIX", false);
 		var enable = wideSlider && limbFix;
 		if (staticFlag || !LimbFixes.ContainsKey(maid) || (LimbFixes[maid] != enable)) {
 			if (enable) {

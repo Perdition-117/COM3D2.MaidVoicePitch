@@ -24,6 +24,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	private static ManualLogSource _logger;
 
+	internal static readonly PluginSaveData PluginSaveData = new(PluginName);
+
 	private static bool _deserialized = false;
 
 	private static readonly TBodyMoveHeadAndEye TBodyMoveHeadAndEye = new();
@@ -203,6 +205,14 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		}
 	}
 
+	internal static bool GetBooleanProperty(Maid maid, string propName, bool defaultValue) {
+		return ExSaveData.GetBool(maid, PluginName, propName, defaultValue);
+	}
+
+	internal static float GetFloatProperty(Maid maid, string propName, float defaultValue) {
+		return ExSaveData.GetFloat(maid, PluginName, propName, defaultValue);
+	}
+
 	[HarmonyPatch(typeof(BoneMorph), nameof(BoneMorph.Init))]
 	[HarmonyPostfix]
 	private static void BoneMorph_OnInit() {
@@ -288,7 +298,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// </summary>
 	private static void SetAudioPitch(AudioSourceMgr audioSourceMgr) {
 		if (PluginHelper.TryGetMaid(audioSourceMgr, out var maid) && audioSourceMgr.audiosource != null && audioSourceMgr.audiosource.isPlaying) {
-			var pitch = ExSaveData.GetFloat(maid, PluginName, "PITCH", 0f);
+			var pitch = GetFloatProperty(maid, "PITCH", 0f);
 			audioSourceMgr.audiosource.pitch = 1f + pitch;
 		}
 	}
@@ -330,8 +340,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			return;
 		}
 
-		var bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
-		var bLipSyncOff = ExSaveData.GetBool(maid, PluginName, "LIPSYNC_OFF", false);
+		var bMuhyou = GetBooleanProperty(maid, "MUHYOU", false);
+		var bLipSyncOff = GetBooleanProperty(maid, "LIPSYNC_OFF", false);
 		if (bLipSyncOff || bMuhyou || maid.MicLipSync) {
 			// 何もしない
 		} else {
@@ -385,7 +395,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		}
 
 		// スライダー拡張オフなら何もしない
-		if (!ExSaveData.GetBool(maid, PluginName, "WIDESLIDER", false)) {
+		if (!GetBooleanProperty(maid, "WIDESLIDER", false)) {
 			return;
 		}
 
@@ -454,7 +464,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	// 目を常時カメラに向ける
 	private static void EyeToCam(Maid maid, TBody tbody) {
-		var fEyeToCam = ExSaveData.GetFloat(maid, PluginName, "EYETOCAM", 0f);
+		var fEyeToCam = GetFloatProperty(maid, "EYETOCAM", 0f);
 		if (fEyeToCam < -0.5f) {
 			tbody.boEyeToCam = false;
 		} else if (fEyeToCam > 0.5f) {
@@ -464,7 +474,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	// 顔を常時カメラに向ける
 	private static void HeadToCam(Maid maid, TBody tbody) {
-		var fHeadToCam = ExSaveData.GetFloat(maid, PluginName, "HEADTOCAM", 0f);
+		var fHeadToCam = GetFloatProperty(maid, "HEADTOCAM", 0f);
 		if (fHeadToCam < -0.5f) {
 			tbody.boHeadToCam = false;
 		} else if (fHeadToCam > 0.5f) {
@@ -475,13 +485,13 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	// まばたき制限
 	private static void Mabataki(Maid maid) {
 		var mabatakiVal = maid.MabatakiVal;
-		var f = Mathf.Clamp01(1f - ExSaveData.GetFloat(maid, PluginName, "MABATAKI", 1f));
+		var f = Mathf.Clamp01(1f - GetFloatProperty(maid, "MABATAKI", 1f));
 		var mMin = Mathf.Asin(f);
 		var mMax = (float)Math.PI - mMin;
 		mMin = Mathf.Pow(mMin / (float)Math.PI, 0.5f);
 		mMax = Mathf.Pow(mMax / (float)Math.PI, 0.5f);
 		mabatakiVal = Mathf.Clamp(mabatakiVal, mMin, mMax);
-		if (ExSaveData.GetBool(maid, PluginName, "MUHYOU", false)) {
+		if (GetBooleanProperty(maid, "MUHYOU", false)) {
 			// 無表情の場合、常に目を固定
 			mabatakiVal = mMin;
 		}
@@ -512,10 +522,10 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	// リップシンク強度指定
 	private static void SetLipSyncIntensity(Maid maid, TBody tbody) {
-		if (!ExSaveData.GetBool(maid, PluginName, "LIPSYNC_INTENISTY", false)) {
+		if (!GetBooleanProperty(maid, "LIPSYNC_INTENISTY", false)) {
 			return;
 		}
-		var f1 = Mathf.Clamp01(ExSaveData.GetFloat(maid, PluginName, "LIPSYNC_INTENISTY.value", 1f));
+		var f1 = Mathf.Clamp01(GetFloatProperty(maid, "LIPSYNC_INTENISTY.value", 1f));
 		maid.VoicePara_1 = f1 * 0.5f;
 		maid.VoicePara_2 = f1 * 0.074f;
 		maid.VoicePara_3 = f1 * 0.5f;
@@ -527,8 +537,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	// リップシンク(口パク)抑制
 	private static void DisableLipSync(Maid maid) {
-		var bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
-		var bLipSyncOff = ExSaveData.GetBool(maid, PluginName, "LIPSYNC_OFF", false);
+		var bMuhyou = GetBooleanProperty(maid, "MUHYOU", false);
+		var bLipSyncOff = GetBooleanProperty(maid, "LIPSYNC_OFF", false);
 		if (bLipSyncOff || bMuhyou) {
 			maid.m_bFoceKuchipakuSelfUpdateTime = true;
 		}
@@ -536,8 +546,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	// 目と口の表情変化をやめる
 	private static void DisableFaceAnime(Maid maid) {
-		var bMuhyou = ExSaveData.GetBool(maid, PluginName, "MUHYOU", false);
-		var bHyoujouOff = ExSaveData.GetBool(maid, PluginName, "HYOUJOU_OFF", false);
+		var bMuhyou = GetBooleanProperty(maid, "MUHYOU", false);
+		var bHyoujouOff = GetBooleanProperty(maid, "HYOUJOU_OFF", false);
 		if (bHyoujouOff || bMuhyou) {
 			maid.FaceAnime("", 0f, 0);
 		}
@@ -545,18 +555,18 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	// スライダー範囲を拡大
 	public static void WideSlider(Maid maid) {
-		if (!ExSaveData.GetBool(maid, PluginName, "WIDESLIDER", false)) {
+		if (!GetBooleanProperty(maid, "WIDESLIDER", false)) {
 			return;
 		}
 
 		var tbody = maid.body0;
-		if (tbody?.bonemorph?.bones == null) {
+		if (tbody?.bonemorph?.bones == null || maid.IsCrcBody) {
 			return;
 		}
 
 		var boneMorph = tbody.bonemorph;
 
-		var fixLimbs = ExSaveData.GetBool(maid, PluginName, "LIMBSFIX", false);
+		var fixLimbs = GetBooleanProperty(maid, "LIMBSFIX", false);
 
 		// スケール変更するボーンのリスト
 		var boneScales = fixLimbs ? DistortCorrect.GetBoneScales(maid) : GetBoneScales(maid);
@@ -781,7 +791,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	private static void RotateEyes(Maid maid, Transform tEyePosL, Transform tEyePosR) {
 		var (rx, ry, _) = GetBonePosition(maid, "EYE_ANG");
-		var eyeAngle = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.angle", 0f);
+		var eyeAngle = GetFloatProperty(maid, "EYE_ANG.angle", 0f);
 		var eyeAngleX = (rx - 9) / 1000;
 		var eyeAngleY = (ry - 17) / 1000;
 
@@ -913,7 +923,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	internal static Vector3 GetBoneScale(Maid maid, string propName) {
-		float GetBoneProperty(string axis) => ExSaveData.GetFloat(maid, PluginName, propName + axis, 1f);
+		float GetBoneProperty(string axis) => GetFloatProperty(maid, propName + axis, 1f);
 		var x = GetBoneProperty(".height");
 		var y = GetBoneProperty(".depth");
 		var z = GetBoneProperty(".width");
@@ -921,7 +931,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	private static Vector3 GetBonePosition(Maid maid, string propName) {
-		float GetBoneProperty(string axis) => ExSaveData.GetFloat(maid, PluginName, propName + axis, 0f);
+		float GetBoneProperty(string axis) => GetFloatProperty(maid, propName + axis, 0f);
 		var x = GetBoneProperty(".x");
 		var y = GetBoneProperty(".y");
 		var z = GetBoneProperty(".z");
