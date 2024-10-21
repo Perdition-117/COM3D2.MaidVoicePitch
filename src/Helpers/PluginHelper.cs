@@ -44,6 +44,9 @@ internal static class PluginHelper {
 		for (var i = 0; i < characterManager.GetStockMaidCount(); i++) {
 			yield return characterManager.GetStockMaid(i);
 		}
+		foreach (var npcMaid in characterManager.m_listStockNpcMaid) {
+			yield return npcMaid;
+		}
 	}
 
 	public static void DebugGui() {
