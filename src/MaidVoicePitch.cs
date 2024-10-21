@@ -233,7 +233,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// 毎フレーム呼び出されるわけではないことに注意
 	/// </summary>
 	private static void BoneMorph_BlendCallback(BoneMorph_ boneMorph) {
-		if (PluginHelper.TryGetMaid(boneMorph, out var maid)) {
+		if (PluginHelper.TryGetMaid(boneMorph, out var maid) && !maid.IsCrcBody) {
 			WideSlider(maid);
 			//EyeBall(maid);
 

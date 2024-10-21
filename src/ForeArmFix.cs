@@ -17,7 +17,7 @@ internal static class ForeArmFixOptimized {
 	// CM3D.MaidVoicePitch.Plugin を適用しメイドのフリーコメント欄に #FARMFIX# の記述で前腕の歪みを修正する。
 	// 前腕歪みバグを修正
 	internal static void ForeArmFix(Maid maid) {
-		if (!ExSaveData.GetBool(maid, MaidVoicePitch.PluginName, "FARMFIX", false)) {
+		if (!ExSaveData.GetBool(maid, MaidVoicePitch.PluginName, "FARMFIX", false) || maid.IsCrcBody) {
 			return;
 		}
 
