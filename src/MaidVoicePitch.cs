@@ -20,6 +20,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	internal const string DefaultTemplateFile = "MaidVoicePitchSlider.xml";
 
+	private const float SliderScale = 20f;
+
 	private static ManualLogSource _logger;
 
 	private static bool _deserialized = false;
@@ -554,177 +556,26 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		var boneMorph = tbody.bonemorph;
 
 		// スケール変更するボーンのリスト
-		var boneScale = new Dictionary<string, Vector3>();
+		var boneScales = GetBoneScales(maid);
 
 		// ポジション変更するボーンのリスト
-		var bonePosition = new Dictionary<string, Vector3>();
-
-		float eyeAngAngle;
-		float eyeAngX;
-		float eyeAngY;
-		{
-			var ra = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.angle", 0f);
-			var rx = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.x", 0f);
-			var ry = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.y", 0f);
-
-			rx += -9f;
-			ry += -17f;
-
-			rx /= 1000f;
-			ry /= 1000f;
-
-			eyeAngAngle = ra;
-			eyeAngX = rx;
-			eyeAngY = ry;
-		}
-
-		var thiScl = new Vector3(
-			1.0f,
-			ExSaveData.GetFloat(maid, PluginName, "THISCL.depth", 1f),
-			ExSaveData.GetFloat(maid, PluginName, "THISCL.width", 1f));
-
-		{
-			var dx = ExSaveData.GetFloat(maid, PluginName, "THIPOS.x", 0f);
-			var dz = ExSaveData.GetFloat(maid, PluginName, "THIPOS.z", 0f);
-			var dy = 0.0f;
-			bonePosition["Bip01 L Thigh"] = new(dy, dz / 1000f, -dx / 1000f);
-			bonePosition["Bip01 R Thigh"] = new(dy, dz / 1000f, dx / 1000f);
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "THI2POS");
-			bonePosition["Bip01 L Thigh_SCL_"] = new Vector3(y, z, -x) / 1000f;
-			bonePosition["Bip01 R Thigh_SCL_"] = new Vector3(y, z, x) / 1000f;
-		}
-
-		// 元々足の位置と連動しており、追加するときに整合性を保つため足の位置との和で計算
-		{
-			var (x, y, z) = GetBonePosition(maid, "HIPPOS");
-			bonePosition["Hip_L"] = bonePosition["Bip01 L Thigh"] + new Vector3(y, z, -x) / 1000f;
-			bonePosition["Hip_R"] = bonePosition["Bip01 R Thigh"] + new Vector3(y, z, x) / 1000f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "MTWPOS");
-			bonePosition["momotwist_L"] = new Vector3(x, y, z) / 10f;
-			bonePosition["momotwist_R"] = new Vector3(x, y, -z) / 10f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "MMNPOS");
-			bonePosition["momoniku_L"] = new Vector3(x, y, z) / 10f;
-			bonePosition["momoniku_R"] = new Vector3(x, -y, z) / 10f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "SKTPOS");
-			bonePosition["Skirt"] = new Vector3(-z, -y, x) / 10f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "SPIPOS");
-			bonePosition["Bip01 Spine"] = new Vector3(-x, y, z) / 10f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "S0APOS");
-			bonePosition["Bip01 Spine0a"] = new Vector3(-x, y, z) / 10f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "S1POS");
-			bonePosition["Bip01 Spine1"] = new Vector3(-x, y, z) / 10f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "S1APOS");
-			bonePosition["Bip01 Spine1a"] = new Vector3(-x, y, z) / 10f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "NECKPOS");
-			bonePosition["Bip01 Neck"] = new Vector3(-x, y, z) / 10f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "CLVPOS");
-			bonePosition["Bip01 L Clavicle"] = new Vector3(-x, y, z) / 10f;
-			bonePosition["Bip01 R Clavicle"] = new Vector3(-x, y, -z) / 10f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "MUNESUBPOS");
-			bonePosition["Mune_L_sub"] = new Vector3(-y, z, -x) / 10f;
-			bonePosition["Mune_R_sub"] = new Vector3(-y, -z, -x) / 10f;
-		}
-
-		{
-			var (x, y, z) = GetBonePosition(maid, "MUNEPOS");
-			bonePosition["Mune_L"] = new Vector3(z, -y, x) / 10f;
-			bonePosition["Mune_R"] = new Vector3(z, -y, -x) / 10f;
-		}
-
-		// スケール変更するボーンをリストに一括登録
-		SetBoneScales(boneScale, maid);
+		var bonePositions = GetBonePositions(maid);
 
 		// 元々尻はPELSCLに連動していたが単体でも設定できるようにする
 		// ただし元との整合性をとるため乗算する
 		var pelvisScale = GetBoneScale(maid, "PELSCL");
 		var hipScale = GetBoneScale(maid, "HIPSCL");
 		hipScale = Vector3.Scale(hipScale, pelvisScale);
-		boneScale["Hip_L"] = hipScale;
-		boneScale["Hip_R"] = hipScale;
+		boneScales["Hip_L"] = hipScale;
+		boneScales["Hip_R"] = hipScale;
 
 		Transform tEyePosL = null;
 		Transform tEyePosR = null;
 
-		var sliderScale = 20f;
 		for (var i = boneMorph.bones.Count - 1; i >= 0; i--) {
 			var boneMorphLocal = boneMorph.bones[i];
-			var scale = new Vector3(1f, 1f, 1f);
-			var position = boneMorphLocal.pos;
-			for (var j = 0; j < BoneMorph.PropNames.Length; j++) {
-				var s = j switch {
-					0 => boneMorph.SCALE_Kubi,
-					1 => boneMorph.SCALE_Ude,
-					2 => boneMorph.SCALE_EyeX,
-					3 => boneMorph.SCALE_EyeY,
-					4 => boneMorph.Postion_EyeX * (0.5f + boneMorph.Postion_EyeY * 0.5f),
-					5 => boneMorph.Postion_EyeY,
-					6 => boneMorph.SCALE_HeadX,
-					7 => boneMorph.SCALE_HeadY,
-					8 => boneMorph.SCALE_DouPer,
-					9 => boneMorph.SCALE_Sintyou,
-					10 => boneMorph.SCALE_Koshi,
-					11 => boneMorph.SCALE_Kata,
-					12 => boneMorph.SCALE_West,
-					_ => 1f,
-				};
 
-				if (j == 8 && boneMorphLocal.Kahanshin == 0f) {
-					s = 1f - s;
-				}
-
-				if ((boneMorphLocal.atr & 1L << (j & 63)) != 0L) {
-					var v0 = boneMorphLocal.vecs_min[j];
-					var v1 = boneMorphLocal.vecs_max[j];
-
-					var n0 = v0 * sliderScale - v1 * (sliderScale - 1f);
-					var n1 = v1 * sliderScale - v0 * (sliderScale - 1f);
-					var f = (s + sliderScale - 1f) * (1f / (sliderScale * 2.0f - 1f));
-					scale = Vector3.Scale(scale, Vector3.Lerp(n0, n1, f));
-				}
-
-				if ((boneMorphLocal.atr & 1L << (j + 32 & 63)) != 0L) {
-					var v0 = boneMorphLocal.vecs_min[j + 32];
-					var v1 = boneMorphLocal.vecs_max[j + 32];
-
-					var n0 = v0 * sliderScale - v1 * (sliderScale - 1f);
-					var n1 = v1 * sliderScale - v0 * (sliderScale - 1f);
-					var f = (s + sliderScale - 1f) * (1f / (sliderScale * 2.0f - 1f));
-					position = Vector3.Scale(position, Vector3.Lerp(n0, n1, f));
-				}
-			}
+			GetBoneProperties(boneMorph, boneMorphLocal, out var scale, out var position);
 
 			var linkT = boneMorphLocal.linkT;
 			if (linkT == null) {
@@ -739,28 +590,17 @@ public class MaidVoicePitch : BaseUnityPlugin {
 				}
 
 				// リストに登録されているボーンのスケール設定
-				if (boneScale.ContainsKey(name)) {
-					scale = Vector3.Scale(scale, boneScale[name]);
+				if (boneScales.TryGetValue(name, out var boneScale)) {
+					scale = Vector3.Scale(scale, boneScale);
 				}
 
 				// リストに登録されているボーンのポジション設定
-				if (bonePosition.ContainsKey(name)) {
-					position += bonePosition[name];
+				if (bonePositions.TryGetValue(name, out var bonePosition)) {
+					position += bonePosition;
 				}
 			}
 
-			var muneLParent = tbody.m_trHitParentL;
-			var muneLChild = tbody.m_trHitChildL;
-			var muneRParent = tbody.m_trHitParentR;
-			var muneRChild = tbody.m_trHitChildR;
-			var muneLSub = tbody.m_trsMuneLsub;
-			var muneRSub = tbody.m_trsMuneRsub;
-			if (muneLChild && muneLParent && muneRChild && muneRParent) {
-				muneLChild.localPosition = muneLSub.localPosition;
-				muneLParent.localPosition = muneLSub.localPosition;
-				muneRChild.localPosition = muneRSub.localPosition;
-				muneRParent.localPosition = muneRSub.localPosition;
-			}
+			UpdateBreastPositions(tbody);
 
 			// ignoreHeadBonesに登録されている場合はヒラエルキーを辿って頭のツリーを無視
 			if (name != null) {
@@ -778,94 +618,265 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			}
 		}
 
+		RotateEyes(maid, tEyePosL, tEyePosR);
+		MorphBones(boneMorph);
+	}
+
+	private static Dictionary<string, Vector3> GetBonePositions(Maid maid) {
+		var bonePositions = new Dictionary<string, Vector3>();
+
+		{
+			var (x, _, z) = GetBonePosition(maid, "THIPOS");
+			bonePositions["Bip01 L Thigh"] = new Vector3(0, z, -x) / 1000f;
+			bonePositions["Bip01 R Thigh"] = new Vector3(0, z, x) / 1000f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "THI2POS");
+			bonePositions["Bip01 L Thigh_SCL_"] = new Vector3(y, z, -x) / 1000f;
+			bonePositions["Bip01 R Thigh_SCL_"] = new Vector3(y, z, x) / 1000f;
+		}
+
+		// 元々足の位置と連動しており、追加するときに整合性を保つため足の位置との和で計算
+		{
+			var (x, y, z) = GetBonePosition(maid, "HIPPOS");
+			bonePositions["Hip_L"] = bonePositions["Bip01 L Thigh"] + new Vector3(y, z, -x) / 1000f;
+			bonePositions["Hip_R"] = bonePositions["Bip01 R Thigh"] + new Vector3(y, z, x) / 1000f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "MTWPOS");
+			bonePositions["momotwist_L"] = new Vector3(x, y, z) / 10f;
+			bonePositions["momotwist_R"] = new Vector3(x, y, -z) / 10f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "MMNPOS");
+			bonePositions["momoniku_L"] = new Vector3(x, y, z) / 10f;
+			bonePositions["momoniku_R"] = new Vector3(x, -y, z) / 10f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "SKTPOS");
+			bonePositions["Skirt"] = new Vector3(-z, -y, x) / 10f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "SPIPOS");
+			bonePositions["Bip01 Spine"] = new Vector3(-x, y, z) / 10f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "S0APOS");
+			bonePositions["Bip01 Spine0a"] = new Vector3(-x, y, z) / 10f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "S1POS");
+			bonePositions["Bip01 Spine1"] = new Vector3(-x, y, z) / 10f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "S1APOS");
+			bonePositions["Bip01 Spine1a"] = new Vector3(-x, y, z) / 10f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "NECKPOS");
+			bonePositions["Bip01 Neck"] = new Vector3(-x, y, z) / 10f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "CLVPOS");
+			bonePositions["Bip01 L Clavicle"] = new Vector3(-x, y, z) / 10f;
+			bonePositions["Bip01 R Clavicle"] = new Vector3(-x, y, -z) / 10f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "MUNESUBPOS");
+			bonePositions["Mune_L_sub"] = new Vector3(-y, z, -x) / 10f;
+			bonePositions["Mune_R_sub"] = new Vector3(-y, -z, -x) / 10f;
+		}
+
+		{
+			var (x, y, z) = GetBonePosition(maid, "MUNEPOS");
+			bonePositions["Mune_L"] = new Vector3(z, -y, x) / 10f;
+			bonePositions["Mune_R"] = new Vector3(z, -y, -x) / 10f;
+		}
+
+		return bonePositions;
+	}
+
+	private static void GetBoneProperties(BoneMorph_ boneMorph, BoneMorphLocal boneMorphLocal, out Vector3 scale, out Vector3 position) {
+		scale = Vector3.one;
+		position = boneMorphLocal.pos;
+
+		for (var i = 0; i < BoneMorph.PropNames.Length; i++) {
+			var scaleModifier = i switch {
+				0 => boneMorph.SCALE_Kubi,
+				1 => boneMorph.SCALE_Ude,
+				2 => boneMorph.SCALE_EyeX,
+				3 => boneMorph.SCALE_EyeY,
+				4 => boneMorph.Postion_EyeX * (0.5f + boneMorph.Postion_EyeY * 0.5f),
+				5 => boneMorph.Postion_EyeY,
+				6 => boneMorph.SCALE_HeadX,
+				7 => boneMorph.SCALE_HeadY,
+				8 => boneMorph.SCALE_DouPer,
+				9 => boneMorph.SCALE_Sintyou,
+				10 => boneMorph.SCALE_Koshi,
+				11 => boneMorph.SCALE_Kata,
+				12 => boneMorph.SCALE_West,
+				_ => 1f,
+			};
+
+			if (i == 8 && boneMorphLocal.Kahanshin == 0f) {
+				scaleModifier = 1f - scaleModifier;
+			}
+
+			if ((boneMorphLocal.atr & 1L << (i & 63)) != 0L) {
+				scale = Vector3.Scale(scale, GetScale(i));
+			}
+
+			if ((boneMorphLocal.atr & 1L << (i + 32 & 63)) != 0L) {
+				position = Vector3.Scale(position, GetScale(i + 32));
+			}
+
+			Vector3 GetScale(int vectorIndex) {
+				var vectorMin = boneMorphLocal.vecs_min[vectorIndex];
+				var vectorMax = boneMorphLocal.vecs_max[vectorIndex];
+				var n0 = vectorMin * SliderScale - vectorMax * (SliderScale - 1f);
+				var n1 = vectorMax * SliderScale - vectorMin * (SliderScale - 1f);
+				var f = (scaleModifier + SliderScale - 1f) * (1f / (SliderScale * 2.0f - 1f));
+				return Vector3.Lerp(n0, n1, f);
+			}
+		}
+	}
+
+	private static void UpdateBreastPositions(TBody tbody) {
+		var muneLParent = tbody.m_trHitParentL;
+		var muneRParent = tbody.m_trHitParentR;
+		var muneLChild = tbody.m_trHitChildL;
+		var muneRChild = tbody.m_trHitChildR;
+		var muneLSub = tbody.m_trsMuneLsub;
+		var muneRSub = tbody.m_trsMuneRsub;
+		if (muneLChild && muneLParent && muneRChild && muneRParent) {
+			muneLChild.localPosition = muneLSub.localPosition;
+			muneLParent.localPosition = muneLSub.localPosition;
+			muneRChild.localPosition = muneRSub.localPosition;
+			muneRParent.localPosition = muneRSub.localPosition;
+		}
+	}
+
+	private static void RotateEyes(Maid maid, Transform tEyePosL, Transform tEyePosR) {
+		var (rx, ry, _) = GetBonePosition(maid, "EYE_ANG");
+		var eyeAngle = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.angle", 0f);
+		var eyeAngleX = (rx - 9) / 1000;
+		var eyeAngleY = (ry - 17) / 1000;
+
 		// 目のサイズ・角度変更
 		// EyeScaleRotate : 目のサイズと角度変更する CM3D.MaidVoicePich.Plugin.cs の追加メソッド
 		// http://pastebin.com/DBuN5Sws
 		// その１>>923
 		// http://jbbs.shitaraba.net/bbs/read.cgi/game/55179/1438196715/923
 		if (tEyePosL != null) {
-			var linkT = tEyePosL;
-			var localCenter = linkT.localPosition + new Vector3(0f, eyeAngY, eyeAngX); // ローカル座標系での回転中心位置
+			RotateEye(tEyePosL, new(-0.00560432f, -0.001345155f, 0.06805823f, 0.9976647f));
+		}
+
+		if (tEyePosR != null) {
+			RotateEye(tEyePosR, new(0.9976647f, 0.06805764f, -0.001350592f, -0.005603582f), -1);
+		}
+
+		void RotateEye(Transform linkT, Quaternion rotation, int angleMultiplier = 1) {
+			var localCenter = linkT.localPosition + new Vector3(0f, eyeAngleY, eyeAngleX * angleMultiplier); // ローカル座標系での回転中心位置
 			var worldCenter = linkT.parent.TransformPoint(localCenter);         // ワールド座標系での回転中心位置
 			var localAxis = new Vector3(-1f, 0f, 0f);                       // ローカル座標系での回転軸
 			var worldAxis = linkT.TransformDirection(localAxis);               // ワールド座標系での回転軸
 
-			linkT.localRotation = new(-0.00560432f, -0.001345155f, 0.06805823f, 0.9976647f);    // 初期の回転量
-			linkT.RotateAround(worldCenter, worldAxis, eyeAngAngle);
+			linkT.localRotation = rotation;    // 初期の回転量
+			linkT.RotateAround(worldCenter, worldAxis, eyeAngle * angleMultiplier);
 		}
-		if (tEyePosR != null) {
-			var linkT = tEyePosR;
-			var localCenter = linkT.localPosition + new Vector3(0f, eyeAngY, -eyeAngX);    // ローカル座標系での回転中心位置
-			var worldCenter = linkT.parent.TransformPoint(localCenter);             // ワールド座標系での回転中心位置
-			var localAxis = new Vector3(-1f, 0f, 0f);                           // ローカル座標系での回転軸
-			var worldAxis = linkT.TransformDirection(localAxis);                   // ワールド座標系での回転軸
+	}
 
-			linkT.localRotation = new(0.9976647f, 0.06805764f, -0.001350592f, -0.005603582f);   // 初期の回転量
-			linkT.RotateAround(worldCenter, worldAxis, -eyeAngAngle);
-		}
-
+	private static void MorphBones(BoneMorph_ boneMorph) {
 		// COM3D2追加処理
 		// ボーンポジション系
 		foreach (var boneMorphPosition in boneMorph.m_listBoneMorphPos) {
-			var propName = boneMorphPosition.strPropName;
 			var transform = boneMorphPosition.trBone;
 			var defPosition = boneMorphPosition.m_vDefPos;
 			var addMin = boneMorphPosition.m_vAddMin;
 			var addMax = boneMorphPosition.m_vAddMax;
 
-			if (propName == "Nosepos")
-				transform.localPosition = Lerp(addMin, defPosition, addMax, boneMorph.POS_Nose, sliderScale);
-			else if (propName == "MayuY") {
-				transform.localPosition = Lerp(addMin, defPosition, addMax, boneMorph.POS_MayuY, sliderScale);
-			} else if (propName == "EyeBallPosYL" || propName == "EyeBallPosYR") {
-				transform.localPosition = Lerp(addMin, defPosition, addMax, boneMorph.EyeBallPosY, sliderScale);
-			} else if (propName == "Mayupos_L" || propName == "Mayupos_R") {
-				var vector3_1 = Lerp(addMin, defPosition, addMax, boneMorph.POS_MayuY, sliderScale);
-				var x1 = addMin.x;
-				addMin.x = addMax.x;
-				addMax.x = x1;
-				var vector3_2 = Lerp(addMin, defPosition, addMax, boneMorph.POS_MayuX, sliderScale);
-				var x3 = vector3_2.x + vector3_1.x - defPosition.x;
-				transform.localPosition = new(x3, vector3_1.y, vector3_2.z);
+			switch (boneMorphPosition.strPropName) {
+				case "Nosepos":
+					transform.localPosition = Lerp(boneMorph.POS_Nose);
+					break;
+				case "MayuY":
+					transform.localPosition = Lerp(boneMorph.POS_MayuY);
+					break;
+				case "EyeBallPosYL":
+				case "EyeBallPosYR":
+					transform.localPosition = Lerp(boneMorph.EyeBallPosY);
+					break;
+				case "Mayupos_L":
+				case "Mayupos_R":
+					var vector3_1 = Lerp(boneMorph.POS_MayuY);
+					var x1 = addMin.x;
+					addMin.x = addMax.x;
+					addMax.x = x1;
+					var vector3_2 = Lerp(boneMorph.POS_MayuX);
+					var x3 = vector3_2.x + vector3_1.x - defPosition.x;
+					transform.localPosition = new(x3, vector3_1.y, vector3_2.z);
+					break;
 			}
+
+			Vector3 Lerp(float position) => MaidVoicePitch.Lerp(addMin, boneMorphPosition.m_vDefPos, addMax, position, SliderScale);
 		}
 
 		// ボーンスケール系
 		foreach (var boneMorphScale in boneMorph.m_listBoneMorphScl) {
-			var propName = boneMorphScale.strPropName;
 			var transform = boneMorphScale.trBone;
-			var defScale = boneMorphScale.m_vDefScl;
-			var addMin = boneMorphScale.m_vAddMin;
-			var addMax = boneMorphScale.m_vAddMax;
 
-			if (propName == "Earscl_L" || propName == "Earscl_R") {
-				transform.localScale = Lerp(addMin, defScale, addMax, boneMorph.SCALE_Ear, sliderScale);
-			} else if (propName == "Nosescl") {
-				transform.localScale = Lerp(addMin, defScale, addMax, boneMorph.SCALE_Nose, sliderScale);
-			} else if (propName == "EyeBallSclXL" || propName == "EyeBallSclXR") {
-				var localScale = transform.localScale;
-				localScale.z = Lerp(addMin, defScale, addMax, boneMorph.EyeBallSclX, sliderScale).z;
-				transform.localScale = localScale;
-			} else if (propName == "EyeBallSclYL" || propName == "EyeBallSclYR") {
-				var localScale = transform.localScale;
-				localScale.y = Lerp(addMin, defScale, addMax, boneMorph.EyeBallSclY, sliderScale).y;
-				transform.localScale = localScale;
+			switch (boneMorphScale.strPropName) {
+				case "Earscl_L":
+				case "Earscl_R":
+					transform.localScale = Lerp(boneMorph.SCALE_Ear);
+					break;
+				case "Nosescl":
+					transform.localScale = Lerp(boneMorph.SCALE_Nose);
+					break;
+				case "EyeBallSclXL":
+				case "EyeBallSclXR":
+					var eyeBallScaleX = transform.localScale;
+					eyeBallScaleX.z = Lerp(boneMorph.EyeBallSclX).z;
+					transform.localScale = eyeBallScaleX;
+					break;
+				case "EyeBallSclYL":
+				case "EyeBallSclYR":
+					var eyeBallScaleY = transform.localScale;
+					eyeBallScaleY.y = Lerp(boneMorph.EyeBallSclY).y;
+					transform.localScale = eyeBallScaleY;
+					break;
 			}
+
+			Vector3 Lerp(float scale) => MaidVoicePitch.Lerp(boneMorphScale.m_vAddMin, boneMorphScale.m_vDefScl, boneMorphScale.m_vAddMax, scale, SliderScale);
 		}
 
 		// ボーンローテーション系
 		foreach (var boneMorphRotation in boneMorph.m_listBoneMorphRot) {
-			var propName = boneMorphRotation.strPropName;
 			var transform = boneMorphRotation.trBone;
-			var defRotation = boneMorphRotation.m_vDefRotate;
-			var addMin = boneMorphRotation.m_vAddMin;
-			var addMax = boneMorphRotation.m_vAddMax;
 
-			if (propName == "Earrot_L" || propName == "Earrot_R") {
-				transform.localRotation = RotLerp(addMin, defRotation, addMax, boneMorph.ROT_Ear, sliderScale);
-			} else if (propName == "Mayurot_L" || propName == "Mayurot_R") {
-				transform.localRotation = RotLerp(addMin, defRotation, addMax, boneMorph.ROT_Mayu, sliderScale);
+			switch (boneMorphRotation.strPropName) {
+				case "Earrot_L":
+				case "Earrot_R":
+					transform.localRotation = RotLerp(boneMorph.ROT_Ear);
+					break;
+				case "Mayurot_L":
+				case "Mayurot_R":
+					transform.localRotation = RotLerp(boneMorph.ROT_Mayu);
+					break;
 			}
+
+			Quaternion RotLerp(float rotation) => MaidVoicePitch.RotLerp(boneMorphRotation.m_vAddMin, boneMorphRotation.m_vDefRotate, boneMorphRotation.m_vAddMax, rotation, SliderScale);
 		}
 	}
 
@@ -890,31 +901,35 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	private static Vector3 GetBoneScale(Maid maid, string propName) {
-		var x = ExSaveData.GetFloat(maid, PluginName, propName + ".height", 1f);
-		var y = ExSaveData.GetFloat(maid, PluginName, propName + ".depth", 1f);
-		var z = ExSaveData.GetFloat(maid, PluginName, propName + ".width", 1f);
+		float GetBoneProperty(string axis) => ExSaveData.GetFloat(maid, PluginName, propName + axis, 1f);
+		var x = GetBoneProperty(".height");
+		var y = GetBoneProperty(".depth");
+		var z = GetBoneProperty(".width");
 		return new(x, y, z);
 	}
 
 	private static Vector3 GetBonePosition(Maid maid, string propName) {
-		var x = ExSaveData.GetFloat(maid, PluginName, propName + ".x", 0f);
-		var y = ExSaveData.GetFloat(maid, PluginName, propName + ".y", 0f);
-		var z = ExSaveData.GetFloat(maid, PluginName, propName + ".z", 0f);
+		float GetBoneProperty(string axis) => ExSaveData.GetFloat(maid, PluginName, propName + axis, 0f);
+		var x = GetBoneProperty(".x");
+		var y = GetBoneProperty(".y");
+		var z = GetBoneProperty(".z");
 		return new(x, y, z);
 	}
 
-	private static void SetBoneScales(Dictionary<string, Vector3> dictionary, Maid maid) {
+	private static Dictionary<string, Vector3> GetBoneScales(Maid maid) {
+		var boneScales = new Dictionary<string, Vector3>();
 		foreach (var item in BoneAndPropNameList) {
 			var boneName = item.Key;
 			if (boneName.Contains("?")) {
 				var boneNameL = boneName.Replace('?', 'L');
 				var boneNameR = boneName.Replace('?', 'R');
-				dictionary[boneNameL] = GetBoneScale(maid, item.Value);
-				dictionary[boneNameR] = dictionary[boneNameL];
+				boneScales[boneNameL] = GetBoneScale(maid, item.Value);
+				boneScales[boneNameR] = boneScales[boneNameL];
 			} else {
-				dictionary[boneName] = GetBoneScale(maid, item.Value);
+				boneScales[boneName] = GetBoneScale(maid, item.Value);
 			}
 		}
+		return boneScales;
 	}
 
 	private string GetHierarchy(Transform transform) {

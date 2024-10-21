@@ -21,14 +21,12 @@ internal static class ForeArmFixOptimized {
 			return;
 		}
 
-		var boneMorph = maid.body0.bonemorph;
-
-		if (!MaidBones.ContainsKey(maid.status.guid) || MaidBones[maid.status.guid].LeftForeArm == null || MaidBones[maid.status.guid].RightForeArm == null || MaidBones[maid.status.guid].UpperArm == null) {
+		if (!(MaidBones.TryGetValue(maid.status.guid, out var MaidBone) || MaidBone is { LeftForeArm: { }, RightForeArm: { }, UpperArm: { } })) {
 			Transform foreArmL = null;
 			Transform foreArmR = null;
 			Transform upperArm = null;
 
-			foreach (var bone in boneMorph.bones) {
+			foreach (var bone in maid.body0.bonemorph.bones) {
 				if (bone.linkT == null) continue;
 				if (bone.linkT.name == "Bip01 L Forearm") foreArmL = bone.linkT;
 				if (bone.linkT.name == "Bip01 R Forearm") foreArmR = bone.linkT;
