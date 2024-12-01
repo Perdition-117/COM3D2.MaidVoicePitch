@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Reflection.Emit;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using CM3D2.ExternalPreset.Managed;
 using CM3D2.ExternalSaveData.Managed;
@@ -34,6 +35,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	private static Vector3 _skirtScaleBackUp;
 	private static Vector3 _jiggleBoneScaleBackUp;
+
+	private static ConfigEntry<bool> _configAllowEditModeFaceActions;
 
 	/// <summary>
 	/// Transform変形を行うボーンのリスト。
@@ -123,6 +126,18 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		_logger = Logger;
 
+		_configAllowEditModeFaceActions = Config.Bind("General", "AllowEditModeFaceActions", false, "Allows face actions while in edit mode, even while otherwise disabled.");
+
+		_configAllowEditModeFaceActions.SettingChanged += (o, e) => {
+			if (_configAllowEditModeFaceActions.Value) {
+				if (SceneManager.GetActiveScene().name == "SceneEdit" && GameMain.Instance?.CharacterMgr != null) {
+					foreach (var maid in PluginHelper.GetMaids()) {
+						maid.m_bFoceKuchipakuSelfUpdateTime = false;
+					}
+				}
+			}
+		};
+
 		// ExPresetに外部から登録
 		ExPreset.AddExSaveNode(PluginName);
 		ExPreset.loadNotify.AddListener(MaidVoicePitch_UpdateSliders);
@@ -198,7 +213,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		SliderTemplates.Update(PluginName);
 
 		// エディット画面にいる場合は特別処理として毎フレームアップデートを行う
-		if (SceneManager.GetActiveScene().name == "SceneEdit" && GameMain.Instance?.CharacterMgr != null) {
+		if (!_configAllowEditModeFaceActions.Value && SceneManager.GetActiveScene().name == "SceneEdit" && GameMain.Instance?.CharacterMgr != null) {
 			foreach (var maid in PluginHelper.GetMaids()) {
 				EditSceneMaidUpdate(maid);
 			}
@@ -212,6 +227,10 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	internal static float GetFloatProperty(Maid maid, string propName, float defaultValue) {
 		return ExSaveData.GetFloat(maid, PluginName, propName, defaultValue);
 	}
+
+	private static bool IsAllFaceActionDisabled(Maid maid) => GetBooleanProperty(maid, "MUHYOU", false);
+	private static bool IsFaceExpressionDisabled(Maid maid) => GetBooleanProperty(maid, "HYOUJOU_OFF", false);
+	private static bool IsLipSyncDisabled(Maid maid) => GetBooleanProperty(maid, "LIPSYNC_OFF", false);
 
 	[HarmonyPatch(typeof(BoneMorph), nameof(BoneMorph.Init))]
 	[HarmonyPostfix]
@@ -340,11 +359,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			return;
 		}
 
-		var bMuhyou = GetBooleanProperty(maid, "MUHYOU", false);
-		var bLipSyncOff = GetBooleanProperty(maid, "LIPSYNC_OFF", false);
-		if (bLipSyncOff || bMuhyou || maid.MicLipSync) {
-			// 何もしない
-		} else {
+		if (!(IsAllFaceActionDisabled(maid) || IsLipSyncDisabled(maid) || maid.MicLipSync)) {
 			// エディットシーンではリップシンクを強制的に復活させる
 			maid.m_bFoceKuchipakuSelfUpdateTime = false;
 		}
@@ -491,7 +506,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		mMin = Mathf.Pow(mMin / (float)Math.PI, 0.5f);
 		mMax = Mathf.Pow(mMax / (float)Math.PI, 0.5f);
 		mabatakiVal = Mathf.Clamp(mabatakiVal, mMin, mMax);
-		if (GetBooleanProperty(maid, "MUHYOU", false)) {
+		if (IsAllFaceActionDisabled(maid)) {
 			// 無表情の場合、常に目を固定
 			mabatakiVal = mMin;
 		}
@@ -537,18 +552,14 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	// リップシンク(口パク)抑制
 	private static void DisableLipSync(Maid maid) {
-		var bMuhyou = GetBooleanProperty(maid, "MUHYOU", false);
-		var bLipSyncOff = GetBooleanProperty(maid, "LIPSYNC_OFF", false);
-		if (bLipSyncOff || bMuhyou) {
+		if (IsAllFaceActionDisabled(maid) || IsLipSyncDisabled(maid)) {
 			maid.m_bFoceKuchipakuSelfUpdateTime = true;
 		}
 	}
 
 	// 目と口の表情変化をやめる
 	private static void DisableFaceAnime(Maid maid) {
-		var bMuhyou = GetBooleanProperty(maid, "MUHYOU", false);
-		var bHyoujouOff = GetBooleanProperty(maid, "HYOUJOU_OFF", false);
-		if (bHyoujouOff || bMuhyou) {
+		if (IsAllFaceActionDisabled(maid) || IsFaceExpressionDisabled(maid)) {
 			maid.FaceAnime("", 0f, 0);
 		}
 	}
