@@ -21,7 +21,7 @@ internal static class ForeArmFixOptimized {
 			return;
 		}
 
-		if (!(MaidBones.TryGetValue(maid.status.guid, out var MaidBone) || MaidBone is { LeftForeArm: { }, RightForeArm: { }, UpperArm: { } })) {
+		if (!(MaidBones.TryGetValue(maid.status.guid, out var MaidBone) && MaidBone.LeftForeArm != null && MaidBone.RightForeArm != null && MaidBone.UpperArm != null)) {
 			Transform foreArmL = null;
 			Transform foreArmR = null;
 			Transform upperArm = null;
