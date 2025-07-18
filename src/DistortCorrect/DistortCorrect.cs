@@ -86,8 +86,10 @@ public class DistortCorrect {
 	[HarmonyPrefix]
 	[HarmonyPatch(typeof(TBody), nameof(TBody.AddItem), typeof(MPN), typeof(string), typeof(string), typeof(string), typeof(string), typeof(bool), typeof(int))]
 	[HarmonyPatch(typeof(TBody), nameof(TBody.DelItem))]
-	private static void ResetBones(TBody __instance) {
-		ResetBoneDic(__instance.maid, true);
+	private static void ResetBones(TBody __instance, string slotname) {
+		if (TBody.hashSlotName.ContainsKey(slotname)) {
+			ResetBoneDic(__instance.maid, true);
+		}
 	}
 
 	[HarmonyPrefix]
