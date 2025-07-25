@@ -1,6 +1,5 @@
 using System.Linq;
 using UnityEngine;
-using CM3D2.ExternalSaveData.Managed;
 using HarmonyLib;
 using System.Reflection.Emit;
 using System.IO;
@@ -133,7 +132,7 @@ public class DistortCorrect {
 		BoneMorph.SetScale(tag, boneName, x, y, z, x2, y2, z2);
 	}
 
-	private static void ResetBoneDic(Maid maid, bool staticFlag) {
+	private static void ResetBoneDic(Maid maid, bool force) {
 		if (OriginalBones == null) {
 			InitBoneDic();
 		}
@@ -142,11 +141,9 @@ public class DistortCorrect {
 			return;
 		}
 
-		var wideSlider = MaidVoicePitch.GetBooleanProperty(maid, "WIDESLIDER", false);
-		var limbFix = MaidVoicePitch.GetBooleanProperty(maid, "LIMBSFIX", false);
-		var enable = wideSlider && limbFix;
-		if (staticFlag || !LimbFixes.ContainsKey(maid) || (LimbFixes[maid] != enable)) {
-			if (enable) {
+		var fixLimbs = MaidVoicePitch.GetBooleanProperty(maid, "LIMBSFIX", false);
+		if (force || !LimbFixes.ContainsKey(maid) || (LimbFixes[maid] != fixLimbs)) {
+			if (fixLimbs) {
 				BoneMorph.dic = NewBones;
 				BoneMorph.dic2 = NewBones2;
 			} else {
@@ -155,7 +152,7 @@ public class DistortCorrect {
 			}
 			maid.body0.bonemorph.Init();
 			maid.body0.bonemorph.AddRoot(maid.body0.m_Bones.transform);
-			LimbFixes[maid] = enable;
+			LimbFixes[maid] = fixLimbs;
 		}
 	}
 

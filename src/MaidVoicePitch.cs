@@ -77,6 +77,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	};
 
 	private static readonly string[] ObsoleteSettings = {
+		"WIDESLIDER",
 		"WIDESLIDER.enable",
 		"PROPSET_OFF.enable",
 		"LIPSYNC_OFF.enable",
@@ -409,11 +410,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			JiggleBones[bone] = maid;
 		}
 
-		// スライダー拡張オフなら何もしない
-		if (!GetBooleanProperty(maid, "WIDESLIDER", false)) {
-			return;
-		}
-
 		var breastScale = GetBoneScale(maid, "MUNESCL");
 		bone.transform.localScale = Vector3.Scale(bone.transform.localScale, breastScale);
 	}
@@ -566,10 +562,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	// スライダー範囲を拡大
 	public static void WideSlider(Maid maid) {
-		if (!GetBooleanProperty(maid, "WIDESLIDER", false)) {
-			return;
-		}
-
 		var tbody = maid.body0;
 		if (tbody?.bonemorph?.bones == null || maid.IsCrcBody) {
 			return;
