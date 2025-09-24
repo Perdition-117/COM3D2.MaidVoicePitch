@@ -88,6 +88,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		"FARMFIX.enable",
 		"EYEBALL.enable",
+		"EYEBALL.width",
+		"EYEBALL.height",
 		"EYE_ANG.enable",
 
 		"PELSCL.enable",
@@ -255,7 +257,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	private static void BoneMorph_BlendCallback(BoneMorph_ boneMorph) {
 		if (PluginHelper.TryGetMaid(boneMorph, out var maid) && !maid.IsCrcBody) {
 			WideSlider(maid);
-			//EyeBall(maid);
 
 			if (SceneManager.GetActiveScene().name != "ScenePhotoMode" && maid.body0 != null && maid.body0.isLoadedBody) {
 				IKPreInit(maid);
@@ -507,16 +508,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			mabatakiVal = mMin;
 		}
 		maid.MabatakiVal = mabatakiVal;
-	}
-
-	// 瞳サイズ変更
-	public static void EyeBall(Maid maid) {
-		var tbody = maid.body0;
-		if (tbody != null && tbody.trsEyeL != null && tbody.trsEyeR != null) {
-			var (h, _, w) = GetBoneScale(maid, "EYEBALL");
-			tbody.trsEyeL.localScale = new(1f, h, w);
-			tbody.trsEyeR.localScale = new(1f, h, w);
-		}
 	}
 
 	// 瞳の角度を目の角度に合わせて補正
