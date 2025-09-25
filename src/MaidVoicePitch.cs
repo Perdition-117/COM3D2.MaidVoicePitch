@@ -201,13 +201,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		SliderTemplates.Clear();
 	}
 
-	public void OnGUI() {
-		PluginHelper.DebugGui();
-	}
-
 	public void Update() {
-		//PluginHelper.LineClear();
-		PluginHelper.DebugClear();
 		// テンプレートキャッシュを消去して、再読み込みを促す
 		if (Input.GetKey(KeyCode.F12)) {
 			FaceScriptTemplates.Clear();

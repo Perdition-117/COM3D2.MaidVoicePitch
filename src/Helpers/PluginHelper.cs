@@ -2,19 +2,6 @@ using System.Linq;
 using UnityEngine;
 
 internal static class PluginHelper {
-#if DEBUG
-	public static bool bDebugEnable = true;
-#else
-	public static bool bDebugEnable = false;
-#endif
-
-	public static List<string> debugLines = new();
-	public static int debugLinesMax = 100;
-	public static Vector2 debugScrollPosition = new(0f, 0f);
-	const int margin = 20;
-	const int windowId = 0x123456;
-	public static Rect debugWindowRect = new(margin, margin, Screen.width / 2 - (margin * 2), Screen.height - (margin * 2));
-
 	public static Maid GetMaid(TBody tbody) {
 		return tbody.maid;
 	}
@@ -47,41 +34,6 @@ internal static class PluginHelper {
 		foreach (var npcMaid in characterManager.m_listStockNpcMaid) {
 			yield return npcMaid;
 		}
-	}
-
-	public static void DebugGui() {
-		if (bDebugEnable && debugLines != null && debugLines.Count > 0) {
-			debugWindowRect = GUILayout.Window(windowId, debugWindowRect, DebugGuiWindow, "Debug");
-		}
-	}
-
-	public static void DebugGuiWindow(int windowId) {
-		debugScrollPosition = GUILayout.BeginScrollView(debugScrollPosition);
-		foreach (var line in debugLines) {
-			GUILayout.Label(line);
-		}
-		GUILayout.EndScrollView();
-	}
-
-	public static void DebugClear() {
-		debugLines.Clear();
-	}
-
-	public static void Debug(string s) {
-		if (!bDebugEnable) {
-			return;
-		}
-		if (debugLines.Count > debugLinesMax) {
-			return;
-		}
-		debugLines.Add(s);
-	}
-
-	public static void Debug(string format, params object[] args) {
-		if (!bDebugEnable) {
-			return;
-		}
-		Debug(string.Format(format, args));
 	}
 
 	public static float NormalizeAngle(float angle) {
