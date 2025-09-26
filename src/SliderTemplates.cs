@@ -1,6 +1,5 @@
 using System.IO;
 using System.Xml;
-using BepInEx;
 using CM3D2.ExternalSaveData.Managed;
 using CM3D2.MaidVoicePitch.Plugin;
 
@@ -26,7 +25,7 @@ internal static class SliderTemplates {
 			return;
 		}
 		var fileName = ExSaveData.Get(maid, pluginName, "SLIDER_TEMPLATE", MaidVoicePitch.DefaultTemplateFile);
-		fileName = Path.Combine(Paths.ConfigPath, fileName);
+		fileName = Path.Combine(MaidVoicePitch.PluginPath, fileName);
 		PathCheck(maid, pluginName, fileName);
 		var sliderTemplate = SliderTemplateCache.Get(fileName);
 		var guid = maid.status.guid;

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
 using BepInEx;
@@ -18,6 +19,7 @@ namespace CM3D2.MaidVoicePitch.Plugin;
 [BepInDependency("COM3D2.ExternalPresetData")]
 public class MaidVoicePitch : BaseUnityPlugin {
 	public static string PluginName => "CM3D2.MaidVoicePitch";
+	internal static readonly string PluginPath = Path.Combine(Paths.PluginPath, "ModSliders");
 
 	internal const string DefaultTemplateFile = "MaidVoicePitchSlider.xml";
 
