@@ -6,9 +6,9 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using CM3D2.ExternalPreset.Managed;
 using CM3D2.ExternalSaveData.Managed;
-using COM3D2.MaidVoicePitch;
 using ExtensionMethods;
 using HarmonyLib;
+using MaidVoicePitch;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34009.444
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "COM3D2.MaidVoicePitch", "src\COM3D2.MaidVoicePitch.csproj", "{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaidVoicePitch", "src\MaidVoicePitch.csproj", "{C5B37760-57CF-41B5-BE4D-26CA9FC183D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

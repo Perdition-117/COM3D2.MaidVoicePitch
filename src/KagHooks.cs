@@ -1,5 +1,6 @@
 using CM3D2.ExternalSaveData.Managed;
-using CM3D2.MaidVoicePitch.Plugin;
+
+namespace CM3D2.MaidVoicePitch.Plugin;
 
 internal static class KagHooks {
 	private static bool kagTagPropSetHooked = false;

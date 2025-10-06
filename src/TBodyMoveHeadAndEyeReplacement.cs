@@ -1,5 +1,6 @@
-using CM3D2.MaidVoicePitch.Plugin;
 using UnityEngine;
+
+namespace CM3D2.MaidVoicePitch.Plugin;
 
 class TBodyMoveHeadAndEye {
 	public class ExternalValues : MonoBehaviour {

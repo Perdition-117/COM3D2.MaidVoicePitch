@@ -1,7 +1,8 @@
 using System.IO;
 using System.Xml;
 using CM3D2.ExternalSaveData.Managed;
-using CM3D2.MaidVoicePitch.Plugin;
+
+namespace CM3D2.MaidVoicePitch.Plugin;
 
 internal static class SliderTemplates {
 	private static readonly Cache SliderTemplateCache = new();
