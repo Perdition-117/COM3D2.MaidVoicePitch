@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using BepInEx;
 using BepInEx.Configuration;
@@ -25,18 +26,22 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	private const float SliderScale = 20f;
 
-	private static ManualLogSource _logger;
-
+	internal static readonly bool IsCom3d25 = new Version(GameUty.GetBuildVersionText()).Major == 3;
 	internal static readonly PluginSaveData PluginSaveData = new(PluginName);
 
-	private static bool _deserialized = false;
-
 	private static readonly TBodyMoveHeadAndEye TBodyMoveHeadAndEye = new();
-
 	private static readonly Dictionary<jiggleBone, Maid> JiggleBones = new();
 
+	private static ManualLogSource _logger;
+	private static bool _deserialized = false;
 	private static Vector3 _skirtScaleBackUp;
 	private static Vector3 _jiggleBoneScaleBackUp;
+
+	private static PropertyInfo _bodyIk;
+	private static FieldInfo _bodyIkMouth;
+	private static FieldInfo _bodyIkNippleLeft;
+	private static FieldInfo _bodyIkNippleRight;
+	private static MethodInfo _bodyIkInit;
 
 	private static ConfigEntry<bool> _configAllowEditModeFaceActions;
 
@@ -152,14 +157,71 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.BoneMorph_.Blend));
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.AudioSourceMgr.Play));
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.AudioSourceMgr.PlayOneShot));
-		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.CharacterMgr.PresetSet));
-		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf));
-		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf));
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.jiggleBone.PreLateUpdateSelf));
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.jiggleBone.PostLateUpdateSelf));
 
-		Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
-		Harmony.CreateAndPatchAll(typeof(DistortCorrect));
+		var harmony1 = Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
+		var harmony2 = Harmony.CreateAndPatchAll(typeof(DistortCorrect));
+
+		Type tbodyType = typeof(TBody);
+		Type tbodyIkType;
+		MethodInfo presetSetMethod;
+		MethodInfo skirtBoneUpdateMethod;
+		MethodInfo addItemMethod;
+
+		if (IsCom3d25) {
+			tbodyIkType = tbodyType.Assembly.GetType("FullBodyIKMgr");
+			_bodyIk = tbodyType.GetProperty("fullBodyIK");
+			_bodyIkMouth = GetField("Mouth");
+			_bodyIkNippleLeft = GetField("NippleL");
+			_bodyIkNippleRight = GetField("NippleR");
+
+			Type tbodySkinType = typeof(TBodySkin);
+			presetSetMethod = AccessTools.Method(typeof(CharacterMgr), nameof(CharacterMgr.PresetSet), new[] { typeof(Maid), typeof(CharacterMgr.Preset), typeof(bool) });
+			skirtBoneUpdateMethod = AccessTools.Method(typeof(DynamicSkirtBone), "DynamicUpdate");
+			addItemMethod = AccessTools.Method(tbodyType, nameof(TBody.AddItem), new[] {
+				typeof(MPN),
+				typeof(int),
+				typeof(string),
+				typeof(string),
+				typeof(string),
+				typeof(string),
+				typeof(bool),
+				typeof(int),
+				typeof(bool),
+				tbodySkinType.GetNestedType("SplitParam"),
+				tbodySkinType.GetNestedType("TargetBodyType"),
+				typeof(int),
+			});
+		} else {
+			tbodyIkType = tbodyType.Assembly.GetType("FullBodyIKCtrl");
+			_bodyIk = tbodyType.GetProperty("IKCtrl");
+			_bodyIkMouth = GetField("m_Mouth");
+			_bodyIkNippleLeft = GetField("m_NippleL");
+			_bodyIkNippleRight = GetField("m_NippleR");
+
+			presetSetMethod = AccessTools.Method(typeof(CharacterMgr), nameof(CharacterMgr.PresetSet), new[] { typeof(Maid), typeof(CharacterMgr.Preset) });
+			skirtBoneUpdateMethod = AccessTools.Method(typeof(DynamicSkirtBone), "UpdateSelf");
+			addItemMethod = AccessTools.Method(tbodyType, nameof(TBody.AddItem), new[] {
+				typeof(MPN),
+				typeof(string),
+				typeof(string),
+				typeof(string),
+				typeof(string),
+				typeof(bool),
+				typeof(int),
+			});
+		}
+
+		harmony1.Patch(presetSetMethod, new HarmonyMethod(typeof(Managed.Callbacks.CharacterMgr.PresetSet), nameof(Managed.Callbacks.CharacterMgr.PresetSet.Invoke)));
+		harmony1.Patch(skirtBoneUpdateMethod,
+			new HarmonyMethod(typeof(Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf), nameof(Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf.Invoke)),
+			new HarmonyMethod(typeof(Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf), nameof(Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf.Invoke)));
+		harmony2.Patch(addItemMethod, new HarmonyMethod(typeof(DistortCorrect), nameof(DistortCorrect.ResetBones)));
+
+		_bodyIkInit = tbodyIkType.GetMethod("Init");
+
+		FieldInfo GetField(string name) => tbodyIkType.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
 	}
 
 	internal static void LogDebug(object data) {
@@ -255,30 +317,22 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			WideSlider(maid);
 
 			if (SceneManager.GetActiveScene().name != "ScenePhotoMode" && maid.body0 != null && maid.body0.isLoadedBody) {
-				IKPreInit(maid);
-				maid.body0.IKCtrl.Init();
-				//.IKCtrl.Init();
+				var bodyIk = _bodyIk.GetValue(maid.body0, null);
+				IKPreInit(bodyIk);
+				_bodyIkInit.Invoke(bodyIk, null);
 			}
 		}
 	}
 
-	private static void IKPreInit(Maid maid) {
-		var fbikc = maid.body0.IKCtrl;
+	private static void IKPreInit(object bodyIk) {
+		Destroy(_bodyIkMouth);
+		Destroy(_bodyIkNippleLeft);
+		Destroy(_bodyIkNippleRight);
 
-		var mouth = fbikc.m_Mouth;
-		if (mouth) {
-			DestroyImmediate(mouth.gameObject);
-		}
-
-		var nippleL = fbikc.m_NippleL;
-		if (nippleL) {
-			DestroyImmediate(nippleL.gameObject);
-		}
-
-		var nippleR = fbikc.m_NippleR;
-
-		if (nippleR) {
-			DestroyImmediate(nippleR.gameObject);
+		void Destroy(FieldInfo fieldInfo) {
+			if (fieldInfo.GetValue(bodyIk) is Transform transform) {
+				DestroyImmediate(transform.gameObject);
+			}
 		}
 	}
 
@@ -329,7 +383,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			return;
 		}
 
-		foreach (var maid in PluginHelper.GetMaids().Where(e => e?.body0?.bonemorph != null)) {
+		foreach (var maid in PluginHelper.GetMaids().Where(e => !e.IsCrcBody && e?.body0?.bonemorph != null)) {
 			//
 			//	todo	本当にこの方法しかないのか調べること
 			//

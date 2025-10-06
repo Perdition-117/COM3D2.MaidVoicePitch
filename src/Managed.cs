@@ -104,8 +104,6 @@ namespace CM3D2.MaidVoicePitch.Managed.Callbacks {
 
 			public static Callbacks<Callback> Callbacks = new();
 
-			[HarmonyPrefix]
-			[HarmonyPatch(typeof(global::CharacterMgr), nameof(global::CharacterMgr.PresetSet), typeof(Maid), typeof(global::CharacterMgr.Preset))]
 			public static void Invoke(global::CharacterMgr __instance, Maid f_maid, global::CharacterMgr.Preset f_prest) {
 				try {
 					foreach (var callback in Callbacks.ArrayOfVals) {
@@ -124,8 +122,6 @@ namespace CM3D2.MaidVoicePitch.Managed.Callbacks {
 
 			public static Callbacks<Callback> Callbacks = new();
 
-			[HarmonyPrefix]
-			[HarmonyPatch(typeof(global::DynamicSkirtBone), nameof(global::DynamicSkirtBone.UpdateSelf))]
 			public static void Invoke(global::DynamicSkirtBone __instance) {
 				try {
 					foreach (var callback in Callbacks.ArrayOfVals) {
@@ -142,8 +138,6 @@ namespace CM3D2.MaidVoicePitch.Managed.Callbacks {
 
 			public static Callbacks<Callback> Callbacks = new();
 
-			[HarmonyPostfix]
-			[HarmonyPatch(typeof(global::DynamicSkirtBone), nameof(global::DynamicSkirtBone.UpdateSelf))]
 			public static void Invoke(global::DynamicSkirtBone __instance) {
 				try {
 					foreach (var callback in Callbacks.ArrayOfVals) {

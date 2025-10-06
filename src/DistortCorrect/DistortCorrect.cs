@@ -83,9 +83,8 @@ public class DistortCorrect {
 	private static Dictionary<string, List<BoneMorph.BoneProp>> NewBones2;
 
 	[HarmonyPrefix]
-	[HarmonyPatch(typeof(TBody), nameof(TBody.AddItem), typeof(MPN), typeof(string), typeof(string), typeof(string), typeof(string), typeof(bool), typeof(int))]
 	[HarmonyPatch(typeof(TBody), nameof(TBody.DelItem))]
-	private static void ResetBones(TBody __instance, string slotname) {
+	internal static void ResetBones(TBody __instance, string slotname) {
 		if (TBody.hashSlotName.ContainsKey(slotname)) {
 			ResetBoneDic(__instance.maid, true);
 		}
@@ -101,13 +100,13 @@ public class DistortCorrect {
 	[HarmonyTranspiler]
 	[HarmonyPatch(typeof(ImportCM), nameof(ImportCM.LoadSkinMesh_R))]
 	private static IEnumerable<CodeInstruction> HookLoadMesh(IEnumerable<CodeInstruction> instructions) {
-		return CreateTranspiler(instructions, 15);
+		return CreateTranspiler(instructions, MaidVoicePitch.IsCom3d25 ? 42 : 15);
 	}
 
 	[HarmonyTranspiler]
 	[HarmonyPatch(typeof(ImportCM), nameof(ImportCM.LoadOnlyBone_R))]
 	private static IEnumerable<CodeInstruction> HookLoadBone(IEnumerable<CodeInstruction> instructions) {
-		return CreateTranspiler(instructions, 10);
+		return CreateTranspiler(instructions, MaidVoicePitch.IsCom3d25 ? 9 : 10);
 	}
 
 	private static IEnumerable<CodeInstruction> CreateTranspiler(IEnumerable<CodeInstruction> instructions, int i) {

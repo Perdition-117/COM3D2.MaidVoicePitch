@@ -25,11 +25,11 @@
 		<slider name="MuneYawaraka"  min="0"    max="200"/> <!-- breast shake -->
 
 		<slider name="sintyou"       min="-300" max="100"/> <!-- height -->
+		<slider name="DouPer"        min="-100" max="500"/> <!-- leg length -->
 		<slider name="KubiScl"       min="0"    max="200"/> <!-- neck length -->
 		<slider name="kata"          min="-400" max="100"/> <!-- shoulder width -->
 		<slider name="west"          min="-30"  max="100"/> <!-- waist -->
 		<slider name="Hara"          min="0"    max="200"/> <!-- belly -->
 		<slider name="koshi"         min="-160" max="200"/> <!-- hip -->
-		<slider name="DouPer"        min="-100" max="500"/> <!-- leg length -->
 	</sliders>
 </slidertemplate>
