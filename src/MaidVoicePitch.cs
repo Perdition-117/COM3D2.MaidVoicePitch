@@ -18,9 +18,13 @@ namespace CM3D2.MaidVoicePitch.Plugin;
 [BepInPlugin("COM3D2.MaidVoicePitch", MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInDependency("COM3D2.ExternalSaveData")]
 [BepInDependency("COM3D2.ExternalPresetData")]
+[BepInDependency("COM3D2.AddModsSlider")]
 public class MaidVoicePitch : BaseUnityPlugin {
 	public static string PluginName => "CM3D2.MaidVoicePitch";
 	internal static readonly string PluginPath = Path.Combine(Paths.PluginPath, "ModSliders");
+	private static readonly string LocalizationPath = Path.Combine(PluginPath, "localization");
+	private static readonly string ParametersRoot = Path.Combine(PluginPath, "parameters");
+	private static readonly string ParametersPath = Path.Combine(ParametersRoot, "ModSliders.xml");
 
 	internal const string DefaultTemplateFile = "MaidVoicePitchSlider.xml";
 
@@ -131,6 +135,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	public void Awake() {
 		DontDestroyOnLoad(this);
+
+		AddModsSlider.Plugin.AddModsSlider.AddParameters(ParametersPath, LocalizationPath, "ModSliders");
 
 		SceneManager.sceneLoaded += OnSceneLoaded;
 

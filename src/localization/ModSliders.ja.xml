@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Localization>
+	<Term Key="Value"      Translation="数値" />
+	<Term Key="Scale"      Translation="スケーリング" />
+	<Term Key="Position"   Translation="位置" />
+	<Term Key="Width"      Translation="横幅" />
+	<Term Key="Height"     Translation="高さ" />
+	<Term Key="Depth"      Translation="奥行" />
+	<Term Key="Horizontal" Translation="横" />
+	<Term Key="Vertical"   Translation="縦" />
+	<Term Key="Angle"      Translation="角度" />
+	<Term Key="Back-front" Translation="前後" />
+
+	<Term Key="MUHYOU"            Translation="全ての顔処理を停止" />
+	<Term Key="HYOUJOU_OFF"       Translation="表情変化停止" />
+	<Term Key="FACE_OFF"          Translation="@Faceによる表情変化抑制" />
+	<Term Key="FACEBLEND_OFF"     Translation="@FaceBlendによる表情変化抑制" />
+	<Term Key="EYETOCAMERA_OFF"   Translation="@EyeToCamera視線切替停止" />
+	<Term Key="PROPSET_OFF"       Translation="@PropSet補正停止" />
+	<Term Key="LIPSYNC_OFF"       Translation="口パク停止" />
+	<Term Key="LIPSYNC_INTENISTY" Translation="リップシンク強度指定" />
+	<Term Key="FARMFIX"           Translation="前腕の歪み修正" />
+	<Term Key="LIMBSFIX"          Translation="手足の歪み修正" />
+	<Term Key="PITCH"             Translation="声のピッチ" />
+
+	<Term Key="EYE_ANG"           Translation="目の角度" />
+	<Term Key="MABATAKI"          Translation="目の開度" />
+
+	<Term Key="EYETOCAM"          Translation="目をカメラに向ける" />
+	<Term Key="HEADTOCAM"         Translation="顔をカメラに向ける" />
+
+	<Term Key="HEAD_TRACK"                 Translation="顔と目の可動・追従範囲" />
+	<Term Key="HEAD_TRACK.frontangle"      Translation="正面角度" />
+	<Term Key="HEAD_TRACK.headrateup"      Translation="顔の上追従割合" />
+	<Term Key="HEAD_TRACK.headratedown"    Translation="顔の下追従割合" />
+	<Term Key="HEAD_TRACK.headratehorizon" Translation="顔の横追従割合" />
+	<Term Key="HEAD_TRACK.inclinerate"     Translation="顔の横回転傾き連動" />
+	<Term Key="HEAD_TRACK.lateral"         Translation="顔の横可動角度" />
+	<Term Key="HEAD_TRACK.above"           Translation="顔の上可動角度" />
+	<Term Key="HEAD_TRACK.below"           Translation="顔の下可動角度" />
+	<Term Key="HEAD_TRACK.behind"          Translation="顔の追従最大角度" />
+	<Term Key="HEAD_TRACK.speed"           Translation="顔の回転速度" />
+	<Term Key="HEAD_TRACK.ofsx"            Translation="横回転Offset" />
+	<Term Key="HEAD_TRACK.ofsy"            Translation="縦回転Offset" />
+	<Term Key="HEAD_TRACK.ofsz"            Translation="回転Offset" />
+
+	<Term Key="EYE_TRACK.inside"           Translation="目の内可動角度" />
+	<Term Key="EYE_TRACK.outside"          Translation="目の外可動角度" />
+	<Term Key="EYE_TRACK.above"            Translation="目の上可動角度" />
+	<Term Key="EYE_TRACK.below"            Translation="目の下可動角度" />
+	<Term Key="EYE_TRACK.behind"           Translation="目の追従最大角度" />
+	<Term Key="EYE_TRACK.speed"            Translation="目の回転速度" />
+	<Term Key="EYE_TRACK.ofsx"             Translation="横Offset" />
+	<Term Key="EYE_TRACK.ofsy"             Translation="縦Offset" />
+
+	<Term Key="NECK"       Translation="首" />
+	<Term Key="CLV"        Translation="鎖骨" />
+	<Term Key="KATA"       Translation="肩" />
+	<Term Key="UPARM"      Translation="上腕" />
+	<Term Key="FARM"       Translation="前腕(FARMFIX=OFF時のみ有効)" />
+	<Term Key="HAND"       Translation="手" />
+
+	<Term Key="MUNE"       Translation="胸" />
+	<Term Key="MUNESUB"    Translation="胸サブ" />
+
+	<Term Key="S1ABASE"    Translation="胴(肋骨から上)" />
+	<Term Key="S1A"        Translation="胴(肋骨)" />
+	<Term Key="S1"         Translation="胴(みぞおち)" />
+	<Term Key="S0A"        Translation="胴(腹部)" />
+	<Term Key="SPI"        Translation="胴(下腹部)" />
+
+	<Term Key="SKT"        Translation="スカート" />
+	<Term Key="PEL"        Translation="骨盤" />
+	<Term Key="HIP"        Translation="尻" />
+	<Term Key="THI"        Translation="足全体" />
+	<Term Key="MTW"        Translation="ももねじれ肉" />
+	<Term Key="MMN"        Translation="もも肉" />
+	<Term Key="THI2"       Translation="膝" />
+	<Term Key="CALF"       Translation="膝下" />
+	<Term Key="FOOT"       Translation="足首より下" />
+</Localization>

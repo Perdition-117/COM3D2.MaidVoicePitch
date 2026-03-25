@@ -33,7 +33,7 @@ jobs:
           Set-Location src\build
           $pluginDirectory = "BepInEx\plugins\ModSliders"
           New-Item -Type Directory $pluginDirectory
-          Move-Item "$assemblyName.dll",MaidVoicePitchSlider.xml $pluginDirectory
+          Move-Item "$assemblyName.dll",MaidVoicePitchSlider.xml,parameters,localization $pluginDirectory
           Compress-Archive -DestinationPath $env:ARCHIVE_PATH -Path BepInEx
 
       - name: Release

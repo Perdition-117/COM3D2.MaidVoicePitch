@@ -21,6 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="COM3D2.AddModsSlider.Plugin">
+      <HintPath>..\lib\COM3D2.AddModsSlider.Plugin.dll</HintPath>
+    </Reference>
     <Reference Include="COM3D2.ExternalSaveData.Managed">
       <HintPath>..\lib\COM3D2.ExternalSaveData.Managed.dll</HintPath>
     </Reference>
@@ -31,6 +34,12 @@
 
   <ItemGroup>
     <None Update="MaidVoicePitchSlider.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="parameters\*.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="localization\*.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

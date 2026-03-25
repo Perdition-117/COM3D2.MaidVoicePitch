@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Localization>
+	<Term Key="Value"      Translation="Value" />
+	<Term Key="Scale"      Translation="Scale" />
+	<Term Key="Position"   Translation="Position" />
+	<Term Key="Width"      Translation="Width" />
+	<Term Key="Height"     Translation="Height" />
+	<Term Key="Depth"      Translation="Depth" />
+	<Term Key="Horizontal" Translation="Horizontal" />
+	<Term Key="Vertical"   Translation="Vertical" />
+	<Term Key="Angle"      Translation="Angle" />
+	<Term Key="Back-front" Translation="Back-front" />
+
+	<Term Key="MUHYOU"            Translation="Disable all face actions" />
+	<Term Key="HYOUJOU_OFF"       Translation="Disable face expressions" />
+	<Term Key="FACE_OFF"          Translation="Disable all @Face expression changes" />
+	<Term Key="FACEBLEND_OFF"     Translation="Disable all @FaceBlend expression changes" />
+	<Term Key="EYETOCAMERA_OFF"   Translation="Disable @EyeToCamera" />
+	<Term Key="PROPSET_OFF"       Translation="Disable @PropSet correction" />
+	<Term Key="LIPSYNC_OFF"       Translation="Disable lipsync" />
+	<Term Key="LIPSYNC_INTENISTY" Translation="Lipsync intensity" />
+	<Term Key="FARMFIX"           Translation="Fix forearm distortion" />
+	<Term Key="LIMBSFIX"          Translation="Fix limb distortion" />
+	<Term Key="PITCH"             Translation="Voice pitch" />
+
+	<Term Key="EYE_ANG"           Translation="Eye angle" />
+	<Term Key="MABATAKI"          Translation="Eyes openness" />
+
+	<Term Key="EYETOCAM"          Translation="Eyes to cam" />
+	<Term Key="HEADTOCAM"         Translation="Head to cam" />
+
+	<Term Key="HEAD_TRACK"                 Translation="Head/eye movement/following range" />
+	<Term Key="HEAD_TRACK.frontangle"      Translation="Up/down face direction" />
+	<Term Key="HEAD_TRACK.headrateup"      Translation="Tracking rate up" />
+	<Term Key="HEAD_TRACK.headratedown"    Translation="Tracking rate down" />
+	<Term Key="HEAD_TRACK.headratehorizon" Translation="Tracking rate side" />
+	<Term Key="HEAD_TRACK.inclinerate"     Translation="Head incline" />
+	<Term Key="HEAD_TRACK.lateral"         Translation="Tracking range side" />
+	<Term Key="HEAD_TRACK.above"           Translation="Tracking range up" />
+	<Term Key="HEAD_TRACK.below"           Translation="Tracking range down" />
+	<Term Key="HEAD_TRACK.behind"          Translation="Tracking range max" />
+	<Term Key="HEAD_TRACK.speed"           Translation="Tracking speed" />
+	<Term Key="HEAD_TRACK.ofsx"            Translation="Head offset horizontal" />
+	<Term Key="HEAD_TRACK.ofsy"            Translation="Head offset vertical" />
+	<Term Key="HEAD_TRACK.ofsz"            Translation="Head incline Offset" />
+
+	<Term Key="EYE_TRACK.inside"           Translation="Eye tracking range inside" />
+	<Term Key="EYE_TRACK.outside"          Translation="Eye tracking range outside" />
+	<Term Key="EYE_TRACK.above"            Translation="Eye tracking range up" />
+	<Term Key="EYE_TRACK.below"            Translation="Eye tracking range down" />
+	<Term Key="EYE_TRACK.behind"           Translation="Max eyes tracking range" />
+	<Term Key="EYE_TRACK.speed"            Translation="Eyes tracking speed" />
+	<Term Key="EYE_TRACK.ofsx"             Translation="Eye offset horizontal" />
+	<Term Key="EYE_TRACK.ofsy"             Translation="Eye offset vertical" />
+
+	<Term Key="NECK"       Translation="Neck" />
+	<Term Key="CLV"        Translation="Clavicle" />
+	<Term Key="KATA"       Translation="Shoulders" />
+	<Term Key="UPARM"      Translation="Upper arm" />
+	<Term Key="FARM"       Translation="Forearm (FARMFIX=OFF only)" />
+	<Term Key="HAND"       Translation="Hands" />
+
+	<Term Key="MUNE"       Translation="Breasts" />
+	<Term Key="MUNESUB"    Translation="Breasts sub" />
+
+	<Term Key="S1ABASE"    Translation="Upper torso" />
+	<Term Key="S1A"        Translation="Upper chest" />
+	<Term Key="S1"         Translation="Lower chest" />
+	<Term Key="S0A"        Translation="Upper abdomen" />
+	<Term Key="SPI"        Translation="Lower abdomen" />
+
+	<Term Key="SKT"        Translation="Skirt" />
+	<Term Key="PEL"        Translation="Pelvis" />
+	<Term Key="HIP"        Translation="Hips" />
+	<Term Key="THI"        Translation="Legs" />
+	<Term Key="MTW"        Translation="Thighs" />
+	<Term Key="MMN"        Translation="Rear thighs" />
+	<Term Key="THI2"       Translation="Knees" />
+	<Term Key="CALF"       Translation="Calves" />
+	<Term Key="FOOT"       Translation="Feet" />
+</Localization>
