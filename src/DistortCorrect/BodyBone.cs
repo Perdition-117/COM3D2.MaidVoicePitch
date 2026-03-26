@@ -1,4 +1,4 @@
-namespace CM3D2.MaidVoicePitch.Plugin;
+namespace MaidVoicePitch.DistortCorrect;
 
 internal static class BodyBone {
 	public static readonly List<string> HandScales = new() {

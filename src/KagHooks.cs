@@ -1,6 +1,8 @@
 using CM3D2.ExternalSaveData.Managed;
+using UnityEngine.SceneManagement;
+using static CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch;
 
-namespace CM3D2.MaidVoicePitch.Plugin;
+namespace MaidVoicePitch;
 
 internal static class KagHooks {
 	private static bool kagTagPropSetHooked = false;
@@ -43,7 +45,7 @@ internal static class KagHooks {
 			var str = tagData.GetTagProperty("category").AsString();
 			if (Enum.IsDefined(typeof(MPN), str)) {
 #if DEBUG
-				MaidVoicePitch.LogDebug($"PROPSET_OFF(category={str}) -> match");
+				LogDebug($"PROPSET_OFF(category={str}) -> match");
 #endif
 				return false;
 			}
@@ -101,7 +103,7 @@ internal static class KagHooks {
 		}
 
 		if (ExSaveData.GetBool(maidAndMan, _pluginName, "FACEBLEND_OFF", false)) {
-			MaidVoicePitch.LogDebug("FACEBLEND_OFF() -> match");
+			LogDebug("FACEBLEND_OFF() -> match");
 			return false;
 		}
 
@@ -113,9 +115,9 @@ internal static class KagHooks {
 		}
 
 		var newName = FaceScriptTemplates.ProcFaceBlendName(maidAndMan, _pluginName, oldName);
-		MaidVoicePitch.LogDebug($"TagFaceBlend({oldName})->({newName})");
+		LogDebug($"TagFaceBlend({oldName})->({newName})");
 
-		if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "ScenePhotoMode") {
+		if (SceneManager.GetActiveScene().name == "ScenePhotoMode") {
 			newName = "オリジナル";
 		}
 

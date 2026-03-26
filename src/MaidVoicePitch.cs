@@ -10,6 +10,7 @@ using CM3D2.ExternalSaveData.Managed;
 using ExtensionMethods;
 using HarmonyLib;
 using MaidVoicePitch;
+using MaidVoicePitch.DistortCorrect;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -33,7 +34,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	internal static readonly bool IsCom3d25 = new Version(GameUty.GetBuildVersionText()).Major == 3;
 	internal static readonly PluginSaveData PluginSaveData = new(PluginName);
 
-	private static readonly TBodyMoveHeadAndEye TBodyMoveHeadAndEye = new();
 	private static readonly Dictionary<jiggleBone, Maid> JiggleBones = new();
 
 	private static ManualLogSource _logger;
@@ -347,7 +347,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	///  表示されている間は毎フレーム呼び出される
 	/// </summary>
 	private static void TBody_MoveHeadAndEyeCallback(TBody tbody) {
-		TBodyMoveHeadAndEye.Callback(tbody);
+		TBodyMoveHeadAndEye.MoveHeadAndEye(tbody);
 
 		if (tbody.boMAN || tbody.trsEyeL == null || tbody.trsEyeR == null || tbody.maid == null) {
 			return;

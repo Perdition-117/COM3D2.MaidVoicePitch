@@ -1,8 +1,10 @@
 using System.IO;
 using System.Xml;
 using CM3D2.ExternalSaveData.Managed;
+using ExtensionMethods;
+using static CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch;
 
-namespace CM3D2.MaidVoicePitch.Plugin;
+namespace MaidVoicePitch;
 
 internal static class SliderTemplates {
 	private static readonly Cache SliderTemplateCache = new();
@@ -25,21 +27,17 @@ internal static class SliderTemplates {
 		if (!maid.Visible) {
 			return;
 		}
-		var fileName = ExSaveData.Get(maid, pluginName, "SLIDER_TEMPLATE", MaidVoicePitch.DefaultTemplateFile);
-		fileName = Path.Combine(MaidVoicePitch.PluginPath, fileName);
-		PathCheck(maid, pluginName, fileName);
-		var sliderTemplate = SliderTemplateCache.Get(fileName);
+		var fileName = ExSaveData.Get(maid, pluginName, "SLIDER_TEMPLATE", DefaultTemplateFile);
+		fileName = Path.Combine(PluginPath, fileName);
+		if (!File.Exists(fileName)) {
+			fileName = DefaultTemplateFile;
+			ExSaveData.Set(maid, pluginName, "SLIDER_TEMPLATE", fileName);
+		}
+		var sliderTemplate = SliderTemplateCache.GetTemplate(fileName);
 		var guid = maid.status.guid;
 		if (sliderTemplate != null && !sliderTemplate.LoadedMaidGuids.Contains(guid)) {
 			sliderTemplate.WriteProps(maid);
 			sliderTemplate.LoadedMaidGuids.Add(guid);
-		}
-	}
-
-	private static void PathCheck(Maid maid, string pluginName, string fileName) {
-		if (!File.Exists(fileName)) {
-			fileName = MaidVoicePitch.DefaultTemplateFile;
-			ExSaveData.Set(maid, pluginName, "SLIDER_TEMPLATE", fileName);
 		}
 	}
 
@@ -51,15 +49,11 @@ internal static class SliderTemplates {
 			public float Max { get; set; }
 		}
 
-		public Dictionary<string, Slider> Sliders { get; set; }
+		private readonly Dictionary<string, Slider> _sliders = new();
 		public HashSet<string> LoadedMaidGuids = new();
 
-		public SliderTemplate() {
-			Clear();
-		}
-
-		void Clear() {
-			Sliders = new();
+		private void Clear() {
+			_sliders.Clear();
 		}
 
 		public bool Load(string fileName) {
@@ -70,31 +64,35 @@ internal static class SliderTemplates {
 				if (File.Exists(fileName)) {
 					document.Load(fileName);
 					foreach (XmlNode node in document.SelectNodes("/slidertemplate/sliders/slider")) {
-						Sliders[node.Attributes["name"].Value] = new() {
-							Min = Helper.StringToFloat(node.Attributes["min"].Value, 0f),
-							Max = Helper.StringToFloat(node.Attributes["max"].Value, 100f),
+						_sliders[node.Attributes["name"].Value] = new() {
+							Min = StringToFloat(node.Attributes["min"].Value, 0f),
+							Max = StringToFloat(node.Attributes["max"].Value, 100f),
 						};
 					}
 					// Helper.Log($"SliderTemplates.SliderTemplate.Load({fileName}) -> ok");
 					result = true;
 				}
 			} catch (Exception e) {
-				MaidVoicePitch.LogError(e);
+				LogError(e);
 			}
 			return result;
 		}
 
 		public void WriteProps(Maid maid) {
-			foreach (var kv in Sliders) {
+			foreach (var kv in _sliders) {
 				var name = kv.Key;
 				var slider = kv.Value;
-				var mpn = Helper.ToEnum(name, MPN.null_mpn);
+				var mpn = name.ToEnum(MPN.null_mpn);
 				if (mpn != MPN.null_mpn) {
 					var maidProp = maid.GetProp(mpn);
 					maidProp.min = (int)slider.Min;
 					maidProp.max = (int)slider.Max;
 				}
 			}
+		}
+
+		private static float StringToFloat(string s, float defaultValue) {
+			return s != null && float.TryParse(s, out var v) ? v : defaultValue;
 		}
 	}
 }

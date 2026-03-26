@@ -2,8 +2,9 @@ using System.IO;
 using System.Xml;
 using BepInEx;
 using CM3D2.ExternalSaveData.Managed;
+using static CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch;
 
-namespace CM3D2.MaidVoicePitch.Plugin;
+namespace MaidVoicePitch;
 
 internal static class FaceScriptTemplates {
 	private static readonly Cache FaceScriptTemplateCache = new();
@@ -13,89 +14,70 @@ internal static class FaceScriptTemplates {
 	}
 
 	public static string ProcFaceName(Maid maid, string pluginName, string faceName) {
-		var t = Get(maid, pluginName);
-		if (t == null) {
+		if (TryGetTemplate(maid, pluginName, out var template)) {
 			// Helper.Log($"FaceScriptTemplates.ProcFaceName({maid},{pluginName},{faceName}) -> null");
-			return faceName;
+			return template.ProcFaceName(faceName);
 		}
-		return t.ProcFaceName(faceName);
+		return faceName;
 	}
 
 	public static string ProcFaceBlendName(Maid maid, string pluginName, string faceBlendName) {
-		var t = Get(maid, pluginName);
-		if (t == null) {
+		if (TryGetTemplate(maid, pluginName, out var template)) {
 			// Helper.Log($"FaceScriptTemplates.ProcFaceBlendName({maid},{pluginName},{faceBlendName}) -> null");
-			return faceBlendName;
+			return template.ProcFaceBlendName(faceBlendName);
 		}
-		return t.ProcFaceBlendName(faceBlendName);
+		return faceBlendName;
 	}
 
-	private static TemplateFile Get(Maid maid, string pluginName) {
-		return Get(ExSaveData.Get(maid, pluginName, "FACE_SCRIPT_TEMPLATE", null));
-	}
-
-	private static TemplateFile Get(string fileName) {
+	private static bool TryGetTemplate(Maid maid, string pluginName, out TemplateFile template) {
+		var fileName = ExSaveData.Get(maid, pluginName, "FACE_SCRIPT_TEMPLATE", null);
 		if (fileName != null) {
 			fileName = Path.Combine(Paths.ConfigPath, fileName);
 		}
-		var t = FaceScriptTemplateCache.Get(fileName);
+		template = FaceScriptTemplateCache.GetTemplate(fileName);
 		// Helper.Log($"FaceScriptTemplates.Get({fileName}) -> {t}");
-		return t;
+		return template != null;
 	}
 
 	class Cache : TemplateFiles<TemplateFile> { }
 
 	class TemplateFile : ITemplateFile {
-		public Dictionary<string, string> FaceBlends { get; set; }
-		public Dictionary<string, string> Faces { get; set; }
+		private readonly Dictionary<string, string> _faces = new();
+		private readonly Dictionary<string, string> _faceBlends = new();
 
-		public TemplateFile() {
-			Clear();
-		}
-
-		public void Clear() {
-			FaceBlends = new();
-			Faces = new();
+		private void Clear() {
+			_faces.Clear();
+			_faceBlends.Clear();
 		}
 
 		public bool Load(string fileName) {
 			var result = false;
 			Clear();
-			var document = new XmlDocument();
 			try {
 				if (File.Exists(fileName)) {
+					var document = new XmlDocument();
 					document.Load(fileName);
-					foreach (XmlNode node in document.SelectNodes("/facescripttemplate/faceblends/faceblend")) {
-						FaceBlends[node.Attributes["key"].Value] = node.Attributes["value"].Value;
-					}
 					foreach (XmlNode node in document.SelectNodes("/facescripttemplate/faces/face")) {
-						Faces[node.Attributes["key"].Value] = node.Attributes["value"].Value;
+						_faces[node.Attributes["key"].Value] = node.Attributes["value"].Value;
+					}
+					foreach (XmlNode node in document.SelectNodes("/facescripttemplate/faceblends/faceblend")) {
+						_faceBlends[node.Attributes["key"].Value] = node.Attributes["value"].Value;
 					}
 					// Helper.Log($"FaceScriptTemplates.TemplateFile({fileName}) -> ok");
 					result = true;
 				}
 			} catch (Exception e) {
-				MaidVoicePitch.LogError(e);
+				LogError(e);
 			}
 			return result;
 		}
 
 		public string ProcFaceName(string faceName) {
-			if (Faces.TryGetValue(faceName, out var s)) {
-				// Helper.Log($"FaceScriptTemplates.TemplateFile.ProcFaceName({faceName}) -> {s}");
-				return s;
-			}
-			// Helper.Log($"FaceScriptTemplates.TemplateFile.ProcFaceName({faceName}) -> fail");
-			return faceName;
+			return _faces.TryGetValue(faceName, out var s) ? s : faceName;
 		}
 
 		public string ProcFaceBlendName(string faceBlendName) {
-			if (FaceBlends.TryGetValue(faceBlendName, out var s)) {
-				// Helper.Log($"FaceScriptTemplates.TemplateFile.ProcFaceBlendName({faceBlendName}) -> {s}");
-				return s;
-			}
-			// Helper.Log($"FaceScriptTemplates.TemplateFile.ProcFaceBlendName({faceBlendName}) -> fail");
-			return faceBlendName;
+			return _faceBlends.TryGetValue(faceBlendName, out var s) ? s : faceBlendName;
 		}
 	}
 }

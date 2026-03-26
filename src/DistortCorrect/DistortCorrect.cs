@@ -1,10 +1,11 @@
-using System.Linq;
-using UnityEngine;
-using HarmonyLib;
-using System.Reflection.Emit;
 using System.IO;
+using System.Linq;
+using System.Reflection.Emit;
+using HarmonyLib;
+using UnityEngine;
+using static CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch;
 
-namespace CM3D2.MaidVoicePitch.Plugin;
+namespace MaidVoicePitch.DistortCorrect;
 
 public class DistortCorrect {
 	private static readonly KeyValuePair<string, string>[] BoneAndPropNameList = {
@@ -100,13 +101,13 @@ public class DistortCorrect {
 	[HarmonyTranspiler]
 	[HarmonyPatch(typeof(ImportCM), nameof(ImportCM.LoadSkinMesh_R))]
 	private static IEnumerable<CodeInstruction> HookLoadMesh(IEnumerable<CodeInstruction> instructions) {
-		return CreateTranspiler(instructions, MaidVoicePitch.IsCom3d25 ? 42 : 15);
+		return CreateTranspiler(instructions, IsCom3d25 ? 42 : 15);
 	}
 
 	[HarmonyTranspiler]
 	[HarmonyPatch(typeof(ImportCM), nameof(ImportCM.LoadOnlyBone_R))]
 	private static IEnumerable<CodeInstruction> HookLoadBone(IEnumerable<CodeInstruction> instructions) {
-		return CreateTranspiler(instructions, MaidVoicePitch.IsCom3d25 ? 9 : 10);
+		return CreateTranspiler(instructions, IsCom3d25 ? 9 : 10);
 	}
 
 	private static IEnumerable<CodeInstruction> CreateTranspiler(IEnumerable<CodeInstruction> instructions, int i) {
@@ -140,8 +141,8 @@ public class DistortCorrect {
 			return;
 		}
 
-		var fixLimbs = MaidVoicePitch.GetBooleanProperty(maid, "LIMBSFIX", false);
-		if (force || !LimbFixes.ContainsKey(maid) || (LimbFixes[maid] != fixLimbs)) {
+		var fixLimbs = GetBooleanProperty(maid, "LIMBSFIX", false);
+		if (force || !LimbFixes.ContainsKey(maid) || LimbFixes[maid] != fixLimbs) {
 			if (fixLimbs) {
 				BoneMorph.dic = NewBones;
 				BoneMorph.dic2 = NewBones2;
@@ -355,7 +356,7 @@ public class DistortCorrect {
 		}
 
 		Vector3 GetBoneScale(string boneName) {
-			var boneScale = MaidVoicePitch.GetBoneScale(maid, propName);
+			var boneScale = CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch.GetBoneScale(maid, propName);
 			var baseScale = boneScales.TryGetValue(boneName, out var scale) ? scale : Vector3.one;
 			return Vector3.Scale(baseScale, boneScale);
 		}
