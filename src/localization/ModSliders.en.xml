@@ -19,9 +19,7 @@
 	<Term Key="PROPSET_OFF"       Translation="Disable @PropSet correction" />
 	<Term Key="LIPSYNC_OFF"       Translation="Disable lipsync" />
 	<Term Key="LIPSYNC_INTENISTY" Translation="Lipsync intensity" />
-	<Term Key="FARMFIX"           Translation="Fix forearm distortion" />
 	<Term Key="LIMBSFIX"          Translation="Fix limb distortion" />
-	<Term Key="PITCH"             Translation="Voice pitch" />
 
 	<Term Key="EYE_ANG"           Translation="Eye angle" />
 	<Term Key="MABATAKI"          Translation="Eyes openness" />
@@ -57,7 +55,7 @@
 	<Term Key="CLV"        Translation="Clavicle" />
 	<Term Key="KATA"       Translation="Shoulders" />
 	<Term Key="UPARM"      Translation="Upper arm" />
-	<Term Key="FARM"       Translation="Forearm (FARMFIX=OFF only)" />
+	<Term Key="FARM"       Translation="Forearm" />
 	<Term Key="HAND"       Translation="Hands" />
 
 	<Term Key="MUNE"       Translation="Breasts" />

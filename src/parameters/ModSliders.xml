@@ -7,15 +7,10 @@
 	<Parameter Name="EYETOCAMERA_OFF" Type="Toggle" />
 	<Parameter Name="PROPSET_OFF"     Type="Toggle" />
 	<Parameter Name="LIPSYNC_OFF"     Type="Toggle" />
-	<Parameter Name="FARMFIX"         Type="Toggle" />
 	<Parameter Name="LIMBSFIX"        Type="Toggle" />
 
 	<Parameter Name="LIPSYNC_INTENISTY" Type="ToggleSlider" >
 		<Property Name="LIPSYNC_INTENISTY.value" Type="Float" MinValue="0.0" MaxValue="1.0" DefaultValue="1.0" Label="Value" />
-	</Parameter>
-
-	<Parameter Name="PITCH">
-		<Property Name="PITCH" Type="Float" MinValue="-1" MaxValue="1" Label="Value" />
 	</Parameter>
 
 	<Parameter Name="EYE_ANG">

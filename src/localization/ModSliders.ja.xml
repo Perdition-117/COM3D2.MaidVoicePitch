@@ -19,9 +19,7 @@
 	<Term Key="PROPSET_OFF"       Translation="@PropSet補正停止" />
 	<Term Key="LIPSYNC_OFF"       Translation="口パク停止" />
 	<Term Key="LIPSYNC_INTENISTY" Translation="リップシンク強度指定" />
-	<Term Key="FARMFIX"           Translation="前腕の歪み修正" />
 	<Term Key="LIMBSFIX"          Translation="手足の歪み修正" />
-	<Term Key="PITCH"             Translation="声のピッチ" />
 
 	<Term Key="EYE_ANG"           Translation="目の角度" />
 	<Term Key="MABATAKI"          Translation="目の開度" />
@@ -57,7 +55,7 @@
 	<Term Key="CLV"        Translation="鎖骨" />
 	<Term Key="KATA"       Translation="肩" />
 	<Term Key="UPARM"      Translation="上腕" />
-	<Term Key="FARM"       Translation="前腕(FARMFIX=OFF時のみ有効)" />
+	<Term Key="FARM"       Translation="前腕" />
 	<Term Key="HAND"       Translation="手" />
 
 	<Term Key="MUNE"       Translation="胸" />

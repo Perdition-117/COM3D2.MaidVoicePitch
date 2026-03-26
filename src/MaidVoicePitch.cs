@@ -92,11 +92,13 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		"WIDESLIDER.enable",
 		"PROPSET_OFF.enable",
 		"LIPSYNC_OFF.enable",
+		"PITCH",
 
 		"HYOUJOU_OFF.enable",
 		"EYETOCAMERA_OFF.enable",
 		"MUHYOU.enable",
 
+		"FARMFIX",
 		"FARMFIX.enable",
 		"EYEBALL.enable",
 		"EYEBALL.width",
@@ -161,8 +163,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.TBody.LateUpdate));
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.TBody.MoveHeadAndEye));
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.BoneMorph_.Blend));
-		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.AudioSourceMgr.Play));
-		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.AudioSourceMgr.PlayOneShot));
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.jiggleBone.PreLateUpdateSelf));
 		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.jiggleBone.PostLateUpdateSelf));
 
@@ -361,23 +361,10 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			Mabataki(maid);
 			EyeToCam(maid, tbody);
 			HeadToCam(maid, tbody);
-			RotatePupil(maid, tbody);
 			SetLipSyncIntensity(maid, tbody);
-			ForeArmFixOptimized.ForeArmFix(maid);
 		}
 
 		return;
-	}
-
-	/// <summary>
-	/// AudioSourceMgr.Play および AudioSourceMgr.PlayOneShot の処理終了後に呼ばれるコールバック。
-	/// ピッチ変更を行う
-	/// </summary>
-	private static void SetAudioPitch(AudioSourceMgr audioSourceMgr) {
-		if (PluginHelper.TryGetMaid(audioSourceMgr, out var maid) && audioSourceMgr.audiosource != null && audioSourceMgr.audiosource.isPlaying) {
-			var pitch = GetFloatProperty(maid, "PITCH", 0f);
-			audioSourceMgr.audiosource.pitch = 1f + pitch;
-		}
 	}
 
 	/// <summary>
@@ -564,18 +551,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			mabatakiVal = mMin;
 		}
 		maid.MabatakiVal = mabatakiVal;
-	}
-
-	// 瞳の角度を目の角度に合わせて補正
-	private static void RotatePupil(Maid maid, TBody tbody) {
-		/*
-					//  注意：TBody.MoveHeadAndEye内で trsEye[L,R].localRotation が上書きされているため、
-					//  この値は TBody.MoveHeadAndEyeが呼ばれるたびに書き換える必要がある
-					float eyeAng = ExSaveData.GetFloat(maid, PluginName, "EYE_ANG.angle", 0f);
-					Vector3 eea = (Vector3)Helper.GetInstanceField(typeof(TBody), tbody, "EyeEulerAngle");
-					tbody.trsEyeL.localRotation = tbody.quaDefEyeL * Quaternion.Euler(eyeAng, eea.x * -0.2f, eea.z * -0.1f);
-					tbody.trsEyeR.localRotation = tbody.quaDefEyeR * Quaternion.Euler(-eyeAng, eea.x * 0.2f, eea.z * 0.1f);
-		*/
 	}
 
 	// リップシンク強度指定

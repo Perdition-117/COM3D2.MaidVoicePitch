@@ -60,44 +60,6 @@ namespace CM3D2.MaidVoicePitch.Managed.Callbacks {
 		}
 	}
 
-	namespace AudioSourceMgr {
-		public static class Play {
-			public delegate void Callback(global::AudioSourceMgr that, float f_fFadeTime, bool loop);
-
-			public static Callbacks<Callback> Callbacks = new();
-
-			[HarmonyPostfix]
-			[HarmonyPatch(typeof(global::AudioSourceMgr), nameof(global::AudioSourceMgr.Play))]
-			public static void Invoke(global::AudioSourceMgr __instance, float f_fFadeTime, bool loop) {
-				try {
-					foreach (var callback in Callbacks.ArrayOfVals) {
-						callback(__instance, f_fFadeTime, loop);
-					}
-				} catch (Exception e) {
-					Plugin.MaidVoicePitch.LogError(e);
-				}
-			}
-		}
-
-		public class PlayOneShot {
-			public delegate void Callback(global::AudioSourceMgr that);
-
-			public static Callbacks<Callback> Callbacks = new();
-
-			[HarmonyPostfix]
-			[HarmonyPatch(typeof(global::AudioSourceMgr), nameof(global::AudioSourceMgr.PlayOneShot))]
-			public static void Invoke(global::AudioSourceMgr __instance) {
-				try {
-					foreach (var callback in Callbacks.ArrayOfVals) {
-						callback(__instance);
-					}
-				} catch (Exception e) {
-					Plugin.MaidVoicePitch.LogError(e);
-				}
-			}
-		}
-	}
-
 	namespace CharacterMgr {
 		public static class PresetSet {
 			public delegate void Callback(global::CharacterMgr that, Maid f_maid, global::CharacterMgr.Preset f_prest);
