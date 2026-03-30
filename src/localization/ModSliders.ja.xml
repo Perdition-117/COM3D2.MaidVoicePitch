@@ -27,29 +27,25 @@
 	<Term Key="EYETOCAM"          Translation="目をカメラに向ける" />
 	<Term Key="HEADTOCAM"         Translation="顔をカメラに向ける" />
 
-	<Term Key="HEAD_TRACK"                 Translation="顔と目の可動・追従範囲" />
+	<Term Key="TrackingRangeMax"  Translation="追従最大角度" />
+	<Term Key="TrackingSpeed"     Translation="回転速度" />
+	<Term Key="TrackingRangeUp"   Translation="上可動角度" />
+	<Term Key="TrackingRangeDown" Translation="下可動角度" />
+	<Term Key="OffsetX"           Translation="横Offset" />
+	<Term Key="OffsetY"           Translation="縦Offset" />
+
+	<Term Key="HEAD_TRACK"                 Translation="顔追従" />
 	<Term Key="HEAD_TRACK.frontangle"      Translation="正面角度" />
-	<Term Key="HEAD_TRACK.headrateup"      Translation="顔の上追従割合" />
-	<Term Key="HEAD_TRACK.headratedown"    Translation="顔の下追従割合" />
-	<Term Key="HEAD_TRACK.headratehorizon" Translation="顔の横追従割合" />
-	<Term Key="HEAD_TRACK.inclinerate"     Translation="顔の横回転傾き連動" />
-	<Term Key="HEAD_TRACK.lateral"         Translation="顔の横可動角度" />
-	<Term Key="HEAD_TRACK.above"           Translation="顔の上可動角度" />
-	<Term Key="HEAD_TRACK.below"           Translation="顔の下可動角度" />
-	<Term Key="HEAD_TRACK.behind"          Translation="顔の追従最大角度" />
-	<Term Key="HEAD_TRACK.speed"           Translation="顔の回転速度" />
-	<Term Key="HEAD_TRACK.ofsx"            Translation="横回転Offset" />
-	<Term Key="HEAD_TRACK.ofsy"            Translation="縦回転Offset" />
+	<Term Key="HEAD_TRACK.headrateup"      Translation="上追従割合" />
+	<Term Key="HEAD_TRACK.headratedown"    Translation="下追従割合" />
+	<Term Key="HEAD_TRACK.headratehorizon" Translation="横追従割合" />
+	<Term Key="HEAD_TRACK.lateral"         Translation="横可動角度" />
+	<Term Key="HEAD_TRACK.inclinerate"     Translation="横回転傾き連動" />
 	<Term Key="HEAD_TRACK.ofsz"            Translation="回転Offset" />
 
-	<Term Key="EYE_TRACK.inside"           Translation="目の内可動角度" />
-	<Term Key="EYE_TRACK.outside"          Translation="目の外可動角度" />
-	<Term Key="EYE_TRACK.above"            Translation="目の上可動角度" />
-	<Term Key="EYE_TRACK.below"            Translation="目の下可動角度" />
-	<Term Key="EYE_TRACK.behind"           Translation="目の追従最大角度" />
-	<Term Key="EYE_TRACK.speed"            Translation="目の回転速度" />
-	<Term Key="EYE_TRACK.ofsx"             Translation="横Offset" />
-	<Term Key="EYE_TRACK.ofsy"             Translation="縦Offset" />
+	<Term Key="EYE_TRACK"                  Translation="目の追従" />
+	<Term Key="EYE_TRACK.inside"           Translation="内可動角度" />
+	<Term Key="EYE_TRACK.outside"          Translation="外可動角度" />
 
 	<Term Key="NECK"       Translation="首" />
 	<Term Key="CLV"        Translation="鎖骨" />

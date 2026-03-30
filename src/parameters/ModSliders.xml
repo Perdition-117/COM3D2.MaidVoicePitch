@@ -38,22 +38,24 @@
 		<Property Name="HEAD_TRACK.headratehorizon" Type="Float"   MinValue="0"   MaxValue="1"   DefaultValue="1" />
 		<Property Name="HEAD_TRACK.inclinerate"     Type="Float"   MinValue="-1"  MaxValue="1"   DefaultValue="0" />
 		<Property Name="HEAD_TRACK.lateral"         Type="Float"   MinValue="0"   MaxValue="90"  DefaultValue="30" />
-		<Property Name="HEAD_TRACK.above"           Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="30" />
-		<Property Name="HEAD_TRACK.below"           Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="15" />
-		<Property Name="HEAD_TRACK.behind"          Type="Scale"   MinValue="0"   MaxValue="180" DefaultValue="90" />
-		<Property Name="HEAD_TRACK.speed"           Type="Float"   MinValue="0"   MaxValue="1.0" DefaultValue="0.04" />
-		<Property Name="HEAD_TRACK.ofsx"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0" />
-		<Property Name="HEAD_TRACK.ofsy"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0" />
+		<Property Name="HEAD_TRACK.above"           Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="30"   Label="TrackingRangeUp" />
+		<Property Name="HEAD_TRACK.below"           Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="15"   Label="TrackingRangeDown" />
+		<Property Name="HEAD_TRACK.behind"          Type="Scale"   MinValue="0"   MaxValue="180" DefaultValue="90"   Label="TrackingRangeMax" />
+		<Property Name="HEAD_TRACK.speed"           Type="Float"   MinValue="0"   MaxValue="1.0" DefaultValue="0.04" Label="TrackingSpeed" />
+		<Property Name="HEAD_TRACK.ofsx"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0"    Label="OffsetX" />
+		<Property Name="HEAD_TRACK.ofsy"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0"    Label="OffsetY" />
 		<Property Name="HEAD_TRACK.ofsz"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0" />
+	</Parameter>
 
+	<Parameter Name="EYE_TRACK" Type="ToggleSlider">
 		<Property Name="EYE_TRACK.inside"           Type="Float"   MinValue="0"   MaxValue="90"  DefaultValue="35" />
 		<Property Name="EYE_TRACK.outside"          Type="Float"   MinValue="0"   MaxValue="90"  DefaultValue="65" />
-		<Property Name="EYE_TRACK.above"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="10" />
-		<Property Name="EYE_TRACK.below"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="20" />
-		<Property Name="EYE_TRACK.behind"           Type="Scale"   MinValue="0"   MaxValue="180" DefaultValue="170" />
-		<Property Name="EYE_TRACK.speed"            Type="Float"   MinValue="0"   MaxValue="1.0" DefaultValue="0.07" />
-		<Property Name="EYE_TRACK.ofsx"             Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0" />
-		<Property Name="EYE_TRACK.ofsy"             Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0" />
+		<Property Name="EYE_TRACK.above"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="10"   Label="TrackingRangeUp" />
+		<Property Name="EYE_TRACK.below"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="20"   Label="TrackingRangeDown" />
+		<Property Name="EYE_TRACK.behind"           Type="Scale"   MinValue="0"   MaxValue="180" DefaultValue="170"  Label="TrackingRangeMax" />
+		<Property Name="EYE_TRACK.speed"            Type="Float"   MinValue="0"   MaxValue="1.0" DefaultValue="0.07" Label="TrackingSpeed" />
+		<Property Name="EYE_TRACK.ofsx"             Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0"    Label="OffsetX" />
+		<Property Name="EYE_TRACK.ofsy"             Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0"    Label="OffsetY" />
 	</Parameter>
 
 	<Parameter Name="NECK">

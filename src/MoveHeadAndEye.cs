@@ -13,15 +13,13 @@ internal static class TBodyMoveHeadAndEye {
 
 		public void Update() {
 			// 前回よりも角度の差が大きい場合はリセットする
-			if (Body?.maid) {
-				//本体側更新によりjbMuneLの取得方法変更 
-				var jbMuneL = Body.jbMuneL ?? Body.jbMuneL;
-				if (jbMuneL.boWarpInit) {
-					Reset = true;
-				}
+			if (Body?.maid && Body.jbMuneL.boWarpInit) {
+				Reset = true;
 			}
 		}
 	}
+
+	private static bool _isTracking;
 
 	public static void MoveHeadAndEye(TBody body) {
 		if (body.trsHead == null) {
@@ -32,16 +30,6 @@ internal static class TBodyMoveHeadAndEye {
 		}
 
 		try {
-			var bParamHeadTrack = false;
-			var maid = body.maid;
-			if (maid != null) {
-				bParamHeadTrack = GetBooleanProperty(maid, "HEAD_TRACK", false);
-			}
-
-			var headEulerAngle = body.HeadEulerAngle;
-			var headEulerAngleG = body.HeadEulerAngleG;
-			var eyeEulerAngle = body.EyeEulerAngle;
-
 			// eyeTargetWorldPos：ワールド座標系での視線のターゲット位置
 			var eyeTargetWorldPosition = UpdateEyeTargetPosition(body);
 
@@ -58,27 +46,32 @@ internal static class TBodyMoveHeadAndEye {
 
 				body.boChkEye = false;
 
-				if (bParamHeadTrack) {
-					var externalValues = body.GetOrAddComponent<BackupValues>();
-					externalValues.Body = body;
-					MoveHead(externalValues, body, eyeTargetWorldPosition);
-					MoveEyes(externalValues, body, eyeTargetWorldPosition);
+				var maid = body.maid;
+				var headTrack = maid && GetBooleanProperty(maid, "HEAD_TRACK", false);
+				var eyeTrack = maid && GetBooleanProperty(maid, "EYE_TRACK", false);
+
+				var backupValues = body.GetOrAddComponent<BackupValues>();
+				backupValues.Body = body;
+
+				if (headTrack) {
+					MoveHead(backupValues, body, eyeTargetWorldPosition);
 				} else {
-					OriginalMoveHead(body, eyeTargetWorldPosition, ref headEulerAngle, ref headEulerAngleG);
-					OriginalMoveEyes(body, eyeTargetWorldPosition, ref eyeEulerAngle);
+					OriginalMoveHead(body, eyeTargetWorldPosition);
+				}
+
+				if (eyeTrack) {
+					MoveEyes(backupValues, body, eyeTargetWorldPosition);
+				} else {
+					OriginalMoveEyes(body, eyeTargetWorldPosition);
 				}
 			}
-
-			body.HeadEulerAngle = headEulerAngle;
-			body.HeadEulerAngleG = headEulerAngleG;
-			body.EyeEulerAngle = eyeEulerAngle;
 		} catch (Exception ex) {
 			LogError(ex);
 		}
 	}
 
 	// 元の MoveHeadAndEye 相当の処理
-	private static void OriginalMoveEyes(TBody body, Vector3 eyeTargetPosition, ref Vector3 eyeEulerAngle) {
+	private static void OriginalMoveEyes(TBody body, Vector3 eyeTargetPosition) {
 		if (body.boMAN || body.trsEyeL == null || body.trsEyeR == null) {
 			return;
 		}
@@ -93,11 +86,12 @@ internal static class TBodyMoveHeadAndEye {
 			if (body.boEyeSorashi) {
 				num = 0.05f;
 			}
-			eyeEulerAngle = eyeEulerAngle * (1f - num) + eulerAngles * num;
+			body.EyeEulerAngle = body.EyeEulerAngle * (1f - num) + eulerAngles * num;
 		} else {
-			eyeEulerAngle *= 0.95f;
+			body.EyeEulerAngle *= 0.95f;
 		}
 
+		var eyeEulerAngle = body.EyeEulerAngle;
 		body.trsEyeL.localRotation = body.quaDefEyeL * Quaternion.Euler(0.0f, eyeEulerAngle.x * -0.2f + body.m_editYorime, eyeEulerAngle.z * -0.1f);
 		body.trsEyeR.localRotation = body.quaDefEyeR * Quaternion.Euler(0.0f, eyeEulerAngle.x * 0.2f + body.m_editYorime, eyeEulerAngle.z * 0.1f);
 	}
@@ -134,7 +128,10 @@ internal static class TBodyMoveHeadAndEye {
 		return eyeTargetWorldPos;
 	}
 
-	private static void OriginalMoveHead(TBody body, Vector3 eyeTargetPosition, ref Vector3 headEulerAngle, ref Vector3 headEulerAngleG) {
+	private static void OriginalMoveHead(TBody body, Vector3 eyeTargetPosition) {
+		var headEulerAngle = body.HeadEulerAngle;
+		var headEulerAngleG = body.HeadEulerAngleG;
+
 		// eulerAngles：顔の正面向きのベクトルから見た、視線ターゲットまでの回転量
 		Vector3 eulerAngles;
 		{
@@ -197,6 +194,8 @@ internal static class TBodyMoveHeadAndEye {
 
 		headEulerAngleG *= 0.95f;
 		headEulerAngle += headEulerAngleG;
+		body.HeadEulerAngle = headEulerAngle;
+		body.HeadEulerAngleG = headEulerAngleG;
 
 		var uScale = 0.4f;
 		body.trsHead.localRotation = Quaternion.Slerp(
@@ -207,8 +206,6 @@ internal static class TBodyMoveHeadAndEye {
 
 	// 新しい MoveHeadAndEye
 	private static void MoveEyes(BackupValues backupValues, TBody body, Vector3 eyeTargetPosition) {
-		backupValues.Rotation = body.trsHead.rotation;
-
 		if (body.boMAN || body.trsEyeL == null || body.trsEyeR == null) {
 			return;
 		}
@@ -238,17 +235,15 @@ internal static class TBodyMoveHeadAndEye {
 			{
 				var defaultRotation = body.quaDefEyeL * Quaternion.Euler(paramEyeAngle, -paramOffsetX, -paramOffsetY);
 				var rotation = GetEyeRotation(body.trsEyeL, backupValues.LeftEyeRotation, paramBelow, paramAbove);
-				var originalRotation = rotation;
+				backupValues.LeftEyeRotation = rotation;
 				body.trsEyeL.localRotation = rotation * defaultRotation;
-				backupValues.LeftEyeRotation = originalRotation;
 			}
 
 			{
 				var defaultRotation = body.quaDefEyeR * Quaternion.Euler(-paramEyeAngle, -paramOffsetX, paramOffsetY);
 				var rotation = GetEyeRotation(body.trsEyeR, backupValues.RightEyeRotation, paramAbove, paramBelow);
-				var originalRotation = rotation;
+				backupValues.RightEyeRotation = rotation;
 				body.trsEyeR.localRotation = rotation * defaultRotation;
-				backupValues.RightEyeRotation = originalRotation;
 			}
 
 			Quaternion GetEyeRotation(Transform eye, Quaternion originalRotation, float paramAbove, float paramBelow) {
@@ -338,6 +333,10 @@ internal static class TBodyMoveHeadAndEye {
 			targetWorld,
 			eyeTargetPosition);
 
+		if (_isTracking) {
+			body.boChkEye = true;
+		}
+
 		newHeadRotationWorld *= Quaternion.Euler(0f, paramOffsetZ, 0f);
 
 		// TBody.HeadToCamPer を「正面向き度合い」として加味する
@@ -348,15 +347,9 @@ internal static class TBodyMoveHeadAndEye {
 		var newHeadRotationLocal = Quaternion.Inverse(baseRotation) * newHeadRotationWorld;
 		var newHeadRotationEulerLocal = newHeadRotationLocal.eulerAngles;
 		if (newHeadRotationEulerLocal.x > 180f) {
-			newHeadRotationEulerLocal = new(
-				newHeadRotationEulerLocal.x - 360f,
-				newHeadRotationEulerLocal.y,
-				newHeadRotationEulerLocal.z);
+			newHeadRotationEulerLocal -= new Vector3(360f, 0);
 		}
-		newHeadRotationEulerLocal = new(
-			newHeadRotationEulerLocal.x,
-			newHeadRotationEulerLocal.y + (newHeadRotationEulerLocal.x * inclineRate),
-			newHeadRotationEulerLocal.z);
+		newHeadRotationEulerLocal += new Vector3(0, newHeadRotationEulerLocal.x * inclineRate);
 		newHeadRotationLocal = Quaternion.Euler(newHeadRotationEulerLocal);
 		newHeadRotationWorld = baseRotation * newHeadRotationLocal;
 
@@ -372,6 +365,8 @@ internal static class TBodyMoveHeadAndEye {
 
 		// 実際の回転
 		body.trsHead.rotation = Quaternion.Slerp(backupValues.Rotation, newHeadRotationWorld, paramSpeed);
+
+		backupValues.Rotation = body.trsHead.rotation;
 	}
 
 	private static Quaternion CalcNewRotation(
@@ -382,7 +377,7 @@ internal static class TBodyMoveHeadAndEye {
 		float paramRight,
 		float paramAbove,
 		float paramBelow,
-		float paramBehind,
+		float maxTrackRange,
 		Quaternion neckRotation,
 		Vector3 headPosition,
 		Vector3 targetPosition,
@@ -403,10 +398,12 @@ internal static class TBodyMoveHeadAndEye {
 		var originalAngle = Vector3.Angle(headForwardWorld, originalHeadToTargetDirectionWorld);
 
 		// 視線目標点が首から見て真後ろ付近なら、目標方向は正面にする
-		if (originalAngle >= paramBehind) {
+		if (originalAngle >= maxTrackRange) {
 			headToTargetDirectionWorld = headForwardWorld;
 			currentAngle = Vector3.Angle(headForwardWorld, headToTargetDirectionWorld);
 		}
+
+		_isTracking = originalAngle <= maxTrackRange;
 
 		// headから視線目標点への方向 (TBody.trsNeck座標系。正規化済み)
 		var headToTargetDirectionNeck = Quaternion.Inverse(neckRotation) * headToTargetDirectionWorld;
