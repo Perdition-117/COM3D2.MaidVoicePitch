@@ -60,24 +60,6 @@ namespace CM3D2.MaidVoicePitch.Managed.Callbacks {
 		}
 	}
 
-	namespace CharacterMgr {
-		public static class PresetSet {
-			public delegate void Callback(global::CharacterMgr that, Maid f_maid, global::CharacterMgr.Preset f_prest);
-
-			public static Callbacks<Callback> Callbacks = new();
-
-			public static void Invoke(global::CharacterMgr __instance, Maid f_maid, global::CharacterMgr.Preset f_prest) {
-				try {
-					foreach (var callback in Callbacks.ArrayOfVals) {
-						callback(__instance, f_maid, f_prest);
-					}
-				} catch (Exception e) {
-					Plugin.MaidVoicePitch.LogError(e);
-				}
-			}
-		}
-	}
-
 	namespace DynamicSkirtBone {
 		public class PreUpdateSelf {
 			public delegate void Callback(global::DynamicSkirtBone that);

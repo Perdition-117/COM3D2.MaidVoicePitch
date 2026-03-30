@@ -27,8 +27,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	private static readonly string ParametersRoot = Path.Combine(PluginPath, "parameters");
 	private static readonly string ParametersPath = Path.Combine(ParametersRoot, "ModSliders.xml");
 
-	internal const string DefaultTemplateFile = "MaidVoicePitchSlider.xml";
-
 	private const float SliderScale = 20f;
 
 	internal static readonly bool IsCom3d25 = new Version(GameUty.GetBuildVersionText()).Major == 3;
@@ -88,6 +86,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	};
 
 	private static readonly string[] ObsoleteSettings = {
+		"SLIDER_TEMPLATE",
 		"WIDESLIDER",
 		"WIDESLIDER.enable",
 		"PROPSET_OFF.enable",
@@ -168,10 +167,10 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		var harmony1 = Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
 		var harmony2 = Harmony.CreateAndPatchAll(typeof(DistortCorrect));
+		Harmony.CreateAndPatchAll(typeof(SliderTemplates));
 
 		Type tbodyType = typeof(TBody);
 		Type tbodyIkType;
-		MethodInfo presetSetMethod;
 		MethodInfo skirtBoneUpdateMethod;
 		MethodInfo addItemMethod;
 
@@ -183,7 +182,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			_bodyIkNippleRight = GetField("NippleR");
 
 			Type tbodySkinType = typeof(TBodySkin);
-			presetSetMethod = AccessTools.Method(typeof(CharacterMgr), nameof(CharacterMgr.PresetSet), new[] { typeof(Maid), typeof(CharacterMgr.Preset), typeof(bool) });
 			skirtBoneUpdateMethod = AccessTools.Method(typeof(DynamicSkirtBone), "DynamicUpdate");
 			addItemMethod = AccessTools.Method(tbodyType, nameof(TBody.AddItem), new[] {
 				typeof(MPN),
@@ -206,7 +204,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			_bodyIkNippleLeft = GetField("m_NippleL");
 			_bodyIkNippleRight = GetField("m_NippleR");
 
-			presetSetMethod = AccessTools.Method(typeof(CharacterMgr), nameof(CharacterMgr.PresetSet), new[] { typeof(Maid), typeof(CharacterMgr.Preset) });
 			skirtBoneUpdateMethod = AccessTools.Method(typeof(DynamicSkirtBone), "UpdateSelf");
 			addItemMethod = AccessTools.Method(tbodyType, nameof(TBody.AddItem), new[] {
 				typeof(MPN),
@@ -219,7 +216,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			});
 		}
 
-		harmony1.Patch(presetSetMethod, new HarmonyMethod(typeof(Managed.Callbacks.CharacterMgr.PresetSet), nameof(Managed.Callbacks.CharacterMgr.PresetSet.Invoke)));
 		harmony1.Patch(skirtBoneUpdateMethod,
 			new HarmonyMethod(typeof(Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf), nameof(Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf.Invoke)),
 			new HarmonyMethod(typeof(Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf), nameof(Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf.Invoke)));
@@ -259,25 +255,19 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		Managed.Callbacks.jiggleBone.PreLateUpdateSelf.Callbacks[PluginName] = JiggleBone_PreLateUpdateSelf;
 		Managed.Callbacks.jiggleBone.PostLateUpdateSelf.Callbacks[PluginName] = JiggleBone_PostLateUpdateSelf;
 
-		Managed.Callbacks.CharacterMgr.PresetSet.Callbacks[PluginName] = CharacterMgrPresetSet;
-
 		// ロード直後のシーン読み込みなら、初回セットアップを行う
 		if (_deserialized) {
 			_deserialized = false;
 			ExSaveData.CleanupMaids();
 			CleanupExSave();
 		}
-
-		SliderTemplates.Clear();
 	}
 
 	public void Update() {
 		// テンプレートキャッシュを消去して、再読み込みを促す
 		if (Input.GetKey(KeyCode.F12)) {
 			FaceScriptTemplates.Clear();
-			SliderTemplates.Clear();
 		}
-		SliderTemplates.Update(PluginName);
 
 		// エディット画面にいる場合は特別処理として毎フレームアップデートを行う
 		if (!_configAllowEditModeFaceActions.Value && SceneManager.GetActiveScene().name == "SceneEdit" && GameMain.Instance?.CharacterMgr != null) {
@@ -456,13 +446,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		var breastScale = GetBoneScale(maid, "MUNESCL");
 		bone.transform.localScale = Vector3.Scale(bone.transform.localScale, breastScale);
-	}
-
-	private static void CharacterMgrPresetSet(CharacterMgr __instance, Maid f_maid, CharacterMgr.Preset f_prest) {
-		if (f_maid == null) {
-			return;
-		}
-		SliderTemplates.Update(f_maid, PluginName);
 	}
 
 	[HarmonyTranspiler]
@@ -997,13 +980,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		foreach (var maid in PluginHelper.GetMaids()) {
 			foreach (var setting in ObsoleteSettings) {
 				ExSaveData.Remove(maid, PluginName, setting);
-			}
-
-			{
-				var fileName = ExSaveData.Get(maid, PluginName, "SLIDER_TEMPLATE", null);
-				if (string.IsNullOrEmpty(fileName)) {
-					ExSaveData.Set(maid, PluginName, "SLIDER_TEMPLATE", DefaultTemplateFile, true);
-				}
 			}
 		}
 
