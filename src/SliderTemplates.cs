@@ -1,5 +1,6 @@
 using System.IO;
 using System.Xml;
+using System.Xml.Serialization;
 using CM3D2.ExternalSaveData.Managed;
 using ExtensionMethods;
 using static CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch;
@@ -7,6 +8,7 @@ using static CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch;
 namespace MaidVoicePitch;
 
 internal static class SliderTemplates {
+	private static readonly XmlSerializer SchemaSerializer = new(typeof(SliderLimits));
 	private static readonly Cache SliderTemplateCache = new();
 
 	public static void Clear() {
@@ -44,31 +46,15 @@ internal static class SliderTemplates {
 	class Cache : TemplateFiles<SliderTemplate> { }
 
 	class SliderTemplate : ITemplateFile {
-		public class Slider {
-			public float Min { get; set; }
-			public float Max { get; set; }
-		}
-
-		private readonly Dictionary<string, Slider> _sliders = new();
 		public HashSet<string> LoadedMaidGuids = new();
-
-		private void Clear() {
-			_sliders.Clear();
-		}
+		private SliderLimits _sliderLimits;
 
 		public bool Load(string fileName) {
 			var result = false;
-			Clear();
-			var document = new XmlDocument();
 			try {
 				if (File.Exists(fileName)) {
-					document.Load(fileName);
-					foreach (XmlNode node in document.SelectNodes("/slidertemplate/sliders/slider")) {
-						_sliders[node.Attributes["name"].Value] = new() {
-							Min = StringToFloat(node.Attributes["min"].Value, 0f),
-							Max = StringToFloat(node.Attributes["max"].Value, 100f),
-						};
-					}
+					using var reader = XmlReader.Create(fileName);
+					_sliderLimits = (SliderLimits)SchemaSerializer.Deserialize(reader);
 					// Helper.Log($"SliderTemplates.SliderTemplate.Load({fileName}) -> ok");
 					result = true;
 				}
@@ -79,20 +65,14 @@ internal static class SliderTemplates {
 		}
 
 		public void WriteProps(Maid maid) {
-			foreach (var kv in _sliders) {
-				var name = kv.Key;
-				var slider = kv.Value;
-				var mpn = name.ToEnum(MPN.null_mpn);
+			foreach (var slider in _sliderLimits.Sliders) {
+				var mpn = slider.Name.ToEnum(MPN.null_mpn);
 				if (mpn != MPN.null_mpn) {
 					var maidProp = maid.GetProp(mpn);
-					maidProp.min = (int)slider.Min;
-					maidProp.max = (int)slider.Max;
+					maidProp.min = slider.MinValue;
+					maidProp.max = slider.MaxValue;
 				}
 			}
-		}
-
-		private static float StringToFloat(string s, float defaultValue) {
-			return s != null && float.TryParse(s, out var v) ? v : defaultValue;
 		}
 	}
 }
