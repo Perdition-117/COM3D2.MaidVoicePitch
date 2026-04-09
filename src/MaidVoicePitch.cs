@@ -131,17 +131,12 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		ExPreset.AddExSaveNode(PluginName);
 		ExPreset.loadNotify.AddListener(MaidVoicePitch_UpdateSliders);
 
-		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.BoneMorph_.Blend));
-		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.jiggleBone.PreLateUpdateSelf));
-		Harmony.CreateAndPatchAll(typeof(Managed.Callbacks.jiggleBone.PostLateUpdateSelf));
-
-		var harmony1 = Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
-		var harmony2 = Harmony.CreateAndPatchAll(typeof(DistortCorrect));
+		Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
 		Harmony.CreateAndPatchAll(typeof(SliderTemplates));
+		var harmony = Harmony.CreateAndPatchAll(typeof(DistortCorrect));
 
 		Type tbodyType = typeof(TBody);
 		Type tbodyIkType;
-		MethodInfo skirtBoneUpdateMethod;
 		MethodInfo addItemMethod;
 
 		if (IsCom3d25) {
@@ -151,8 +146,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			_bodyIkNippleLeft = GetField("NippleL");
 			_bodyIkNippleRight = GetField("NippleR");
 
+			Harmony.CreateAndPatchAll(typeof(DynamicSkirtBone30));
+
 			Type tbodySkinType = typeof(TBodySkin);
-			skirtBoneUpdateMethod = AccessTools.Method(typeof(DynamicSkirtBone), "DynamicUpdate");
 			addItemMethod = AccessTools.Method(tbodyType, nameof(TBody.AddItem), new[] {
 				typeof(MPN),
 				typeof(int),
@@ -174,7 +170,8 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			_bodyIkNippleLeft = GetField("m_NippleL");
 			_bodyIkNippleRight = GetField("m_NippleR");
 
-			skirtBoneUpdateMethod = AccessTools.Method(typeof(DynamicSkirtBone), "UpdateSelf");
+			Harmony.CreateAndPatchAll(typeof(DynamicSkirtBone20));
+
 			addItemMethod = AccessTools.Method(tbodyType, nameof(TBody.AddItem), new[] {
 				typeof(MPN),
 				typeof(string),
@@ -186,10 +183,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			});
 		}
 
-		harmony1.Patch(skirtBoneUpdateMethod,
-			new HarmonyMethod(typeof(Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf), nameof(Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf.Invoke)),
-			new HarmonyMethod(typeof(Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf), nameof(Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf.Invoke)));
-		harmony2.Patch(addItemMethod, new HarmonyMethod(typeof(DistortCorrect), nameof(DistortCorrect.ResetBones)));
+		harmony.Patch(addItemMethod, new HarmonyMethod(typeof(DistortCorrect.DistortCorrect), nameof(ResetBones)));
 
 		_bodyIkInit = tbodyIkType.GetMethod("Init");
 
@@ -205,20 +199,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
-		// BoneMorph_.Blend 処理終了後のコールバック
-		Managed.Callbacks.BoneMorph_.Blend.Callbacks[PluginName] = BoneMorph_BlendCallback;
-
 		// GameMain.Deserialize処理終了後のコールバック
 		//  ロードが行われたときに呼び出される
 		ExternalSaveData.Managed.GameMainCallbacks.Deserialize.Callbacks[PluginName] = (gameMain, f_nSaveNo) => _deserialized = true;
-
-		// スカート計算用コールバック
-		Managed.Callbacks.DynamicSkirtBone.PreUpdateSelf.Callbacks[PluginName] = DynamicSkirtBonePreUpdate;
-		Managed.Callbacks.DynamicSkirtBone.PostUpdateSelf.Callbacks[PluginName] = DynamicSkirtBonePostUpdate;
-
-		// 胸ボーンサイズ調整用コールバック
-		Managed.Callbacks.jiggleBone.PreLateUpdateSelf.Callbacks[PluginName] = JiggleBone_PreLateUpdateSelf;
-		Managed.Callbacks.jiggleBone.PostLateUpdateSelf.Callbacks[PluginName] = JiggleBone_PostLateUpdateSelf;
 
 		// ロード直後のシーン読み込みなら、初回セットアップを行う
 		if (_deserialized) {
@@ -255,8 +238,10 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// ボーンのブレンド処理が行われる際、拡張スライダーに関連する補正は基本的にここで行う。
 	/// 毎フレーム呼び出されるわけではないことに注意
 	/// </summary>
-	private static void BoneMorph_BlendCallback(BoneMorph_ boneMorph) {
-		if (PluginHelper.TryGetMaid(boneMorph, out var maid) && !maid.IsCrcBody) {
+	[HarmonyPostfix]
+	[HarmonyPatch(typeof(BoneMorph_), nameof(BoneMorph_.Blend))]
+	private static void BoneMorph_BlendCallback(BoneMorph_ __instance) {
+		if (PluginHelper.TryGetMaid(__instance, out var maid) && !maid.IsCrcBody) {
 			WideSlider(maid);
 
 			if (SceneManager.GetActiveScene().name != "ScenePhotoMode" && maid.body0 != null && maid.body0.isLoadedBody) {
@@ -322,25 +307,49 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		targetTransform.localScale = _skirtScaleBackUp;
 	}
 
+	class DynamicSkirtBone30 {
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(DynamicSkirtBone), "DynamicUpdate")]
+		private static void PreDynamicUpdate(DynamicSkirtBone __instance) => DynamicSkirtBonePreUpdate(__instance);
+
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(DynamicSkirtBone), "DynamicUpdate")]
+		private static void PostDynamicUpdate(DynamicSkirtBone __instance) => DynamicSkirtBonePostUpdate(__instance);
+	}
+
+	class DynamicSkirtBone20 {
+		[HarmonyPrefix]
+		[HarmonyPatch(typeof(DynamicSkirtBone), "UpdateSelf")]
+		private static void PreDynamicUpdate(DynamicSkirtBone __instance) => DynamicSkirtBonePreUpdate(__instance);
+
+		[HarmonyPostfix]
+		[HarmonyPatch(typeof(DynamicSkirtBone), "UpdateSelf")]
+		private static void PostDynamicUpdate(DynamicSkirtBone __instance) => DynamicSkirtBonePostUpdate(__instance);
+	}
+
 	/// <summary>
 	/// 胸サイズ変更処理
 	/// </summary>
-	private static void JiggleBone_PreLateUpdateSelf(jiggleBone bone) {
-		_jiggleBoneScaleBackUp = bone.transform.localScale;
+	[HarmonyPrefix]
+	[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
+	private static void JiggleBone_PreLateUpdateSelf(jiggleBone __instance) {
+		_jiggleBoneScaleBackUp = __instance.transform.localScale;
 	}
 
-	private static void JiggleBone_PostLateUpdateSelf(jiggleBone bone) {
+	[HarmonyPostfix]
+	[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
+	private static void JiggleBone_PostLateUpdateSelf(jiggleBone __instance) {
 		// 変更処理が実行されなければ終了
-		if (bone.transform.localScale == _jiggleBoneScaleBackUp) {
+		if (__instance.transform.localScale == _jiggleBoneScaleBackUp) {
 			return;
 		}
 		// jiggleBoneからMaidを取得
 		Maid maid = null;
 
-		if (JiggleBones.ContainsKey(bone)) {
-			maid = JiggleBones[bone];
+		if (JiggleBones.ContainsKey(__instance)) {
+			maid = JiggleBones[__instance];
 		} else {
-			var transform = bone.transform;
+			var transform = __instance.transform;
 
 			while (maid == null && transform != null) {
 				maid = transform.GetComponent<Maid>();
@@ -349,11 +358,11 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 			if (maid == null) return;
 
-			JiggleBones[bone] = maid;
+			JiggleBones[__instance] = maid;
 		}
 
 		var breastScale = GetBoneScale(maid, "MUNESCL");
-		bone.transform.localScale = Vector3.Scale(bone.transform.localScale, breastScale);
+		__instance.transform.localScale = Vector3.Scale(__instance.transform.localScale, breastScale);
 	}
 
 	[HarmonyTranspiler]
