@@ -3,11 +3,11 @@ using System.Linq;
 using System.Reflection.Emit;
 using HarmonyLib;
 using UnityEngine;
-using static CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch;
+using static MaidVoicePitch.MaidVoicePitch;
 
 namespace MaidVoicePitch.DistortCorrect;
 
-public class DistortCorrect {
+internal class DistortCorrect {
 	private static readonly KeyValuePair<string, string>[] BoneAndPropNameList = {
 		new("Bip01 ? Thigh_SCL_", "THISCL"),     // 下半身
 		new("Bip01 ? Calf_SCL_",  "THISCL"),     // 下半身
@@ -94,7 +94,7 @@ public class DistortCorrect {
 	[HarmonyPrefix]
 	[HarmonyPatch(typeof(BoneMorph_), nameof(BoneMorph_.Blend))]
 	private static void PreBlend(BoneMorph_ __instance) {
-		PluginHelper.TryGetMaid(__instance, out var maid);
+		TryGetMaid(__instance, out var maid);
 		ResetBoneDic(maid, false);
 	}
 
@@ -356,7 +356,7 @@ public class DistortCorrect {
 		}
 
 		Vector3 GetBoneScale(string boneName) {
-			var boneScale = CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch.GetBoneScale(maid, propName);
+			var boneScale = MaidVoicePitch.GetBoneScale(maid, propName);
 			var baseScale = boneScales.TryGetValue(boneName, out var scale) ? scale : Vector3.one;
 			return Vector3.Scale(baseScale, boneScale);
 		}

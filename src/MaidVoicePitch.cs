@@ -3,24 +3,22 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using BepInEx;
-using BepInEx.Logging;
 using CM3D2.ExternalPreset.Managed;
 using CM3D2.ExternalSaveData.Managed;
 using ExtensionMethods;
 using HarmonyLib;
-using MaidVoicePitch;
-using MaidVoicePitch.DistortCorrect;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static MaidVoicePitch.DistortCorrect.DistortCorrect;
 
-namespace CM3D2.MaidVoicePitch.Plugin;
+namespace MaidVoicePitch;
 
 [BepInPlugin("COM3D2.MaidVoicePitch", MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInDependency("COM3D2.ExternalSaveData")]
 [BepInDependency("COM3D2.ExternalPresetData")]
 [BepInDependency("COM3D2.AddModsSlider")]
 public class MaidVoicePitch : BaseUnityPlugin {
-	public static string PluginName => "CM3D2.MaidVoicePitch";
+	private const string PluginName = "CM3D2.MaidVoicePitch";
 	internal static readonly string PluginPath = Path.Combine(Paths.PluginPath, "ModSliders");
 	private static readonly string LocalizationPath = Path.Combine(PluginPath, "localization");
 	private static readonly string ParametersRoot = Path.Combine(PluginPath, "parameters");
@@ -33,8 +31,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 	private static readonly Dictionary<jiggleBone, Maid> JiggleBones = new();
 
-	private static ManualLogSource _logger;
-	private static bool _deserialized = false;
 	private static Vector3 _skirtScaleBackUp;
 	private static Vector3 _jiggleBoneScaleBackUp;
 
@@ -118,22 +114,21 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		"TEST_GLOBAL_KEY"
 	};
 
-	public void Awake() {
-		DontDestroyOnLoad(this);
-
+	private MaidVoicePitch() {
 		AddModsSlider.Plugin.AddModsSlider.AddParameters(ParametersPath, LocalizationPath, "ModSliders");
 
-		SceneManager.sceneLoaded += OnSceneLoaded;
-
-		_logger = Logger;
-
 		// ExPresetに外部から登録
-		ExPreset.AddExSaveNode(PluginName);
-		ExPreset.loadNotify.AddListener(MaidVoicePitch_UpdateSliders);
+		ExPreset.AddPluginNode(PluginName);
+		ExPreset.ExternalDataLoaded.AddListener(OnExternalDataLoaded);
+
+		ExSaveData.ExternalDataLoaded.AddListener(() => {
+			ExSaveData.CleanupMaids();
+			CleanupExSave();
+		});
 
 		Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
 		Harmony.CreateAndPatchAll(typeof(SliderTemplates));
-		var harmony = Harmony.CreateAndPatchAll(typeof(DistortCorrect));
+		var harmony = Harmony.CreateAndPatchAll(typeof(DistortCorrect.DistortCorrect));
 
 		Type tbodyType = typeof(TBody);
 		Type tbodyIkType;
@@ -190,27 +185,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		FieldInfo GetField(string name) => tbodyIkType.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
 	}
 
-	internal static void LogDebug(object data) {
-		_logger.LogDebug(data);
-	}
-
-	internal static void LogError(object data) {
-		_logger.LogError(data);
-	}
-
-	private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
-		// GameMain.Deserialize処理終了後のコールバック
-		//  ロードが行われたときに呼び出される
-		ExternalSaveData.Managed.GameMainCallbacks.Deserialize.Callbacks[PluginName] = (gameMain, f_nSaveNo) => _deserialized = true;
-
-		// ロード直後のシーン読み込みなら、初回セットアップを行う
-		if (_deserialized) {
-			_deserialized = false;
-			ExSaveData.CleanupMaids();
-			CleanupExSave();
-		}
-	}
-
 	internal static bool GetBooleanProperty(Maid maid, string propName, bool defaultValue) {
 		return ExSaveData.GetBool(maid, PluginName, propName, defaultValue);
 	}
@@ -241,7 +215,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(BoneMorph_), nameof(BoneMorph_.Blend))]
 	private static void BoneMorph_BlendCallback(BoneMorph_ __instance) {
-		if (PluginHelper.TryGetMaid(__instance, out var maid) && !maid.IsCrcBody) {
+		if (TryGetMaid(__instance, out var maid) && !maid.IsCrcBody) {
 			WideSlider(maid);
 
 			if (SceneManager.GetActiveScene().name != "ScenePhotoMode" && maid.body0 != null && maid.body0.isLoadedBody) {
@@ -264,33 +238,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		}
 	}
 
-	/// <summary>
-	/// AddModsSlider等から呼び出されるコールバック
-	/// 呼び出し方法は this.gameObject.SendMessage("MaidVoicePitch.TestUpdateSliders");
-	/// </summary>
-	public void MaidVoicePitch_UpdateSliders() {
-		if (GameMain.Instance?.CharacterMgr == null) {
-			return;
-		}
-
-		foreach (var maid in PluginHelper.GetMaids().Where(e => !e.IsCrcBody && e?.body0?.bonemorph != null)) {
-			//
-			//	todo	本当にこの方法しかないのか調べること
-			//
-			//	１人目のメイドをエディットし、管理画面に戻り、
-			//	続けて２人目をエディットしようとすると、１人目のメイドの
-			//	boneMorphLocal.linkT が null になっていて例外がおきるので
-			//	あらかじめ linkT を調べる
-			//
-			if (maid.body0.bonemorph.bones.All(e => e.linkT != null)) {
-				try {
-					// 同じ "sintyou" の値を入れて、強制的にモーフ再計算を行う
-					var sintyouScale = maid.body0.bonemorph.SCALE_Sintyou;
-					maid.body0.BoneMorph_FromProcItem("sintyou", sintyouScale);
-				} catch (Exception) {
-				}
-			}
-		}
+	private void OnExternalDataLoaded(Maid maid) {
+		var sintyouScale = maid.body0.bonemorph.SCALE_Sintyou;
+		maid.body0.BoneMorph_FromProcItem("sintyou", sintyouScale);
 	}
 
 	/// <summary>
@@ -344,20 +294,10 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			return;
 		}
 		// jiggleBoneからMaidを取得
-		Maid maid = null;
 
-		if (JiggleBones.ContainsKey(__instance)) {
-			maid = JiggleBones[__instance];
-		} else {
-			var transform = __instance.transform;
-
-			while (maid == null && transform != null) {
-				maid = transform.GetComponent<Maid>();
-				transform = transform.parent;
-			}
-
+		if (!JiggleBones.TryGetValue(__instance, out var maid)) {
+			maid = __instance.GetComponentInParent<Maid>();
 			if (maid == null) return;
-
 			JiggleBones[__instance] = maid;
 		}
 
@@ -412,13 +352,13 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		var instructionIndex = codes.FindLastIndex(e => e.opcode == OpCodes.Ldc_R4 && (float)e.operand == 0.5f);
 		var instruction = codes[instructionIndex];
 		instruction.opcode = OpCodes.Call;
-		instruction.operand = typeof(Math).GetMethod(nameof(Math.Round), new Type[] { typeof(double) });
+		instruction.operand = AccessTools.Method(typeof(Math), nameof(Math.Round), new[] { typeof(double) });
 		codes[instructionIndex + 1].opcode = OpCodes.Nop;
 		return codes;
 	}
 
 	// スライダー範囲を拡大
-	public static void WideSlider(Maid maid) {
+	private static void WideSlider(Maid maid) {
 		var tbody = maid.body0;
 		if (tbody?.bonemorph?.bones == null || maid.IsCrcBody) {
 			return;
@@ -429,12 +369,12 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		var fixLimbs = GetBooleanProperty(maid, "LIMBSFIX", false);
 
 		// スケール変更するボーンのリスト
-		var boneScales = fixLimbs ? DistortCorrect.GetBoneScales(maid) : GetBoneScales(maid);
+		var boneScales = fixLimbs ? DistortCorrect.DistortCorrect.GetBoneScales(maid) : GetBoneScales(maid);
 
 		// ポジション変更するボーンのリスト
 		var bonePositions = GetBonePositions(maid);
 
-		var bonePositionRates = fixLimbs ? DistortCorrect.GetBonePositionRates(maid) : null;
+		var bonePositionRates = fixLimbs ? DistortCorrect.DistortCorrect.GetBonePositionRates(maid) : null;
 
 		if (!fixLimbs) {
 			// 元々尻はPELSCLに連動していたが単体でも設定できるようにする
@@ -762,7 +702,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		}
 	}
 
-	public static Vector3 Lerp(Vector3 min, Vector3 def, Vector3 max, float t, float sliderScale) {
+	private static Vector3 Lerp(Vector3 min, Vector3 def, Vector3 max, float t, float sliderScale) {
 		if ((double)t >= 0.5) {
 			var n1 = max + (max - def) * (sliderScale - 1f) * 2;
 			var f = (t - 0.5f) * (1f / (sliderScale * 2.0f - 1f)) * 2.0f;
@@ -774,7 +714,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		}
 	}
 
-	public static Quaternion RotLerp(Quaternion min, Quaternion def, Quaternion max, float t, float sliderScale) {
+	private static Quaternion RotLerp(Quaternion min, Quaternion def, Quaternion max, float t, float sliderScale) {
 		var t1 = (double)t > 0.5 ? (float)(((double)t - 0.5) / 0.5) : t / 0.5f;
 		if ((double)t <= 0.5) {
 			return Quaternion.LerpUnclamped(min, def, t1);
@@ -814,22 +754,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		return boneScales;
 	}
 
-	private string GetHierarchy(Transform transform) {
-		if (!transform) {
-			return string.Empty;
-		}
-		var hierarchy = "/" + transform.name;
-		while (transform.parent) {
-			transform = transform.parent;
-			hierarchy = "/" + transform.name + hierarchy;
-		}
-
-		return hierarchy;
-	}
-
 	// 動作していない古い設定を削除する
 	private static void CleanupExSave() {
-		foreach (var maid in PluginHelper.GetMaids()) {
+		foreach (var maid in GetMaids()) {
 			foreach (var setting in ObsoleteSettings) {
 				ExSaveData.Remove(maid, PluginName, setting);
 			}
@@ -837,6 +764,25 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		foreach (var setting in ObsoleteGlobalSettings) {
 			ExSaveData.GlobalRemove(PluginName, setting);
+		}
+	}
+
+	internal static bool TryGetMaid(BoneMorph_ boneMorph_, out Maid maid) {
+		maid = null;
+		if (boneMorph_ == null) {
+			return false;
+		}
+		maid = GetMaids().FirstOrDefault(e => e.body0?.bonemorph == boneMorph_);
+		return maid;
+	}
+
+	private static IEnumerable<Maid> GetMaids() {
+		var characterManager = GameMain.Instance.CharacterMgr;
+		for (var i = 0; i < characterManager.GetStockMaidCount(); i++) {
+			yield return characterManager.GetStockMaid(i);
+		}
+		foreach (var npcMaid in characterManager.m_listStockNpcMaid.Where(e => e.ActiveSlotNo >= 0)) {
+			yield return npcMaid;
 		}
 	}
 }

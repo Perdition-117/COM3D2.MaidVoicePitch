@@ -3,7 +3,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using ExtensionMethods;
 using HarmonyLib;
-using static CM3D2.MaidVoicePitch.Plugin.MaidVoicePitch;
+using static MaidVoicePitch.MaidVoicePitch;
 
 namespace MaidVoicePitch;
 
