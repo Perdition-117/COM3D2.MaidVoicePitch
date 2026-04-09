@@ -106,10 +106,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		"PELVIS.z",
 	};
 
-	private static readonly string[] ObsoleteGlobalSettings = {
-		"TEST_GLOBAL_KEY"
-	};
-
 	private MaidVoicePitch() {
 		// ExPresetに外部から登録
 		ExPreset.AddPluginNode(PluginName);
@@ -117,7 +113,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 
 		ExSaveData.ExternalDataLoaded.AddListener(() => {
 			ExSaveData.CleanupMaids();
-			CleanupExSave();
+			CleanupExternalData();
 		});
 
 		var plugin = ModSliders.AddParameters(PluginName, "ModSliders");
@@ -752,15 +748,11 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	// 動作していない古い設定を削除する
-	private static void CleanupExSave() {
+	private static void CleanupExternalData() {
 		foreach (var maid in GetMaids()) {
 			foreach (var setting in ObsoleteSettings) {
 				ExSaveData.Remove(maid, PluginName, setting);
 			}
-		}
-
-		foreach (var setting in ObsoleteGlobalSettings) {
-			ExSaveData.GlobalRemove(PluginName, setting);
 		}
 	}
 
