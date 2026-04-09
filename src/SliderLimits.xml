@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <SliderLimits>
 	<Slider Name="FaceShapeSlim" MinValue="0"    MaxValue="200"/>
-	<Slider Name="EyeSclX"       MinValue="-400" MaxValue="300"/>
-	<Slider Name="EyeSclY"       MinValue="-400" MaxValue="300"/>
+	<Slider Name="EyeSclX"       MinValue="-200" MaxValue="300"/>
+	<Slider Name="EyeSclY"       MinValue="-200" MaxValue="300"/>
 	<Slider Name="EyePosX"       MinValue="-100" MaxValue="130"/>
 	<Slider Name="EyePosY"       MinValue="-100" MaxValue="200"/>
 	<Slider Name="MayuX"         MinValue="-100" MaxValue="200"/>
@@ -18,15 +18,15 @@
 	<Slider Name="NoseScl"       MinValue="-30"  MaxValue="200"/>
 
 	<Slider Name="MuneL"         MinValue="0"    MaxValue="195"/> <!-- breast size -->
-	<Slider Name="MuneUpDown"    MinValue="-50"  MaxValue="300"/> <!-- nipple position -->
+	<Slider Name="MuneUpDown"    MinValue="-50"  MaxValue="200"/> <!-- nipple position -->
 	<Slider Name="MuneYori"      MinValue="-50"  MaxValue="200"/> <!-- breast direction -->
 	<Slider Name="MuneYawaraka"  MinValue="0"    MaxValue="200"/> <!-- breast shake -->
 
-	<Slider Name="sintyou"       MinValue="-300" MaxValue="100"/> <!-- height -->
-	<Slider Name="DouPer"        MinValue="-100" MaxValue="500"/> <!-- leg length -->
+	<Slider Name="sintyou"       MinValue="-200" MaxValue="200"/> <!-- height -->
+	<Slider Name="DouPer"        MinValue="-100" MaxValue="200"/> <!-- leg length -->
 	<Slider Name="KubiScl"       MinValue="0"    MaxValue="200"/> <!-- neck length -->
-	<Slider Name="kata"          MinValue="-400" MaxValue="100"/> <!-- shoulder width -->
+	<Slider Name="kata"          MinValue="-200" MaxValue="200"/> <!-- shoulder width -->
 	<Slider Name="west"          MinValue="-30"  MaxValue="100"/> <!-- waist -->
 	<Slider Name="Hara"          MinValue="0"    MaxValue="200"/> <!-- belly -->
-	<Slider Name="koshi"         MinValue="-160" MaxValue="200"/> <!-- hip -->
+	<Slider Name="koshi"         MinValue="-100" MaxValue="200"/> <!-- hip -->
 </SliderLimits>
