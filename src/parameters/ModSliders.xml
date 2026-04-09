@@ -1,61 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Parameters Version="2">
-	<Parameter Name="MUHYOU"          Type="Toggle" />
-	<Parameter Name="HYOUJOU_OFF"     Type="Toggle" />
-	<Parameter Name="FACE_OFF"        Type="Toggle" />
-	<Parameter Name="FACEBLEND_OFF"   Type="Toggle" />
-	<Parameter Name="EYETOCAMERA_OFF" Type="Toggle" />
-	<Parameter Name="PROPSET_OFF"     Type="Toggle" />
-	<Parameter Name="LIPSYNC_OFF"     Type="Toggle" />
 	<Parameter Name="LIMBSFIX"        Type="Toggle" />
-
-	<Parameter Name="LIPSYNC_INTENISTY" Type="ToggleSlider" >
-		<Property Name="LIPSYNC_INTENISTY.value" Type="Float" MinValue="0.0" MaxValue="1.0" DefaultValue="1.0" Label="Value" />
-	</Parameter>
 
 	<Parameter Name="EYE_ANG">
 		<Property Name="EYE_ANG.angle" Type="Float" MinValue="-60"  MaxValue="60"  Label="Angle" />
 		<Property Name="EYE_ANG.x"     Type="Float" MinValue="-200" MaxValue="200" Label="Vertical" />
 		<Property Name="EYE_ANG.y"     Type="Float" MinValue="-200" MaxValue="200" Label="Horizontal" />
-	</Parameter>
-
-	<Parameter Name="MABATAKI">
-		<Property Name="MABATAKI" Type="Float" MinValue="0" MaxValue="1.0" DefaultValue="1.0" Label="Value" />
-	</Parameter>
-
-	<Parameter Name="EYETOCAM">
-		<Property Name="EYETOCAM" Type="Integer" MinValue="-1" MaxValue="1" Label="Value" />
-	</Parameter>
-
-	<Parameter Name="HEADTOCAM">
-		<Property Name="HEADTOCAM" Type="Integer" MinValue="-1" MaxValue="1" Label="Value" />
-	</Parameter>
-
-	<Parameter Name="HEAD_TRACK" Type="ToggleSlider">
-		<Property Name="HEAD_TRACK.frontangle"      Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0" />
-		<Property Name="HEAD_TRACK.headrateup"      Type="Float"   MinValue="0"   MaxValue="1"   DefaultValue="1" />
-		<Property Name="HEAD_TRACK.headratedown"    Type="Float"   MinValue="0"   MaxValue="1"   DefaultValue="1" />
-		<Property Name="HEAD_TRACK.headratehorizon" Type="Float"   MinValue="0"   MaxValue="1"   DefaultValue="1" />
-		<Property Name="HEAD_TRACK.inclinerate"     Type="Float"   MinValue="-1"  MaxValue="1"   DefaultValue="0" />
-		<Property Name="HEAD_TRACK.lateral"         Type="Float"   MinValue="0"   MaxValue="90"  DefaultValue="30" />
-		<Property Name="HEAD_TRACK.above"           Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="30"   Label="TrackingRangeUp" />
-		<Property Name="HEAD_TRACK.below"           Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="15"   Label="TrackingRangeDown" />
-		<Property Name="HEAD_TRACK.behind"          Type="Scale"   MinValue="0"   MaxValue="180" DefaultValue="90"   Label="TrackingRangeMax" />
-		<Property Name="HEAD_TRACK.speed"           Type="Float"   MinValue="0"   MaxValue="1.0" DefaultValue="0.04" Label="TrackingSpeed" />
-		<Property Name="HEAD_TRACK.ofsx"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0"    Label="OffsetX" />
-		<Property Name="HEAD_TRACK.ofsy"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0"    Label="OffsetY" />
-		<Property Name="HEAD_TRACK.ofsz"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0" />
-	</Parameter>
-
-	<Parameter Name="EYE_TRACK" Type="ToggleSlider">
-		<Property Name="EYE_TRACK.inside"           Type="Float"   MinValue="0"   MaxValue="90"  DefaultValue="35" />
-		<Property Name="EYE_TRACK.outside"          Type="Float"   MinValue="0"   MaxValue="90"  DefaultValue="65" />
-		<Property Name="EYE_TRACK.above"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="10"   Label="TrackingRangeUp" />
-		<Property Name="EYE_TRACK.below"            Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="20"   Label="TrackingRangeDown" />
-		<Property Name="EYE_TRACK.behind"           Type="Scale"   MinValue="0"   MaxValue="180" DefaultValue="170"  Label="TrackingRangeMax" />
-		<Property Name="EYE_TRACK.speed"            Type="Float"   MinValue="0"   MaxValue="1.0" DefaultValue="0.07" Label="TrackingSpeed" />
-		<Property Name="EYE_TRACK.ofsx"             Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0"    Label="OffsetX" />
-		<Property Name="EYE_TRACK.ofsy"             Type="Float"   MinValue="-90" MaxValue="90"  DefaultValue="0"    Label="OffsetY" />
 	</Parameter>
 
 	<Parameter Name="NECK">

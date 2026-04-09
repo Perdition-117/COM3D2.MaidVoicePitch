@@ -1,45 +1,6 @@
 using HarmonyLib;
 
 namespace CM3D2.MaidVoicePitch.Managed.Callbacks {
-	namespace TBody {
-		public class LateUpdate {
-			public delegate void Callback(global::TBody that);
-
-			public static Callbacks<Callback> Callbacks = new();
-
-			[HarmonyPostfix]
-			[HarmonyPatch(typeof(global::TBody), nameof(global::TBody.LateUpdate))]
-			public static void Invoke(global::TBody __instance) {
-				try {
-					foreach (var callback in Callbacks.ArrayOfVals) {
-						callback(__instance);
-					}
-				} catch (Exception e) {
-					Plugin.MaidVoicePitch.LogError(e);
-				}
-			}
-		}
-
-		public class MoveHeadAndEye {
-			public delegate void Callback(global::TBody that);
-
-			public static Callbacks<Callback> Callbacks = new();
-
-			[HarmonyPrefix]
-			[HarmonyPatch(typeof(global::TBody), nameof(global::TBody.MoveHeadAndEye))]
-			public static bool Invoke(global::TBody __instance) {
-				try {
-					foreach (var callback in Callbacks.ArrayOfVals) {
-						callback(__instance);
-					}
-				} catch (Exception e) {
-					Plugin.MaidVoicePitch.LogError(e);
-				}
-				return false;
-			}
-		}
-	}
-
 	namespace BoneMorph_ {
 		public class Blend {
 			public delegate void Callback(global::BoneMorph_ that);

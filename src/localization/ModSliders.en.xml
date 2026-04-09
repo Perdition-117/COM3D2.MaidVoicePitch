@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Localization>
-	<Term Key="Value"      Translation="Value" />
 	<Term Key="Scale"      Translation="Scale" />
 	<Term Key="Position"   Translation="Position" />
 	<Term Key="Width"      Translation="Width" />
@@ -11,41 +10,9 @@
 	<Term Key="Angle"      Translation="Angle" />
 	<Term Key="Back-front" Translation="Back-front" />
 
-	<Term Key="MUHYOU"            Translation="Disable all face actions" />
-	<Term Key="HYOUJOU_OFF"       Translation="Disable face expressions" />
-	<Term Key="FACE_OFF"          Translation="Disable all @Face expression changes" />
-	<Term Key="FACEBLEND_OFF"     Translation="Disable all @FaceBlend expression changes" />
-	<Term Key="EYETOCAMERA_OFF"   Translation="Disable @EyeToCamera" />
-	<Term Key="PROPSET_OFF"       Translation="Disable @PropSet correction" />
-	<Term Key="LIPSYNC_OFF"       Translation="Disable lipsync" />
-	<Term Key="LIPSYNC_INTENISTY" Translation="Lipsync intensity" />
-	<Term Key="LIMBSFIX"          Translation="Fix limb distortion" />
+	<Term Key="LIMBSFIX"   Translation="Fix limb distortion" />
 
-	<Term Key="EYE_ANG"           Translation="Eye angle" />
-	<Term Key="MABATAKI"          Translation="Eyes openness" />
-
-	<Term Key="EYETOCAM"          Translation="Eyes to cam" />
-	<Term Key="HEADTOCAM"         Translation="Head to cam" />
-
-	<Term Key="TrackingRangeMax"  Translation="Max tracking range" />
-	<Term Key="TrackingSpeed"     Translation="Tracking speed" />
-	<Term Key="TrackingRangeUp"   Translation="Tracking range up" />
-	<Term Key="TrackingRangeDown" Translation="Tracking range down" />
-	<Term Key="OffsetX"           Translation="Horizontal offset" />
-	<Term Key="OffsetY"           Translation="Vertical offset" />
-
-	<Term Key="HEAD_TRACK"                 Translation="Head tracking" />
-	<Term Key="HEAD_TRACK.frontangle"      Translation="Up/down face direction" />
-	<Term Key="HEAD_TRACK.headrateup"      Translation="Tracking rate up" />
-	<Term Key="HEAD_TRACK.headratedown"    Translation="Tracking rate down" />
-	<Term Key="HEAD_TRACK.headratehorizon" Translation="Tracking rate side" />
-	<Term Key="HEAD_TRACK.lateral"         Translation="Tracking range side" />
-	<Term Key="HEAD_TRACK.inclinerate"     Translation="Incline" />
-	<Term Key="HEAD_TRACK.ofsz"            Translation="Incline offset" />
-
-	<Term Key="EYE_TRACK"                  Translation="Eye tracking" />
-	<Term Key="EYE_TRACK.inside"           Translation="Tracking range inside" />
-	<Term Key="EYE_TRACK.outside"          Translation="Tracking range outside" />
+	<Term Key="EYE_ANG"    Translation="Eye angle" />
 
 	<Term Key="NECK"       Translation="Neck" />
 	<Term Key="CLV"        Translation="Clavicle" />
