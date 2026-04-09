@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using AddModsSlider;
 using BepInEx;
 using CM3D2.ExternalPreset.Managed;
 using CM3D2.ExternalSaveData.Managed;
@@ -19,20 +20,15 @@ namespace MaidVoicePitch;
 [BepInDependency("COM3D2.AddModsSlider")]
 public class MaidVoicePitch : BaseUnityPlugin {
 	private const string PluginName = "CM3D2.MaidVoicePitch";
-	internal static readonly string PluginPath = Path.Combine(Paths.PluginPath, "ModSliders");
-	private static readonly string LocalizationPath = Path.Combine(PluginPath, "localization");
-	private static readonly string ParametersRoot = Path.Combine(PluginPath, "parameters");
-	private static readonly string ParametersPath = Path.Combine(ParametersRoot, "ModSliders.xml");
-
 	private const float SliderScale = 20f;
 
+	internal static readonly string PluginPath = Path.Combine(Paths.PluginPath, "ModSliders");
 	internal static readonly bool IsCom3d25 = new Version(GameUty.GetBuildVersionText()).Major == 3;
-	internal static readonly PluginSaveData PluginSaveData = new(PluginName);
 
 	private static readonly Dictionary<jiggleBone, Maid> JiggleBones = new();
 
-	private static Vector3 _skirtScaleBackUp;
-	private static Vector3 _jiggleBoneScaleBackUp;
+	private static Vector3 _skirtScaleBackup;
+	private static Vector3 _jiggleBoneScaleBackup;
 
 	private static PropertyInfo _bodyIk;
 	private static FieldInfo _bodyIkMouth;
@@ -115,8 +111,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	};
 
 	private MaidVoicePitch() {
-		AddModsSlider.Plugin.AddModsSlider.AddParameters(ParametersPath, LocalizationPath, "ModSliders");
-
 		// ExPresetに外部から登録
 		ExPreset.AddPluginNode(PluginName);
 		ExPreset.ExternalDataLoaded.AddListener(OnExternalDataLoaded);
@@ -125,6 +119,9 @@ public class MaidVoicePitch : BaseUnityPlugin {
 			ExSaveData.CleanupMaids();
 			CleanupExSave();
 		});
+
+		var plugin = ModSliders.AddParameters(PluginName, "ModSliders");
+		plugin.ParameterValueChanged.AddListener(OnExternalDataLoaded);
 
 		Harmony.CreateAndPatchAll(typeof(MaidVoicePitch));
 		Harmony.CreateAndPatchAll(typeof(SliderTemplates));
@@ -248,13 +245,13 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// </summary>
 	private static void DynamicSkirtBonePreUpdate(DynamicSkirtBone bone) {
 		var targetTransform = bone.m_trPanierParent.parent;
-		_skirtScaleBackUp = targetTransform.localScale;
+		_skirtScaleBackup = targetTransform.localScale;
 		targetTransform.localScale = Vector3.one;
 	}
 
 	private static void DynamicSkirtBonePostUpdate(DynamicSkirtBone bone) {
 		var targetTransform = bone.m_trPanierParent.parent;
-		targetTransform.localScale = _skirtScaleBackUp;
+		targetTransform.localScale = _skirtScaleBackup;
 	}
 
 	class DynamicSkirtBone30 {
@@ -283,14 +280,14 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	[HarmonyPrefix]
 	[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
 	private static void JiggleBone_PreLateUpdateSelf(jiggleBone __instance) {
-		_jiggleBoneScaleBackUp = __instance.transform.localScale;
+		_jiggleBoneScaleBackup = __instance.transform.localScale;
 	}
 
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
 	private static void JiggleBone_PostLateUpdateSelf(jiggleBone __instance) {
 		// 変更処理が実行されなければ終了
-		if (__instance.transform.localScale == _jiggleBoneScaleBackUp) {
+		if (__instance.transform.localScale == _jiggleBoneScaleBackup) {
 			return;
 		}
 		// jiggleBoneからMaidを取得
