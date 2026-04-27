@@ -28,7 +28,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	private static readonly Dictionary<jiggleBone, Maid> JiggleBones = new();
 
 	private static Vector3 _skirtScaleBackup;
-	private static Vector3 _jiggleBoneScaleBackup;
 
 	private static PropertyInfo _bodyIk;
 	private static FieldInfo _bodyIkMouth;
@@ -211,7 +210,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		if (TryGetMaid(__instance, out var maid) && !maid.IsCrcBody) {
 			WideSlider(maid);
 
-			if (SceneManager.GetActiveScene().name != "ScenePhotoMode" && maid.body0 != null && maid.body0.isLoadedBody) {
+			if (SceneManager.GetActiveScene().name != "ScenePhotoMode" && maid.body0.isLoadedBody) {
 				var bodyIk = _bodyIk.GetValue(maid.body0, null);
 				IKPreInit(bodyIk);
 				_bodyIkInit.Invoke(bodyIk, null);
@@ -275,18 +274,16 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	/// </summary>
 	[HarmonyPrefix]
 	[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
-	private static void JiggleBone_PreLateUpdateSelf(jiggleBone __instance) {
-		_jiggleBoneScaleBackup = __instance.transform.localScale;
+	private static void JiggleBone_PreLateUpdateSelf(jiggleBone __instance, ref Vector3 __state) {
+		__state = __instance.transform.localScale;
 	}
 
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(jiggleBone), nameof(jiggleBone.LateUpdateSelf))]
-	private static void JiggleBone_PostLateUpdateSelf(jiggleBone __instance) {
-		// 変更処理が実行されなければ終了
-		if (__instance.transform.localScale == _jiggleBoneScaleBackup) {
+	private static void JiggleBone_PostLateUpdateSelf(jiggleBone __instance, Vector3 __state) {
+		if (__instance.transform.localScale == __state) {
 			return;
 		}
-		// jiggleBoneからMaidを取得
 
 		if (!JiggleBones.TryGetValue(__instance, out var maid)) {
 			maid = __instance.GetComponentInParent<Maid>();
@@ -301,59 +298,38 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	[HarmonyTranspiler]
 	[HarmonyPatch(typeof(SceneEdit), nameof(SceneEdit.SlideCallback))]
 	private static IEnumerable<CodeInstruction> SceneEdit_SlideCallback(IEnumerable<CodeInstruction> instructions) {
-		// SceneEdit.SlideCallback の補間式を変更し、
-		// タブ等を変更してスライダーがアクティブになる度に
-		// 負の値が 0 に近づくのを抑制する
+		// Prevent negative slider values from getting rounded up by replacing addition with Math.Round.
 		//
-		// 元の補間式は以下のようになっている
-		//
-		//      (int) (prop1.min + (prop1.max - prop1.min) * UIProgressBar.current.value + 0.5)
-		//
-		// 例えば prop1.min = -100, prop1.max = 100, UIProgressBar.current.value = 0 の場合、
-		// 以下のようになる
-		//
-		//        (int) (-100 + (100+100) * 0 + 0.5)
-		//		= (int) (-99.5)
-		//		= -99
-		//
-		//      double -> int のキャストについては右記を参照 : https://msdn.microsoft.com/en-us/library/yht2cx7b.aspx
-		//
-		// この値は期待する値 -100 になっていないので、これを以下のように修正したい
-		//
-		//      (int) Math.Round(prop1.min + (prop1.max - prop1.min) * UIProgressBar.current.value)
-		//
-		// ILレベルでは、該当部分は以下のようになっているので
+		//  Old:
 		//
 		//      IL_004a: callvirt instance float32 UIProgressBar::get_value()
 		//      IL_004f: mul
 		//      IL_0050: add
-		//  --> IL_0051: ldc.r4 0.5
-		//  --> IL_0056: add
+		//    - IL_0051: ldc.r4 0.5
+		//    - IL_0056: add
 		//      IL_0057: conv.i4
 		//
-		// これを以下のように改変する
+		//  New:
 		//
 		//      IL_004a: callvirt instance float32 UIProgressBar::get_value()
 		//      IL_004f: mul
 		//      IL_0050: add
-		//  --> IL_0051: call float64 [mscorlib]System.Math::Round(float64)
-		//  --> IL_0056: nop
+		//    + IL_0051: call float64 [mscorlib]System.Math::Round(float64)
+		//    + IL_0056: nop
 		//      IL_0057: conv.i4
 
-
-		var codes = new List<CodeInstruction>(instructions);
-		var instructionIndex = codes.FindLastIndex(e => e.opcode == OpCodes.Ldc_R4 && (float)e.operand == 0.5f);
-		var instruction = codes[instructionIndex];
-		instruction.opcode = OpCodes.Call;
-		instruction.operand = AccessTools.Method(typeof(Math), nameof(Math.Round), new[] { typeof(double) });
-		codes[instructionIndex + 1].opcode = OpCodes.Nop;
-		return codes;
+		return new CodeMatcher(instructions)
+			.End()
+			.MatchStartBackwards(new CodeMatch(OpCodes.Ldc_R4, 0.5f))
+			.SetAndAdvance(OpCodes.Call, AccessTools.Method(typeof(Math), nameof(Math.Round), new[] { typeof(double) }))
+			.SetOpcodeAndAdvance(OpCodes.Nop)
+			.InstructionEnumeration();
 	}
 
 	// スライダー範囲を拡大
 	private static void WideSlider(Maid maid) {
 		var tbody = maid.body0;
-		if (tbody?.bonemorph?.bones == null || maid.IsCrcBody) {
+		if (tbody.bonemorph.bones == null) {
 			return;
 		}
 
@@ -747,7 +723,6 @@ public class MaidVoicePitch : BaseUnityPlugin {
 		return boneScales;
 	}
 
-	// 動作していない古い設定を削除する
 	private static void CleanupExternalData() {
 		foreach (var maid in GetMaids()) {
 			foreach (var setting in ObsoleteSettings) {
@@ -757,11 +732,7 @@ public class MaidVoicePitch : BaseUnityPlugin {
 	}
 
 	internal static bool TryGetMaid(BoneMorph_ boneMorph_, out Maid maid) {
-		maid = null;
-		if (boneMorph_ == null) {
-			return false;
-		}
-		maid = GetMaids().FirstOrDefault(e => e.body0?.bonemorph == boneMorph_);
+		maid = GetMaids().FirstOrDefault(e => e.body0.bonemorph == boneMorph_);
 		return maid;
 	}
 
